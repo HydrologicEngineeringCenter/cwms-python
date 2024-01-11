@@ -12,9 +12,9 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='CWMSpy',
+    name='cwms-python',
     packages=find_packages(include=['CWMSpy']),
-    url="https://github.com/Enovotny/CWMSpy",
+    url="https://github.com/HydrologicEngineeringCenter/cwms-python",
     keywords=["Swagger", "CWMS Data API"],
     version='0.1.0',
     description='A python implementation of the CWMS Data API (CDA)',
