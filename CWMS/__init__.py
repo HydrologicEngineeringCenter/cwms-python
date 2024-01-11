@@ -6,6 +6,6 @@ from importlib.metadata import PackageNotFoundError, version
 from .core import CWMS
 
 try:
-    __version__ = version('CWMSpy')
+    __version__ = version('cwms-python')
 except PackageNotFoundError:
     __version__ = 'version-unknown'
