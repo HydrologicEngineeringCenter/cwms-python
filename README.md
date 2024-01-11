@@ -17,7 +17,7 @@ pip install git+https://github.com/HydrologicEngineeringCenter/cwms-python.git
 
 Then import the package:
 ```python
-import CWMSpy as CWMS
+from CWMS import CWMS
 ```
 
 ## Getting Started
@@ -25,7 +25,7 @@ import CWMSpy as CWMS
 Please follow the [installation procedure](#installation--usage) and then run the following:
 
 ```python
-import CWMSpy as CWMS
+from CWMS import CWMS
 from datetime import datetime, timedelta
 
 apiRoot = 'CDA url to connect to'
