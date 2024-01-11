@@ -13,7 +13,7 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='cwms-python',
-    packages=find_packages(include=['CWMSpy']),
+    packages=find_packages(include=['CWMS']),
     url="https://github.com/HydrologicEngineeringCenter/cwms-python",
     keywords=["Swagger", "CWMS Data API"],
     version='0.1.0',
