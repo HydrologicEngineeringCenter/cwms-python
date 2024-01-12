@@ -57,14 +57,18 @@ def output_type(response, return_type, dict_key):
     -------
     pandas df, json decoded dictionay, or Responce object from request package
     """
+    #converts responce object to dictionary if output is df or dict
     if return_type in ['df','dict']:
         response = response.json()
 
+    #converts dictionary to df based on the key provided for the endpoint
     if return_type == 'df':
         temp = response
         for key in dict_key:
             temp = temp[key]
         temp_df = pd.DataFrame(temp)
+
+        #if timeseries values are present then grab the values and put into dataframe
         if dict_key[-1] == 'values':
             temp_df.columns = [sub['name'] for sub in response['value-columns']]
 

@@ -44,8 +44,8 @@ class CwmsTsMixin:
 
         return responce
 
-    def retrieve_ts(self, p_tsId, p_office_id=None, p_unit='EN', p_datum=None, p_start_date=None, p_end_date=None, p_timezone=None, p_page_size=500000, return_type='df'):
-        """Retrieves time series data from a specified time serues and time window.
+    def retrieve_ts(self, p_tsId, p_office_id, p_unit='EN', p_datum=None, p_start_date=None, p_end_date=None, p_timezone=None, p_page_size=500000, return_type='df'):
+        """Retrieves time series data from a specified time series and time window.  Value date-times obtained are always in UTC.
 
         Parameters
         -----------
@@ -61,11 +61,13 @@ class CwmsTsMixin:
             Specifies the start of the time window for data to be included in the response. If this field is not specified, any required time window begins 24 hours prior to the specified or default end time.
         p_end_date : datetime
             Specifies the end of the time window for data to be included in the response. If this field is not specified, any required time window ends at the current time.
+        p_timezone : string
+            Specifies the time zone of the values of the begin and end fields. UTC is the default.  This value does not impact the values in response.  response is always in UTC.  
         return_type : str
             output type to return values as. 1. 'df' will return a pandas dataframe. 2. 'dict' will return a json decoded dictionay. 3. all other values will return Responce object from request package.
         Returns
         --------
-        pandas df, json decoded dictionay, or Responce object from request package
+        pandas df, json decoded dictionay, or Responce object from request package.  Dates in responce are in UTC.  
 
         Examples
         -------
@@ -83,6 +85,7 @@ class CwmsTsMixin:
             "datum": p_datum,
             "begin": p_start_date,
             "end": p_end_date,
+            "timezone" : p_timezone,
             "page-size" : p_page_size
         }
 
@@ -103,12 +106,14 @@ class CwmsTsMixin:
             df.tsId = timeseried id:specified name of the time series to be posted to
             df.office = the owning office of the time series
             df.units = units of values to be stored (ie. ft, in, m, cfs....)
-            dataframe should have three columns dateTime, value, qualifiers.
-                                         dateTime value  qualifiers
+            dataframe should have three columns date-time, value, quality-code. date-time values can be a string in ISO8601 formate or a datetime field. 
+            if quality-code column is not present is will be set to 0.
+                                         date-time value  quality-code
                0   2023-12-20T14:45:00.000-05:00  93.1           0
                1   2023-12-20T15:00:00.000-05:00  99.8           0
                2   2023-12-20T15:15:00.000-05:00  98.5           0
                3   2023-12-20T15:30:00.000-05:00  98.5           0
+
         version_date : str
             Specifies the version date for the timeseries to create. If this field is not specified, a null version date will be used.  The format for this field is ISO 8601 extended, with optional timezone, i.e., 'format', e.g., '2021-06-10T13:00:00-0700[PST8PDT]'.
         timezone : str
@@ -116,7 +121,7 @@ class CwmsTsMixin:
         create_as_lrts : bool
             Flag indicating if timeseries should be created as Local Regular Time Series. 'True' or 'False', default is 'False'
         store_rule : str
-            The business rule to use when merging the incoming with existing data
+            The business rule to use when merging the incoming with existing data. Available values : REPLACE_ALL, DO_NOT_REPLACE, REPLACE_MISSING_VALUES_ONLY, REPLACE_WITH_NON_MISSING, DELETE_INSERT
         override_protection : bool
             A flag to ignore the protected data quality when storing data. 'True' or 'False'
 
@@ -128,6 +133,7 @@ class CwmsTsMixin:
         -------
         
         """
+        endPoint = 'timeseries'
         params = {
                 'version-date': version_date,
                 'timezone': timezone,
@@ -140,15 +146,37 @@ class CwmsTsMixin:
                 'Content-Type': 'application/json;version=2',
             }
         if isinstance(data, pd.DataFrame):
-            data.values.tolist()
-            ts_dict = {"name": data.tsId,
-                       "office-id": data.office,
-                       "units": data.units,
+            #grab time series information
+            tsId = data.tsId
+            office = data.office
+            units = data.units
+
+            #check dataframe columns
+            if 'quality-code' not in data:
+                values['quality-code'] = 0
+            if 'date-time' not in data:
+                raise TypeError("date-time is a required column in data when posting as a dateframe")
+            if 'value' not in data:
+                raise TypeError("value is a required column when posting data when posting as a dataframe")
+                
+            #make sure that dataTime column is in iso8601 formate.      
+            data['date-time'] = pd.to_datetime(data['date-time']).apply(pd.Timestamp.isoformat)
+            data = data.reindex(columns=['date-time','value','quality-code'])
+            if data.isnull().values.any():
+                raise ValueError("Null/NaN data must be removed from the dataframe")
+                
+            ts_dict = {"name": tsId,
+                       "office-id": office,
+                       "units": units,
                        "values": data.values.tolist()
-                       }
+                       }  
+            
         elif isinstance(data, dict): 
             ts_dict = data
+
+        else: raise TypeError("data is not of type dataframe or dictionary")
+            
         #print(ts_dict)
-        response = self.s.post('timeseries', headers = headerList, data = json.dumps(ts_dict))    
+        response = self.s.post(endPoint, headers = headerList, data = json.dumps(ts_dict))    
         return response
 
