@@ -3,7 +3,7 @@ CWMS REST API for Data Retrieval
 
 ## Requirements.
 
-Python 3.9+
+Python 3.8+
 
 ## Installation & Usage
 ### pip install
