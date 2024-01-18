@@ -20,5 +20,5 @@ setup(
     description='A python implementation of the CWMS Data API (CDA)',
     author='Eric Novotny',
     install_requires=["pandas","requests_toolbelt"],
-    requires_python=[">=3.9.0"],
+    requires_python=[">=3.8.0"],
 )
