@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cwms-python"
+description = "Corps water managerment systems (CWMS) REST API for Data Retrieval of USACE water data"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["USACE", "water data"]
+license = {file = "LICENSE.md"}
+maintainers = [
+  {name = "Eric Novotny", email = "eric.v.novotny@usace.army.mil"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "requests_toolbelt",
+    "requests",
+    "pandas",
+]
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["CWMS"]
+
+[project.optional-dependencies]
+test = [
+  "pytest > 5.0.0",
+  "pytest-cov[all]"
+]
+doc = [
+  "sphinx",
+]
+
+[project.urls]
+homepage = "https://github.com/HydrologicEngineeringCenter/cwms-python"
+repository = "https://github.com/HydrologicEngineeringCenter/cwms-python.git"
+
+[tool.setuptools_scm]
+write_to = "CWMS/_version.py"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+skip-string-normalization = true
