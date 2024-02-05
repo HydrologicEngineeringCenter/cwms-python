@@ -19,6 +19,23 @@ jobs:
         pip install
         build
         --user
+    - name: Run Unit Tests
+      run: |
+        pip install pytest pytest-cov requests-mock requests_toolbelt pandas
+        pytest tests/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
+    - name: Code Coverage Summary Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: out/coverage.xml
+        format: markdown
+        output: both
+        badge: true
+    - name: Generate GitHub Job Summary
+      uses: x-color/github-actions-job-summary@v0.1.1
+      with:
+        file: ./code-coverage-results.md
+        vars: |
+          empty: empty
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
     - name: Store the distribution packages

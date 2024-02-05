@@ -1,4 +1,5 @@
 from .utils import queryCDA
+from ._constants import *
 import pandas as pd
 import json
 
@@ -9,12 +10,12 @@ class CwmsLocMixin:
         endPoint = f'location/group/{p_loc_group_id}'
 
         params = {
-            "office": p_office_id,
+            OFFICE_PARAM: p_office_id,
             "category-id": p_category_id
         }
 
         headerList={
-            "Accept": "application/json"
+            "Accept": HEADER_JSON_V1
         }
 
         responce = queryCDA(self,endPoint,params,headerList,return_type,dict_key = ['assigned-locations'])
@@ -29,13 +30,13 @@ class CwmsLocMixin:
         endPoint = 'locations'
         
         params = {
-            'office': p_office_id,
+            OFFICE_PARAM: p_office_id,
             'names' : p_loc_ids,
             'units' : p_units,
             'datum' : p_datum,
         }
         headerList={
-            "Accept": "application/json;version=2"
+            "Accept": HEADER_JSON_V2
         }
                       
         responce = queryCDA(self,endPoint,params,headerList,return_type,dict_key = ['locations','locations'])  

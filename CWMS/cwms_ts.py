@@ -1,4 +1,5 @@
 from .utils import queryCDA
+from ._constants import *
 import pandas as pd
 import json
 
@@ -29,12 +30,12 @@ class CwmsTsMixin:
         endPoint = f'timeseries/group/{p_group_id}'
 
         params = {
-            "office": p_office_id,
+            OFFICE_PARAM: p_office_id,
             "category-id": p_category_id
         }
 
         headerList={
-            "Accept": "application/json"
+            "Accept": HEADER_JSON_V1
         }
 
         responce = queryCDA(self, endPoint, params, headerList, return_type, dict_key = ['assigned-time-series'])
@@ -79,7 +80,7 @@ class CwmsTsMixin:
         if p_end_date is not None: p_end_date = p_end_date.strftime('%Y-%m-%dT%H:%M:%S') 
 
         params = {
-            "office": p_office_id,
+            OFFICE_PARAM: p_office_id,
             "name": p_tsId,
             "unit": p_unit,
             "datum": p_datum,
@@ -90,7 +91,7 @@ class CwmsTsMixin:
         }
 
         headerList={
-            "Accept": "application/json;version=2"
+            "Accept": HEADER_JSON_V2
         }
         responce = queryCDA(self,endPoint,params,headerList,return_type, dict_key = ['values'])
 
@@ -143,7 +144,7 @@ class CwmsTsMixin:
             }
         headerList={
                 'accept': '*/*',
-                'Content-Type': 'application/json;version=2',
+                'Content-Type': HEADER_JSON_V2,
             }
         if isinstance(data, pd.DataFrame):
             #grab time series information
@@ -177,6 +178,6 @@ class CwmsTsMixin:
         else: raise TypeError("data is not of type dataframe or dictionary")
             
         #print(ts_dict)
-        response = self.s.post(endPoint, headers = headerList, data = json.dumps(ts_dict))    
+        response = self.get_session().post(endPoint, headers = headerList, data = json.dumps(ts_dict))
         return response
 
