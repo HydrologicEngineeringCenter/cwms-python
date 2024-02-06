@@ -38,7 +38,7 @@ def queryCDA(self, endpoint, payload, headerList, return_type, dict_key):
             'Page Not Found Error. May be the result of an empty query. '
             + f'URL: {response.url}'
         )
-
+    response.raise_for_status()
     return output_type(response, return_type, dict_key)
 
 def output_type(response, return_type, dict_key):

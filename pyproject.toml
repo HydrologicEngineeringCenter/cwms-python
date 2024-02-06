@@ -27,9 +27,10 @@ packages = ["CWMS"]
 
 [project.optional-dependencies]
 test = [
-  "pytest > 8.0.0",
-  "pytest-cov[all]",
-  "requests_mock > 1.11.0"
+    "pytest > 8.0.0",
+    "pytest-cov[all]",
+    "requests_mock > 1.11.0",
+    "pytz > 2024.1"
 ]
 doc = [
   "sphinx",

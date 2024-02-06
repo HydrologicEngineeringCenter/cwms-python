@@ -82,12 +82,12 @@ class CwmsTsMixin:
         params = {
             OFFICE_PARAM: p_office_id,
             "name": p_tsId,
-            "unit": p_unit,
-            "datum": p_datum,
-            "begin": p_start_date,
-            "end": p_end_date,
+            UNIT: p_unit,
+            DATUM: p_datum,
+            BEGIN: p_start_date,
+            END: p_end_date,
             "timezone" : p_timezone,
-            "page-size" : p_page_size
+            PAGE_SIZE : p_page_size
         }
 
         headerList={
