@@ -1,0 +1,1844 @@
+[
+  {
+    "office-id": "LRL",
+    "id": "Guide Curve"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Summer Target"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Winter Target"
+  },
+  {
+    "office-id": "MVP",
+    "id": "Bottom of Conservation"
+  },
+  {
+    "office-id": "MVP",
+    "id": "Gage Zero"
+  },
+  {
+    "office-id": "MVP",
+    "id": "Warning"
+  },
+  {
+    "office-id": "SAM",
+    "id": "Lock Closed High Water"
+  },
+  {
+    "office-id": "SAM",
+    "id": "Bottom of Induced Surcharge"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "USACE_Biological_Reference"
+  },
+  {
+    "office-id": "NAB",
+    "id": "NWS Flood Stage"
+  },
+  {
+    "office-id": "MVR",
+    "id": "TempSL"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Daily Pan Evap",
+    "description": "Long term Daily average"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Injunction-Target",
+    "description": "Injunction Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-Operating",
+    "description": "Pool-Operating"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-Conservation",
+    "description": "Pool-Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-MultiPurpose",
+    "description": "Pool-MultiPurpose"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-FloodControl",
+    "description": "Pool-FloodControl"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-FloodControl_Secondary",
+    "description": "Pool-FloodControl_Secondary"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-FloodControl_Max",
+    "description": "Pool-FloodControl_Max"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Pool-Power",
+    "description": "Pool-Power"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-STATS-10year"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "WCM-Minimum-PUB",
+    "description": "WCM-Minimum-PUB"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "FRM-Minimum-PUB",
+    "description": "FRM-Minimum-PUB"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Record",
+    "description": "Pool of Record"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "ODFW-THRESHOLD-PUB"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-STATS-1900ft"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Invert",
+    "description": "Invert"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Obvert",
+    "description": "Obvert"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Maximum",
+    "description": "Maximum"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Average",
+    "description": "Average"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "StationService",
+    "description": "StationService"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Centerline",
+    "description": "Centerline"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Diameter",
+    "description": "Diameter"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Toe of Ramp-FrenchGulch"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Invert-Inlet",
+    "description": "Invert-Inlet"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Invert-Outlet",
+    "description": "Invert-Outlet"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "ODEQ-2006TMDL-Target"
+  },
+  {
+    "office-id": "NAB",
+    "id": "25% Flood Storage",
+    "description": "Elevation at which a project has used 25% of its flood storage."
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Minimum",
+    "description": "Minimum"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Levees",
+    "description": "Project Levees that limit the lake area"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Control Max without Dir"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Below Pittsburgh"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Flood Control",
+    "description": "Flood control"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Bottom of Conservation"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Record"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Control Max with Dir"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Surcharge",
+    "description": "Top of Surcharge"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Water Supply",
+    "description": "Water Supply"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Recreation",
+    "description": "Recreation"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Flood Condition",
+    "description": "Flood Condition"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Flood Threat",
+    "description": "Flood Threat"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Control"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Control Min"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Record Date"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Top of Flood Date"
+  },
+  {
+    "office-id": "LRB",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of GC Plus",
+    "description": "Top of Guide Curve + 1.0 foot"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of IRRM",
+    "description": "Top of IRRM pool level"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of Surcharge",
+    "description": "Top of flood surcharge pool"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Minimum"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Average"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of SEPA Power",
+    "description": "Top of SEPA power marketing zone level"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of Recreation",
+    "description": "Top of the recreation pool"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Maximum"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of GC Minus",
+    "description": "Top of guide curve - 1.0 foot"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Bottom of SEPA Power",
+    "description": "Bottom of SEPA power marketing zone level"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Warning"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Target"
+  },
+  {
+    "office-id": "LRN",
+    "id": "Top of GC",
+    "description": "Top of guide curve"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "NAB",
+    "id": "5% Flood Storage",
+    "description": "Elevation at which a project has used 5% of its flood storage."
+  },
+  {
+    "office-id": "NAB",
+    "id": "P95",
+    "description": "P95 Trigger"
+  },
+  {
+    "office-id": "NAB",
+    "id": "FERC_Q"
+  },
+  {
+    "office-id": "NAB",
+    "id": "WS Trigger-Cowanesque"
+  },
+  {
+    "office-id": "NAB",
+    "id": "WS Trigger-Curwensville"
+  },
+  {
+    "office-id": "LRE",
+    "id": "Coordinated Water Levels Monthly Mean - English",
+    "description": "Coordinated Monthly Mean Water Levels"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Flow Upper Limit"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Stage Lower Limit"
+  },
+  {
+    "office-id": "SPL",
+    "id": "Top of Recreation Pool"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Top of Early Winter",
+    "description": "Top of conservation pool during early winter"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Top of Flood Control",
+    "description": "Top of flood control"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Maximum",
+    "description": "Maximum Pool"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Top of Recreation",
+    "description": "Top of conservation pool during summer recreation"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Top of Weir"
+  },
+  {
+    "office-id": "SPL",
+    "id": "Spillway"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Top of Summer"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Top of Late Winter",
+    "description": "Top of conservation pool during late winter"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Top of M&I",
+    "description": "Top of Municipal and Industrial Water Supply"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Bottom of M&I",
+    "description": "Bottom of Municipal and Industrial Water Supply"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Spillway Crest",
+    "description": "Emergency Spillway Crest"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Service Spillway Crest",
+    "description": "Service Spillway Crest"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Channel Capacity",
+    "description": "Channel Capacity"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Bankfull",
+    "description": "See 2016 SNC pg M-8"
+  },
+  {
+    "office-id": "SPA",
+    "id": "NWS Flood Stage",
+    "description": "See 2016 SNC pg M-9"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Historical Evap"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Top of Parapet Wall",
+    "description": "Top of parapet wall along top of dam"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Drainage",
+    "description": "Contributing drainage area above location"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Maximum Pool"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Action",
+    "description": "See 2016 SNC pg M-8"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Major Flood",
+    "description": "See 2016 SNC pg M-8"
+  },
+  {
+    "office-id": "SPA",
+    "id": "Moderate Flood",
+    "description": "See 2016 SNC pg M-9"
+  },
+  {
+    "office-id": "SPA",
+    "id": "NWS Major Flood Stage",
+    "description": "See 2016 SNC pg M-9"
+  },
+  {
+    "office-id": "SPA",
+    "id": "NWS Moderate Flood Stage",
+    "description": "See 2016 SNC pg M-9"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Hydropower Season Guide Curve",
+    "description": "seasonal"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Daily Pan Evaporation"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Navigation Pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Dam - Left Bank"
+  },
+  {
+    "office-id": "SWT",
+    "id": "10-yr drawdown"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Parapet"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Maximum Pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Bottom of Navigation Pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "5-yr pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Dikes"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Pan Evaporation Multiplier"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Dam - Right Bank"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Maximum Tailwater"
+  },
+  {
+    "office-id": "SWT",
+    "id": "100-yr pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Dead Storage"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Constant Conservation",
+    "description": "toc"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Auxiliary Spillway Crest"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Invert at Lowest Intake"
+  },
+  {
+    "office-id": "SWT",
+    "id": "24-hr Surveillance Begins",
+    "description": "level at which 24-hour surveillance is required"
+  },
+  {
+    "office-id": "SWT",
+    "id": "50-year pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Bottom of Constant Conservation Pool"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Millet Seeding"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Drainage"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Evap Coeff",
+    "description": "Testing by Deziree for CWMSREGI-5691"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Contributing"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Pool of Record"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Daily Surveillance Level"
+  },
+  {
+    "office-id": "SWT",
+    "id": "NWS Flood"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Navigation"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Bottom of Navigation"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Downstream Channel Capacity"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Normal Mean-Areal",
+    "description": "30-year avg mean-Areal Precip"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Normal",
+    "description": "Used for normal precip values"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Total"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Top of Levee"
+  },
+  {
+    "office-id": "SWT",
+    "id": "Bottom of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Spillbays"
+  },
+  {
+    "office-id": "SPL",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "SPL",
+    "id": "Top of Debris Pool"
+  },
+  {
+    "office-id": "SPL",
+    "id": "Top of Buffer Pool"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "HD566-Minimum-PUB"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Toe of Ramp-Copper"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Toe of Ramp-HartTish"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Inlet-Top-Penstock"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Fill",
+    "description": "Lake Fill"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Bankfull",
+    "description": "Bankfull"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Range-Maximum",
+    "description": "Range-Maximum"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Regulating",
+    "description": "Regulating Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Flood",
+    "description": "Flood Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Max Non-Damaging",
+    "description": "Maximum Without Causing Damage Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Conservation",
+    "description": "Top Conservation Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Dam",
+    "description": "Top of Dam Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Downstream",
+    "description": "Top of Downstream Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Flood",
+    "description": "Top of Flood Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Inactive",
+    "description": "Top of Inactive Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Induced Surcharge",
+    "description": "Top of Induced Surcharge Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Normal",
+    "description": "Bottom of Normal Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Normal",
+    "description": "Top of Normal Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Overflow",
+    "description": "Top of Overflow Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Operating",
+    "description": "Bottom of Operating Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Flood Control",
+    "description": "Bottom of Flood Control Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Exclusive Flood Control",
+    "description": "Bottom of Exclusive Flood Control Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Exclusive Flood Control",
+    "description": "Top of Exclusive Flood Control Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Design Capacity",
+    "description": "Design Capacity Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Operating",
+    "description": "Top of Operational Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Power",
+    "description": "Bottom of Power Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Power",
+    "description": "Top of Power Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Multi-Purpose",
+    "description": "Bottom of Multi-Purpose Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Multi-Purpose",
+    "description": "Top of Multi-Purpose Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Inlet",
+    "description": "Top of Inlet Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Bottom of Inlet",
+    "description": "Bottom of Inlet Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Top of Outlet",
+    "description": "Top of Outlet Level"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Streambed",
+    "description": "Streambed Level"
+  },
+  {
+    "office-id": "MVK",
+    "id": "Top of Surcharge",
+    "description": "Top of surcharge"
+  },
+  {
+    "office-id": "MVK",
+    "id": "Top of Flood Control",
+    "description": "Top of flood control"
+  },
+  {
+    "office-id": "MVK",
+    "id": "Top of Guide Curve",
+    "description": "Top of guide curve"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Gate Closing Stage",
+    "description": "Stage at which to evaluate if project gates need to be closed."
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Surcharge"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Multi_Purpose"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Impervious Blanket"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Multipurpose"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Secchi Depth"
+  },
+  {
+    "office-id": "NAB",
+    "id": "50% Flood Storage",
+    "description": "Elevation at which a project has used 50% of its flood storage."
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Spillway"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Bottom of Multipurpose"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "NWS Major Flood Stage"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "NWS Moderate Flood Stage"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "NWS Flood Stage"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Max Temperature Prof Depth"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Replacement"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Max of Record"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "NWS Action Stage"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Conduit Filter"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Sediment"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "0"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Joint Use"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Bottom of Conservation"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Bottom of Inactive"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Flood Level I"
+  },
+  {
+    "office-id": "NWDM",
+    "id": "Top of Flood Level II"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Drought Level 3"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Drought Level 1"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Drought Level 2"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Standard Project Flow"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Spillway Design Flow"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Top of Conservation2"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Regulating2"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Spillway Design Flood"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Standard Project Flood"
+  },
+  {
+    "office-id": "SAS",
+    "id": "Spillway"
+  },
+  {
+    "office-id": "SWL",
+    "id": "NWS_Flood",
+    "description": "NWS Flood Stage"
+  },
+  {
+    "office-id": "SWL",
+    "id": "Basin Area"
+  },
+  {
+    "office-id": "SWL",
+    "id": "Drainage Area",
+    "description": "Drainage Area"
+  },
+  {
+    "office-id": "SWL",
+    "id": "Daily Pan Evaporation"
+  },
+  {
+    "office-id": "SWL",
+    "id": "Forecast Crest",
+    "description": "Forecast crest"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Conditional Snowmelt",
+    "description": "Top of the conditional snowmelt space"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Restricted Space",
+    "description": "Top of restricted space"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Bottom of Conditional Space",
+    "description": "Bottom of conditional space"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Surcharge",
+    "description": "Maximum surcharge"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Gross Pool",
+    "description": "Top of Gross Pool"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Conditional Space",
+    "description": "Top of the conditional space"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Flood Control",
+    "description": "Top of flood control"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Daily Pan Evaporation",
+    "description": "Daily pan evaporation"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Pan Evaporation Multiplier",
+    "description": "Pan Evaporation Multiplier"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Sensor Tip"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Conditional Winter",
+    "description": "Top of the conditional winter pool"
+  },
+  {
+    "office-id": "NAB",
+    "id": "WS Trigger",
+    "description": "Water Supply Trigger"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Gross",
+    "description": "Top of Gross Pool"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "RegulatingOutlets"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Flow_By"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Channel Capacity"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Top of Secondary Flood Control",
+    "description": "Top of Secondary Flood Control"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Elevation - Recreation Impacts"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Avg Pan Evap",
+    "description": "Evap based on POR averages"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Avg Historical Evap"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Top of Guide Curve",
+    "description": "Top of the seasonal guide curve"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Elevation - 100 Percent Flood Control"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Recreation Guide Curve"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Top of Surcharge"
+  },
+  {
+    "office-id": "MVS",
+    "id": "EOC Action Stage - Critical Stage"
+  },
+  {
+    "office-id": "MVS",
+    "id": "NGVD29"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Bottom of Secondary Flood Control",
+    "description": "Bottom of Secondary Flood Control"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Record Elevation"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Seasonal Rule Curve"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Record Stage Minimum",
+    "description": "Record Stage Minimum"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Critical Lake Level",
+    "description": "Critical Lake Level"
+  },
+  {
+    "office-id": "MVS",
+    "id": "EOC Action Stage - Phase 1"
+  },
+  {
+    "office-id": "MVS",
+    "id": "EOC Action Stage - Phase 2"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Elevation - 8 Percent Flood Control"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Elevation - 50 Percent Flood Control"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Streambed",
+    "description": "Bottom of storage"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-STATS-10ft"
+  },
+  {
+    "office-id": "MVS",
+    "id": "LWRP",
+    "description": "LWRP"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Bottom of Conservation"
+  },
+  {
+    "office-id": "SAM",
+    "id": "Lock Trigger High Water Upper Pool"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Spillway-Top of Gate-Closed",
+    "description": "Spillway-Top of Gate-Closed"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Spillway Used",
+    "description": "Spillway Used"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-STATS-30year"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Regulating Outlet",
+    "description": "Regulating Outlet"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "perRO-Open80Pct-Top of Conservation",
+    "description": "perRO-Open80Pct-Top of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "perRO-Open100Pct-Bottom of Conservation",
+    "description": "perRO-Open100Pct-Bottom of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "perRO-Open100Pct-Top of Conservation",
+    "description": "perRO-Open100Pct-Top of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "allROs-Open100Pct-Top of Conservation",
+    "description": "allROs-Open100Pct-Top of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Inlet-Top",
+    "description": "Inlet-Top"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Inlet-Bottom",
+    "description": "Inlet-Bottom"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Useable",
+    "description": "Useable"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Nameplate",
+    "description": "Nameplate"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "perTurbine-Bottom of Conservation",
+    "description": "perTurbine-Bottom of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "perTurbine-Top of Conservation",
+    "description": "perTurbine-Top of Conservation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Capacity",
+    "description": "Capacity"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "perRO-Open80Pct-Bottom of Conservation",
+    "description": "perRO-Open80Pct-Bottom of Conservation"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "perRO-Open10Pct-Top of Conservation",
+    "description": "perRO-Open10Pct-Top of Conservation"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "perRO-Open10Pct-Bottom of Conservation",
+    "description": "perRO-Open10Pct-Bottom of Conservation"
+  },
+  {
+    "office-id": "MVN",
+    "id": "NWS Major Flood Stage",
+    "description": "NWS Major Flood Stage"
+  },
+  {
+    "office-id": "MVN",
+    "id": "Phase I",
+    "description": "Phase I"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Toe of Ramp-JosephStewart"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Height"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-10year-endYEAR-STATS"
+  },
+  {
+    "office-id": "LRH",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "MVS",
+    "id": "NWS HB5",
+    "description": "National Weather Service Handbook 5"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Interim Risk Reduction Measure - Brake Drum",
+    "description": "Interim Risk Reduction Measure - Brake Drum Level"
+  },
+  {
+    "office-id": "LRL",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Minimum",
+    "description": "Minimum pool "
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone D",
+    "description": "Top of Zone D"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone F",
+    "description": "Top of Zone F"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Drought Warning",
+    "description": "Drought Warning"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone A",
+    "description": "Top of Zone A"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone E",
+    "description": "Top of Zone E"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Dam"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Concrete"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Drought Watch",
+    "description": "Drought Watch"
+  },
+  {
+    "office-id": "LRP",
+    "id": "P10",
+    "description": "P10 Pool (1980-2009)"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone C",
+    "description": "Top of Zone C"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Full",
+    "description": "Top of Full pool"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Drought Emergency",
+    "description": "Drought Emergency"
+  },
+  {
+    "office-id": "LRP",
+    "id": "P25",
+    "description": "P25 Pool (1980-2009)"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone B",
+    "description": "Top of Zone B"
+  },
+  {
+    "office-id": "LRP",
+    "id": "Top of Zone G",
+    "description": "Top of Zone G"
+  },
+  {
+    "office-id": "NAE",
+    "id": "Warning"
+  },
+  {
+    "office-id": "NAB",
+    "id": "Q7_10",
+    "description": "Q7_10 Trigger"
+  },
+  {
+    "office-id": "SAM",
+    "id": "Lock Closed High Water Upper Pool"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "Usable-Max",
+    "description": "Usable-Max"
+  },
+  {
+    "office-id": "SAW",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Daily Pan Evaporation",
+    "description": "Use this for a historical or average alternate value"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Low Flow Intake Invert Lower Intermediate Level",
+    "description": "Outlet Works Tower Selector Gate Invert Elevation"
+  },
+  {
+    "office-id": "SWF",
+    "id": "25% Flood",
+    "description": "Flood Pool 25% filled"
+  },
+  {
+    "office-id": "SWF",
+    "id": "5% Flood",
+    "description": "Storage at last 5% of Flood Pool"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Pool Equalization Channel",
+    "description": "North Pool and South Pool are connected at this level (Twin Buttes)"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Spillway Crest",
+    "description": "Broadcrested Ogee Weir"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Top of Power Pool and Spillway Crest",
+    "description": "Ogee Weir"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Hamon Coeff HMc",
+    "description": "HMc Coefficient"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Regulation Schedule",
+    "description": "Control Point Flows - based on project storage"
+  },
+  {
+    "office-id": "SWF",
+    "id": "50% Flood",
+    "description": "Flood Pool at 50% filled"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Maximum Tailwater",
+    "description": "This is the maximum tailwater stage NVGD at which the gates can be operated."
+  },
+  {
+    "office-id": "SWF",
+    "id": "TestTemporary SL"
+  },
+  {
+    "office-id": "SWF",
+    "id": "NWS Flood Stage"
+  },
+  {
+    "office-id": "SWF",
+    "id": "NWS Moderate Flood Stage"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Bankfull"
+  },
+  {
+    "office-id": "SWF",
+    "id": "NWS Major Flood Stage"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Action"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Control Point Maximum"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Spillway Notch"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Pan Evaporation Multiplier",
+    "description": "Pan Evap to Lake Evap factor from TWDB"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Pan Evaporation Constant",
+    "description": "Use a constant Pan to Lake coeff"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Low Flow Intake Invert Lower Level",
+    "description": "Outlet Works Tower Selector Gate Invert Elevation"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Low Flow Intake Invert Highest Level 2",
+    "description": "Outlet Works Tower Selector Gate Invert Elevation"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Bottom of Inactive",
+    "description": "Elevation of zero capacity  "
+  },
+  {
+    "office-id": "SWF",
+    "id": "Pan Evaporation NWS",
+    "description": "NWS 0.78 Coeff"
+  },
+  {
+    "office-id": "SWF",
+    "id": "Low Flow Intake Invert Upper Intermediate Level",
+    "description": "Outlet Works Tower Selector Gate Invert Elevation"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Test_Level_1"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Avg Historical Evap"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Natural Ground",
+    "description": "Natural ground at end of dam"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Top of 100 Yr Flood",
+    "description": "100 year flood"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Top of Standard",
+    "description": "Standard project pool"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Test_Level_2"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Top of Limits",
+    "description": "Limits of Government Land"
+  },
+  {
+    "office-id": "SWG",
+    "id": "Test_Flood Control"
+  },
+  {
+    "office-id": "NAP",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "NAP",
+    "id": "Top of Dead Pool"
+  },
+  {
+    "office-id": "NAP",
+    "id": "Bottom of Recreation"
+  },
+  {
+    "office-id": "NAP",
+    "id": "Top of Recreation"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "State_Target",
+    "description": "State Target"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "COORD_Fisheries_Target",
+    "description": "COORD_Fisheries_Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Toe of Ramp",
+    "description": "Toe of Ramp"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Interim Risk Reduction Measure",
+    "description": "Interim Risk Reduction Measure"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Rule Curve",
+    "description": "Rule Curve"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "State Target",
+    "description": "State Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Drainage",
+    "description": "Drainage Area"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Normal Evacuation Rate",
+    "description": "Normal Evacuation Rate Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Top of Max Flood Control",
+    "description": "Top of Max Flood Control Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Bottom of Conservation",
+    "description": "Bottom of Conservation Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Maximum Evaculation Rate",
+    "description": "Maximum Evacuation Rate"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Spillway Crest",
+    "description": "Spillway Crest Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Top of Max Flood",
+    "description": "Top of Max Flood Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Top of Flood Control"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Maximum Evacuation Rate"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Major Flood",
+    "description": "Major Flood Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Moderate Flood",
+    "description": "Moderate Flood Level"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Fisheries Max Target",
+    "description": "Fisheries Max Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Fisheries Min Target",
+    "description": "Fisheries Min Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "NWS Moderate Flood"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "NWS Major Flood"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Bottom of Flood"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Bottom of Flood Control Pool"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Active Storage"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "NWSAction"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "0"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Bottom of Stilling Well",
+    "description": "Bottom of Stilling Well"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Orifice of Stilling Well",
+    "description": "Orofice of Stilling Well"
+  },
+  {
+    "office-id": "CWMS",
+    "id": "NMFS_USFWS_ODFW_Target",
+    "description": "NMFS_USFWS_ODFW_Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "USACE_Temporary_Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "NWS Action"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "NWS Minor Flood"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "HD531-Minimum-PUB"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Action",
+    "description": "Value at which to take Action"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "NMFS-BIOP-PUB",
+    "description": "NMFS Published Biop Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "COORD-BIOP-PUB",
+    "description": "NMFS Coordinated Biop Target"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Turbines"
+  },
+  {
+    "office-id": "NAE",
+    "id": "Channel Capacity"
+  },
+  {
+    "office-id": "NAE",
+    "id": "Spillway Crest"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Hinge Min",
+    "description": "Hinge Min"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Hinge Max",
+    "description": "Hinge Max"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Record Stage"
+  },
+  {
+    "office-id": "MVN",
+    "id": "NWS Action Stage",
+    "description": "NWS Action Stage"
+  },
+  {
+    "office-id": "MVN",
+    "id": "NWS Flood Stage",
+    "description": "NWS Flood Stage"
+  },
+  {
+    "office-id": "MVN",
+    "id": "NWS Moderate Flood Stage",
+    "description": "NWS Moderate Flood Stage"
+  },
+  {
+    "office-id": "MVN",
+    "id": "Phase II",
+    "description": "Phase II"
+  },
+  {
+    "office-id": "SPK",
+    "id": "Top of Conservaton"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Toe of Ramp-Takelma"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "Width"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-10year-thru2022-STATS"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Flow Lower Limit"
+  },
+  {
+    "office-id": "MVN",
+    "id": "NWS Low Water Stage",
+    "description": "NWS Low Water Stage\n"
+  },
+  {
+    "office-id": "NWDP",
+    "id": "CENWP-30year-thru2023-STATS"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Lower Limit",
+    "description": "Lower Limit"
+  },
+  {
+    "office-id": "MVS",
+    "id": "Seasonal Rule Curve Production",
+    "description": "Seasonal Rule Curve Production"
+  }
+]

@@ -1,6 +1,5 @@
-import requests
+from ._constants import *
 import pandas as pd
-import json
 
 def queryCDA(self, endpoint, payload, headerList, return_type, dict_key):
     """Send a query.
@@ -28,7 +27,7 @@ def queryCDA(self, endpoint, payload, headerList, return_type, dict_key):
     """
 
 
-    response = self.s.get(endpoint, params=payload, headers=headerList)
+    response = self.get_session().get(endpoint, params=payload, headers=headerList, verify=False)
 
     if response.status_code == 400:
         raise ValueError(
@@ -58,11 +57,11 @@ def output_type(response, return_type, dict_key):
     pandas df, json decoded dictionay, or Responce object from request package
     """
     #converts responce object to dictionary if output is df or dict
-    if return_type in ['df','dict']:
+    if return_type in [DATA_FRAME_FORMAT,DICT_FORMAT]:
         response = response.json()
 
     #converts dictionary to df based on the key provided for the endpoint
-    if return_type == 'df':
+    if return_type == DATA_FRAME_FORMAT:
         temp = response
         for key in dict_key:
             temp = temp[key]
