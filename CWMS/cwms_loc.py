@@ -49,7 +49,8 @@ class CwmsLoc(_CwmsBase):
         units: str = None,
         datum: str = None,
     ):
-        responce = CwmsLoc.etreive_locs_json(self, office_id, loc_ids, units, datum)
+        responce = CwmsLoc.etreive_locs_json(
+            self, office_id, loc_ids, units, datum)
 
         df = return_df(responce, dict_key=['locations', 'locations'])
 
@@ -87,7 +88,9 @@ class CwmsLoc(_CwmsBase):
             temp2 = temp2.dropna(how='all', axis='columns')
             temp2 = temp2.reset_index()
             df_alias = pd.concat([df_alias, temp2], ignore_index=True)
-        df_alias = df_alias.drop_duplicates(subset=['locID', 'name'], keep='last')
-        df_alias = df_alias.pivot(index='locID', columns='name', values='value')
+        df_alias = df_alias.drop_duplicates(
+            subset=['locID', 'name'], keep='last')
+        df_alias = df_alias.pivot(
+            index='locID', columns='name', values='value')
         df_alias = pd.concat([df, df_alias], axis=1)
         return df_alias

@@ -26,7 +26,8 @@ class CwmsTs(_CwmsBase):
             df: dataframe
         """
 
-        responce = CwmsTs.retrieve_ts_group_json(self, group_id, category_id, office_id)
+        responce = CwmsTs.retrieve_ts_group_json(
+            self, group_id, category_id, office_id)
 
         df = return_df(responce, dict_key=['assigned-time-series'])
 
@@ -207,7 +208,8 @@ class CwmsTs(_CwmsBase):
             )
             data = data.reindex(columns=['date-time', 'value', 'quality-code'])
             if data.isnull().values.any():
-                raise ValueError("Null/NaN data must be removed from the dataframe")
+                raise ValueError(
+                    "Null/NaN data must be removed from the dataframe")
 
             ts_dict = {
                 "name": tsId,
@@ -224,6 +226,7 @@ class CwmsTs(_CwmsBase):
 
         # print(ts_dict)
         response = self.get_session().post(
-            end_point, params=params, headers=headerList, data=json.dumps(ts_dict)
+            end_point, params=params, headers=headerList, data=json.dumps(
+                ts_dict)
         )
         return response

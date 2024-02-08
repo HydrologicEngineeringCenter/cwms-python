@@ -21,7 +21,8 @@ class CwmsLevel(_CwmsBase):
     ):
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
 
-        params = {OFFICE_PARAM: office_id, TEMPLATE_ID_MASK_PARAM: specified_level_mask}
+        params = {OFFICE_PARAM: office_id,
+                  TEMPLATE_ID_MASK_PARAM: specified_level_mask}
 
         headers = {"Accept": HEADER_JSON_V2}
 
@@ -30,7 +31,8 @@ class CwmsLevel(_CwmsBase):
 
     def retrieve_specified_level_json(self, specified_level_id: str, office_id: str):
         if specified_level_id is None:
-            raise ValueError("Cannot retrieve a single specified level without an id")
+            raise ValueError(
+                "Cannot retrieve a single specified level without an id")
         if office_id is None:
             raise ValueError(
                 "Cannot retrieve a single specified level without an office id"
@@ -60,7 +62,8 @@ class CwmsLevel(_CwmsBase):
         if specified_level_id is None:
             raise ValueError("Cannot delete a specified level without an id")
         if office_id is None:
-            raise ValueError("Cannot delete a specified level without an office id")
+            raise ValueError(
+                "Cannot delete a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
 
         params = {OFFICE_PARAM: office_id}
@@ -72,14 +75,18 @@ class CwmsLevel(_CwmsBase):
         self, old_specified_level_id: str, new_specified_level_id: str, office_id: str
     ):
         if old_specified_level_id is None:
-            raise ValueError("Cannot update a specified level without an old id")
+            raise ValueError(
+                "Cannot update a specified level without an old id")
         if new_specified_level_id is None:
-            raise ValueError("Cannot update a specified level without a new id")
+            raise ValueError(
+                "Cannot update a specified level without a new id")
         if office_id is None:
-            raise ValueError("Cannot update a specified level without an office id")
+            raise ValueError(
+                "Cannot update a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{old_specified_level_id}"
 
-        params = {OFFICE_PARAM: office_id, "specified-level-id": new_specified_level_id}
+        params = {OFFICE_PARAM: office_id,
+                  "specified-level-id": new_specified_level_id}
         headers = {"Content-Type": HEADER_JSON_V2}
         response = self.get_session().patch(end_point, params=params, headers=headers)
         response.raise_for_status()
