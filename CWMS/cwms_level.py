@@ -11,7 +11,6 @@ from .utils import queryCDA
 
 
 class CwmsLevel(_CwmsBase):
-
     _SPECIFIED_LEVELS_ENDPOINT = "specified-levels"
 
     def __init__(self, cwms_api_session: CwmsApiSession):
@@ -23,7 +22,9 @@ class CwmsLevel(_CwmsBase):
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
 
         params = {OFFICE_PARAM: office_id, TEMPLATE_ID_MASK_PARAM: specified_level_mask}
+
         headers = {"Accept": HEADER_JSON_V2}
+
         response = queryCDA(self, end_point, params, headers)
         return response
 
