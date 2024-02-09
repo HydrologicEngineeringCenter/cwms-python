@@ -5,18 +5,7 @@
 import datetime
 import json
 
-from ._constants import BEGIN
-from ._constants import CASCADE_DELETE
-from ._constants import DATUM
-from ._constants import EFFECTIVE_DATE
-from ._constants import END
-from ._constants import FAIL_IF_EXISTS
-from ._constants import HEADER_JSON_V2
-from ._constants import OFFICE_PARAM
-from ._constants import PAGE
-from ._constants import PAGE_SIZE
-from ._constants import TEMPLATE_ID_MASK_PARAM
-from ._constants import UNIT
+import CWMS._constants as constants
 from .core import CwmsApiSession
 from .core import _CwmsBase
 from .utils import queryCDA
@@ -79,10 +68,10 @@ class CwmsLevel(_CwmsBase):
 
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
 
-        params = {OFFICE_PARAM: office_id,
-                  TEMPLATE_ID_MASK_PARAM: specified_level_mask}
+        params = {constants.OFFICE_PARAM: office_id,
+                  constants.TEMPLATE_ID_MASK_PARAM: specified_level_mask}
 
-        headers = {"Accept": HEADER_JSON_V2}
+        headers = {"Accept": constants.HEADER_JSON_V2}
 
         response = queryCDA(self, end_point, params, headers)
         return response
@@ -123,8 +112,8 @@ class CwmsLevel(_CwmsBase):
             )
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
 
-        params = {OFFICE_PARAM: office_id}
-        headers = {"Accept": HEADER_JSON_V2}
+        params = {constants.OFFICE_PARAM: office_id}
+        headers = {"Accept": constants.HEADER_JSON_V2}
         response = queryCDA(self, end_point, params, headers)
         return response
 
@@ -163,10 +152,10 @@ class CwmsLevel(_CwmsBase):
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
 
         params = {
-            FAIL_IF_EXISTS: fail_if_exists
+            constants.FAIL_IF_EXISTS: fail_if_exists
         }
         headers = {
-            "Content-Type": HEADER_JSON_V2
+            "Content-Type": constants.HEADER_JSON_V2
         }
         response = self.get_session().post(end_point, params=params,
                                            headers=headers, data=json.dumps(data))
@@ -205,8 +194,8 @@ class CwmsLevel(_CwmsBase):
                 "Cannot delete a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
 
-        params = {OFFICE_PARAM: office_id}
-        headers = {"Content-Type": HEADER_JSON_V2}
+        params = {constants.OFFICE_PARAM: office_id}
+        headers = {"Content-Type": constants.HEADER_JSON_V2}
         response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
 
@@ -249,9 +238,9 @@ class CwmsLevel(_CwmsBase):
                 "Cannot update a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{old_specified_level_id}"
 
-        params = {OFFICE_PARAM: office_id,
+        params = {constants.OFFICE_PARAM: office_id,
                   "specified-level-id": new_specified_level_id}
-        headers = {"Content-Type": HEADER_JSON_V2}
+        headers = {"Content-Type": constants.HEADER_JSON_V2}
         response = self.get_session().patch(end_point, params=params, headers=headers)
         raise_for_status(response)
 
@@ -301,17 +290,17 @@ class CwmsLevel(_CwmsBase):
         end_point = CwmsLevel._LEVELS_ENDPOINT
 
         params = {
-            OFFICE_PARAM: office_id,
+            constants.OFFICE_PARAM: office_id,
             "level-id-mask": level_id_mask,
-            UNIT: unit,
-            DATUM: datum,
-            BEGIN: begin.isoformat() if begin else None,
-            END: end.isoformat() if begin else None,
-            PAGE: page,
-            PAGE_SIZE: page_size
+            constants.UNIT: unit,
+            constants.DATUM: datum,
+            constants.BEGIN: begin.isoformat() if begin else None,
+            constants.END: end.isoformat() if begin else None,
+            constants.PAGE: page,
+            constants.PAGE_SIZE: page_size
         }
         headers = {
-            "Accept": HEADER_JSON_V2
+            "Accept": constants.HEADER_JSON_V2
         }
         response = queryCDA(self, end_point, params, headers)
         return response
@@ -368,12 +357,12 @@ class CwmsLevel(_CwmsBase):
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{level_id}"
 
         params = {
-            OFFICE_PARAM: office_id,
-            UNIT: unit,
-            EFFECTIVE_DATE: effective_date.isoformat()
+            constants.OFFICE_PARAM: office_id,
+            constants.UNIT: unit,
+            constants.EFFECTIVE_DATE: effective_date.isoformat()
         }
         headers = {
-            "Accept": HEADER_JSON_V2
+            "Accept": constants.HEADER_JSON_V2
         }
         response = queryCDA(self, end_point, params, headers)
         return response
@@ -402,7 +391,7 @@ class CwmsLevel(_CwmsBase):
                 "Cannot store a location level without a JSON data dictionary")
         end_point = CwmsLevel._LEVELS_ENDPOINT
         headers = {
-            "Content-Type": HEADER_JSON_V2
+            "Content-Type": constants.HEADER_JSON_V2
         }
         response = self.get_session().post(end_point, params=None,
                                            headers=headers, data=json.dumps(data))
@@ -444,12 +433,12 @@ class CwmsLevel(_CwmsBase):
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{location_level_id}"
 
         params = {
-            OFFICE_PARAM: office_id,
-            EFFECTIVE_DATE: effective_date.isoformat() if effective_date else None,
-            CASCADE_DELETE: cascade_delete,
+            constants.OFFICE_PARAM: office_id,
+            constants.EFFECTIVE_DATE: effective_date.isoformat() if effective_date else None,
+            constants.CASCADE_DELETE: cascade_delete,
         }
         headers = {
-            "Content-Type": HEADER_JSON_V2
+            "Content-Type": constants.HEADER_JSON_V2
         }
         response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
@@ -498,12 +487,12 @@ class CwmsLevel(_CwmsBase):
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{location_level_id}/timeseries"
 
         params = {
-            OFFICE_PARAM: office_id,
-            BEGIN: begin.isoformat() if begin else None,
-            END: end.isoformat() if end else None,
+            constants.OFFICE_PARAM: office_id,
+            constants.BEGIN: begin.isoformat() if begin else None,
+            constants.END: end.isoformat() if end else None,
             "interval": interval
         }
         headers = {
-            "Accept": HEADER_JSON_V2
+            "Accept": constants.HEADER_JSON_V2
         }
         return queryCDA(self, end_point, params, headers)
