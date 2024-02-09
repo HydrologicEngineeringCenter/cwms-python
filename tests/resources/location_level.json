@@ -1,0 +1,11 @@
+{
+  "location-level-id": "AARK.Elev.Inst.0.Bottom of Inlet",
+  "office-id": "SWT",
+  "specified-level-id": "Bottom of Inlet",
+  "parameter-type-id": "Inst",
+  "parameter-id": "Elev",
+  "constant-value": 145.6944,
+  "level-units-id": "m",
+  "level-date": "1900-01-01T06:00:00Z",
+  "duration-id": "0"
+}

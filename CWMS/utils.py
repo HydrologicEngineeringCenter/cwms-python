@@ -1,4 +1,5 @@
 from ._constants import *
+from .exceptions import *
 import pandas as pd
 
 
@@ -24,13 +25,28 @@ def queryCDA(self, endpoint, payload, headerList):
 
     response = self.get_session().get(endpoint, params=payload, headers=headerList)
 
-    if response.status_code > 200:
 
-        raise Exception(
-            f'Error Code: {response.status_code} \n Bad Request for URL: {response.url} \n response.text'
-        )
+    response = self.get_session().get(endpoint, params=payload, headers=headerList, verify=False)
+    raise_for_status(response)
+    return output_type(response, return_type, dict_key)
+
+
+def raise_for_status(response : Response):
+    if response.status_code == 404:
+        raise NoDataFoundError(response)
+    elif response.status_code >= 500:
+        raise ServerError(response)
+    elif response.status_code >= 400:
+        raise ClientError(response)
+
+    #if response.status_code > 200:
+
+     #   raise Exception(
+     #       f'Error Code: {response.status_code} \n Bad Request for URL: {response.url} \n response.text'
+     #   )
 
     return response.json()
+
 
 
 def return_df(dict, dict_key):
