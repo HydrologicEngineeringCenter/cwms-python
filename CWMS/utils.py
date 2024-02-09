@@ -1,9 +1,9 @@
-from ._constants import *
-from .exceptions import *
+from .exceptions import NoDataFoundError, ServerError, ClientError
+from requests.models import Response
 import pandas as pd
 
 
-def queryCDA(self, endpoint, payload, headerList):
+def queryCDA(self, endpoint: str, payload: dict, headerList: dict):
     """Send a query.
 
     Wrapper for requests.get that handles errors and returns response.
@@ -25,13 +25,13 @@ def queryCDA(self, endpoint, payload, headerList):
 
     response = self.get_session().get(endpoint, params=payload, headers=headerList)
 
-
-    response = self.get_session().get(endpoint, params=payload, headers=headerList, verify=False)
+    response = self.get_session().get(endpoint, params=payload,
+                                      headers=headerList, verify=False)
     raise_for_status(response)
-    return output_type(response, return_type, dict_key)
+    return response
 
 
-def raise_for_status(response : Response):
+def raise_for_status(response: Response):
     if response.status_code == 404:
         raise NoDataFoundError(response)
     elif response.status_code >= 500:
@@ -39,7 +39,7 @@ def raise_for_status(response : Response):
     elif response.status_code >= 400:
         raise ClientError(response)
 
-    #if response.status_code > 200:
+    # if response.status_code > 200:
 
      #   raise Exception(
      #       f'Error Code: {response.status_code} \n Bad Request for URL: {response.url} \n response.text'
@@ -48,8 +48,7 @@ def raise_for_status(response : Response):
     return response.json()
 
 
-
-def return_df(dict, dict_key):
+def return_df(dict: dict, dict_key: list):
     """Convert output to correct format requested by user
     Parameters
     ----------

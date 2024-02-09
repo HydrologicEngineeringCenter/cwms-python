@@ -1,5 +1,6 @@
 from .utils import queryCDA, return_df
-from ._constants import *
+from ._constants import OFFICE_PARAM, HEADER_JSON_V1, HEADER_JSON_V2, UNIT
+from ._constants import DATUM, BEGIN, END, PAGE_SIZE, TIMEZONE, NAME
 from .core import CwmsApiSession
 from .core import _CwmsBase
 import pandas as pd
@@ -14,16 +15,22 @@ class CwmsTs(_CwmsBase):
     def __init__(self, cwms_api_session: CwmsApiSession):
         super().__init__(cwms_api_session)
 
-    def retrieve_ts_group_df(self, group_id: str, category_id: str, office_id: str):
+    def retrieve_ts_group_df(self, group_id: str, category_id: str, office_id: str) -> pd.DataFrame:
         """Retreives time series stored in the requested time series groupas a dataframe
 
-        Args:
-            group_id (str): Specifies the timeseries group whose data is to be included in the response (required)
-            category_id (str): Specifies the category containing the timeseries group whose data is to be included in the response. (required)
-            office_id (str): Specifies the owning office of the timeseries group whose data is to be included in the response. (required)
+       Parameters
+        ----------
+            group_id: string
+                Timeseries group whose data is to be included in the response.
+            category_id: string
+                The category id that contains the timeseries group.
+            office_id: string 
+                The owning office of the timeseries group.
 
-        Returns:
-            df: dataframe
+        Returns
+        -------
+        df : pandas.dataframe
+            The pandas dataframe containing the time series group information.
         """
 
         responce = CwmsTs.retrieve_ts_group_json(
@@ -33,16 +40,22 @@ class CwmsTs(_CwmsBase):
 
         return df
 
-    def retrieve_ts_group_json(self, group_id: str, category_id: str, office_id: str):
+    def retrieve_ts_group_json(self, group_id: str, category_id: str, office_id: str) -> dict:
         """Retreives time series stored in the requested time series group as a dictionary
 
-        Args:
-            group_id (str): Specifies the timeseries group whose data is to be included in the response (required)
-            category_id (str): Specifies the category containing the timeseries group whose data is to be included in the response. (required)
-            office_id (str): Specifies the owning office of the timeseries group whose data is to be included in the response. (required)
+       Parameters
+        ----------
+            group_id: string
+                Timeseries group whose data is to be included in the response.
+            category_id: string
+                The category id that contains the timeseries group.
+            office_id: string 
+                The owning office of the timeseries group.
 
-        Returns:
-            dictionary: json decoded dictionay
+        Returns
+        -------
+        response : dict
+            The JSON response containing the time series group information.
         """
 
         end_point = f"{CwmsTs._TIMESERIES_GROUP_ENDPOINT}/{group_id}"
@@ -65,21 +78,44 @@ class CwmsTs(_CwmsBase):
         end: datetime = None,
         timezone: str = None,
         page_size: int = 500000,
-    ):
-        """Retrieves time series data from a specified time series and time window.  Value date-times obtained are always in UTC.
+    ) -> pd.DataFrame:
+        """Retrieves time series data from a specified time series and time window.  
+        Value date-times obtained are always in UTC.
 
-        Args:
-            tsId (str): Specifies the name(s) of the time series whose data is to be included in the response. A case insensitive comparison is used to match names.
-            office_id (str): Specifies the owning office of the time series(s) whose data is to be included in the response. If this field is not specified, matching location level information from all offices shall be returned.
-            unit (str, optional): Specifies the unit or unit system of the response. Valid values for the unit field are: 1. EN. (default) Specifies English unit system. 2. SI.   Specifies the SI unit system. 3. Other. Any unit returned in the response to the units URI request that is appropriate for the requested parameters. Defaults to EN.
-            datum (str, optional): Specifies the elevation datum of the response. This field affects only elevation location levels. Valid values for this field are:  1. NAVD88.  The elevation values will in the specified or default units above the NAVD-88 datum.  2. NGVD29.  The elevation values will be in the specified or default units above the NGVD-29 datum. Defaults to None.
-            begin (datetime, optional): Specifies the start of the time window for data to be included in the response. If this field is not specified, any required time window begins 24 hours prior to the specified or default end time. Defaults to None.
-            end (datetime, optional): Specifies the end of the time window for data to be included in the response. If this field is not specified, any required time window ends at the current time. Defaults to None.
-            timezone (str, optional): Specifies the time zone of the values of the begin and end fields. UTC is the default.  This value does not impact the values in response.  response is always in UTC. Defaults to None.
-            page_size (int, optional): Sepcifies the number of records to obtain in a single call. Defaults to 500000.
+        Parameters
+        ----------
+            tsId: string
+                Name(s) of the time series whose data is to be included in the response.
+            office_id: string
+                The owning office of the time series(s).
+            unit: string, optional, default is EN
+                The unit or unit system of the response. Defaults to EN. Valid values 
+                for the unit field are: 
+                    1. EN. English unit system. 
+                    2. SI. SI unit system. 
+                    3. Other. 
+            datum: string, optional, default is None
+                The elevation datum of the response. This field affects only elevation location 
+                levels. Valid values for this field are:  
+                    1. NAVD88.  
+                    2. NGVD29.  
+            begin: datetime, optional, default is None 
+                Start of the time window for data to be included in the response. If this field is 
+                not specified, any required time window begins 24 hours prior to the specified 
+                or default end time.
+            end: datetime, optional, default is None
+                End of the time window for data to be included in the response. If this field is 
+                not specified, any required time window ends at the current time.
+            timezone: str, optional, default is None: 
+                Specifies the time zone of the values of the begin and end fields. UTC is the default. 
+                This value does not impact the values in response.  response is always in UTC.
+            page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in 
+                a single call.
 
-        Returns:
-            dataframe: pandas df. Dates in responce are in UTC.
+        Returns
+        -------
+        df : pandas.DataFrame
+            The pandas dataframe containing the time series dates, values, and quality codes. Values are always in UTC. 
         """
 
         responce = CwmsTs.retrieve_ts_json(
@@ -100,21 +136,44 @@ class CwmsTs(_CwmsBase):
         end: datetime = None,
         timezone: str = None,
         page_size: int = 500000,
-    ):
-        """Retrieves time series data from a specified time series and time window.  Value date-times obtained are always in UTC.
+    ) -> dict:
+        """Retrieves time series data from a specified time series and time window.  Value date-times 
+        obtained are always in UTC.
 
-        Args:
-            tsId (str): Specifies the name(s) of the time series whose data is to be included in the response. A case insensitive comparison is used to match names.
-            office_id (str): Specifies the owning office of the time series(s) whose data is to be included in the response. If this field is not specified, matching location level information from all offices shall be returned.
-            unit (str, optional): Specifies the unit or unit system of the response. Valid values for the unit field are: 1. EN. (default) Specifies English unit system. 2. SI.   Specifies the SI unit system. 3. Other. Any unit returned in the response to the units URI request that is appropriate for the requested parameters. Defaults to EN.
-            datum (str, optional): Specifies the elevation datum of the response. This field affects only elevation location levels. Valid values for this field are:  1. NAVD88.  The elevation values will in the specified or default units above the NAVD-88 datum.  2. NGVD29.  The elevation values will be in the specified or default units above the NGVD-29 datum. Defaults to None.
-            begin (datetime, optional): Specifies the start of the time window for data to be included in the response. If this field is not specified, any required time window begins 24 hours prior to the specified or default end time. Defaults to None.
-            end (datetime, optional): Specifies the end of the time window for data to be included in the response. If this field is not specified, any required time window ends at the current time. Defaults to None.
-            timezone (str, optional): Specifies the time zone of the values of the begin and end fields. UTC is the default.  This value does not impact the values in response.  response is always in UTC. Defaults to None.
-            page_size (int, optional): Sepcifies the number of records to obtain in a single call. Defaults to 500000.
+        Parameters
+        ----------
+            tsId: string
+                Name(s) of the time series whose data is to be included in the response.
+            office_id: string
+                The owning office of the time series(s).
+            unit: string, optional, default is EN
+                The unit or unit system of the response. Defaults to EN. Valid values 
+                for the unit field are: 
+                    1. EN. English unit system. 
+                    2. SI. SI unit system. 
+                    3. Other. 
+            datum: string, optional, default is None
+                The elevation datum of the response. This field affects only elevation location 
+                levels. Valid values for this field are:  
+                    1. NAVD88.  
+                    2. NGVD29.  
+            begin: datetime, optional, default is None 
+                Start of the time window for data to be included in the response. If this field is 
+                not specified, any required time window begins 24 hours prior to the specified 
+                or default end time.
+            end: datetime, optional, default is None
+                End of the time window for data to be included in the response. If this field is 
+                not specified, any required time window ends at the current time.
+            timezone: str, optional, default is None: 
+                Specifies the time zone of the values of the begin and end fields. UTC is the default. 
+                This value does not impact the values in response.  response is always in UTC.
+            page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in 
+                a single call.
 
-        Returns:
-            dictionary: json decoded dictionary. Dates in responce are in UTC.
+        Returns
+        -------
+        response : dict
+            The JSON response containing the time series information.  Values are always in UTC. 
         """
 
         # creates the dataframe from the timeseries data
@@ -128,13 +187,13 @@ class CwmsTs(_CwmsBase):
 
         params = {
             OFFICE_PARAM: office_id,
-            "name": tsId,
-            "unit": unit,
-            "datum": datum,
-            "begin": begin,
-            "end": end,
-            "timezone": timezone,
-            "page-size": page_size,
+            NAME: tsId,
+            UNIT: unit,
+            DATUM: datum,
+            BEGIN: begin,
+            END: end,
+            TIMEZONE: timezone,
+            PAGE_SIZE: page_size,
         }
 
         headerList = {"Accept": HEADER_JSON_V2}
@@ -153,29 +212,48 @@ class CwmsTs(_CwmsBase):
     ):
         """Will Create new TimeSeries if not already present.  Will store any data provided
 
-        Args:
-            data (pd.Dataframe, or Dictionary): Time Series data to be stored.  If dataframe data must be provided in the following format
-                df.tsId = timeseried id:specified name of the time series to be posted to
-                df.office = the owning office of the time series
-                df.units = units of values to be stored (ie. ft, in, m, cfs....)
-                dataframe should have three columns date-time, value, quality-code. date-time values can be a string in ISO8601 formate or a datetime field.
-                if quality-code column is not present is will be set to 0.
+        Parameters
+        ----------
+            data: pd.Dataframe, or Dictionary 
+                Time Series data to be stored.  If dataframe data must be provided in the following format
+                    df.tsId = timeseried id:specified name of the time series to be posted to
+                    df.office = the owning office of the time series
+                    df.units = units of values to be stored (ie. ft, in, m, cfs....)
+                    dataframe should have three columns date-time, value, quality-code. date-time values 
+                    can be a string in ISO8601 formate or a datetime field. if quality-code column is not 
+                    present is will be set to 0.
                                             date-time value  quality-code
-                0   2023-12-20T14:45:00.000-05:00  93.1           0
-                1   2023-12-20T15:00:00.000-05:00  99.8           0
-                2   2023-12-20T15:15:00.000-05:00  98.5           0
-                3   2023-12-20T15:30:00.000-05:00  98.5           0
-            version_date (str, optional): Specifies the version date for the timeseries to create. If this field is not specified, a null version date will be used.  The format for this field is ISO 8601 extended, with optional timezone, i.e., 'format', e.g., '2021-06-10T13:00:00-0700[PST8PDT]'.. Defaults to None.
-            timezone (str, optional): Specifies the time zone of the version-date field (unless otherwise specified). If this field is not specified, the default time zone of UTC shall be used.  Ignored if version-date was specified with offset and timezone. Defaults to None.
-            create_as_ltrs (bool, optional): Flag indicating if timeseries should be created as Local Regular Time Series. Defaults to False.
-            store_rule (str, optional): The business rule to use when merging the incoming with existing data. Available values : REPLACE_ALL, DO_NOT_REPLACE, REPLACE_MISSING_VALUES_ONLY, REPLACE_WITH_NON_MISSING, DELETE_INSERT. Defaults to None.
-            override_protection (str, optional): A flag to ignore the protected data quality when storing data. Defaults to False.
+                    0   2023-12-20T14:45:00.000-05:00  93.1           0
+                    1   2023-12-20T15:00:00.000-05:00  99.8           0
+                    2   2023-12-20T15:15:00.000-05:00  98.5           0
+                    3   2023-12-20T15:30:00.000-05:00  98.5           0
+            version_date: str, optional, default is None
+                The version date for the timeseries to create. The format for this field is ISO 8601 extended.
+            timezone: str, optional, default is None)
+                Specifies the time zone of the version-date field (unless otherwise specified). If this field is 
+                not specified, the default time zone of UTC shall be used.  Ignored if version-date was specified 
+                with offset and timezone.
+            create_as_ltrs: bool, optional, defualt is False
+                Flag indicating if timeseries should be created as Local Regular Time Series.
+            store_rule: str, optional, default is None: 
+                The business rule to use when merging the incoming with existing data. Available values : 
+                    REPLACE_ALL, 
+                    DO_NOT_REPLACE, 
+                    REPLACE_MISSING_VALUES_ONLY, 
+                    REPLACE_WITH_NON_MISSING, 
+                    DELETE_INSERT.
+            override_protection: str, optional, default is False
+                A flag to ignore the protected data quality when storing data.
+
+        Returns
+        -------
+        response
         """
 
         end_point = CwmsTs._TIMESERIES_ENDPOINT
         params = {
             'version-date': version_date,
-            'timezone': timezone,
+            TIMEZONE: timezone,
             'create-as-lrts': create_as_ltrs,
             'store-rule': store_rule,
             'override-protection': override_protection,

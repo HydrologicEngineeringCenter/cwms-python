@@ -8,7 +8,6 @@ import json
 from ._constants import BEGIN
 from ._constants import CASCADE_DELETE
 from ._constants import DATUM
-from ._constants import DICT_FORMAT
 from ._constants import EFFECTIVE_DATE
 from ._constants import END
 from ._constants import FAIL_IF_EXISTS
@@ -49,7 +48,6 @@ class CwmsLevel(_CwmsBase):
 
         """
         super().__init__(cwms_api_session)
-
 
     def retrieve_specified_levels_json(self, specified_level_mask: str = "*", office_id: str = "*") -> dict:
         """
@@ -164,14 +162,14 @@ class CwmsLevel(_CwmsBase):
             )
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
 
-
         params = {
             FAIL_IF_EXISTS: fail_if_exists
         }
         headers = {
             "Content-Type": HEADER_JSON_V2
         }
-        response = self.get_session().post(end_point, params=params, headers=headers, data=json.dumps(data))
+        response = self.get_session().post(end_point, params=params,
+                                           headers=headers, data=json.dumps(data))
         raise_for_status(response)
 
     def delete_specified_level(self, specified_level_id: str, office_id: str) -> None:
@@ -315,7 +313,7 @@ class CwmsLevel(_CwmsBase):
         headers = {
             "Accept": HEADER_JSON_V2
         }
-        response = queryCDA(self, end_point, params, headers, DICT_FORMAT, None)
+        response = queryCDA(self, end_point, params, headers)
         return response
 
     def retrieve_location_level_json(self, level_id: str, office_id: str,
@@ -359,11 +357,14 @@ class CwmsLevel(_CwmsBase):
             If a 500 range error code response is returned from the server.
         """
         if level_id is None:
-            raise ValueError("Cannot retrieve a single location level without an id")
+            raise ValueError(
+                "Cannot retrieve a single location level without an id")
         if office_id is None:
-            raise ValueError("Cannot retrieve a single location level without an office id")
+            raise ValueError(
+                "Cannot retrieve a single location level without an office id")
         if effective_date is None:
-            raise ValueError("Cannot retrieve a single location level without an effective date")
+            raise ValueError(
+                "Cannot retrieve a single location level without an effective date")
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{level_id}"
 
         params = {
@@ -374,7 +375,7 @@ class CwmsLevel(_CwmsBase):
         headers = {
             "Accept": HEADER_JSON_V2
         }
-        response = queryCDA(self, end_point, params, headers, DICT_FORMAT, None)
+        response = queryCDA(self, end_point, params, headers)
         return response
 
     def store_location_level_json(self, data: dict) -> None:
@@ -397,12 +398,14 @@ class CwmsLevel(_CwmsBase):
 
         """
         if dict is None:
-            raise ValueError("Cannot store a location level without a JSON data dictionary")
+            raise ValueError(
+                "Cannot store a location level without a JSON data dictionary")
         end_point = CwmsLevel._LEVELS_ENDPOINT
         headers = {
             "Content-Type": HEADER_JSON_V2
         }
-        response = self.get_session().post(end_point, params=None, headers=headers, data=json.dumps(data))
+        response = self.get_session().post(end_point, params=None,
+                                           headers=headers, data=json.dumps(data))
         raise_for_status(response)
 
     def delete_location_level(self, location_level_id: str, office_id: str, effective_date: datetime = None,
@@ -436,7 +439,8 @@ class CwmsLevel(_CwmsBase):
         if location_level_id is None:
             raise ValueError("Cannot delete a location level without an id")
         if office_id is None:
-            raise ValueError("Cannot delete a location level without an office id")
+            raise ValueError(
+                "Cannot delete a location level without an office id")
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{location_level_id}"
 
         params = {
@@ -486,9 +490,11 @@ class CwmsLevel(_CwmsBase):
 
         """
         if location_level_id is None:
-            raise ValueError("Cannot retrieve a time series for a location level without an id")
+            raise ValueError(
+                "Cannot retrieve a time series for a location level without an id")
         if office_id is None:
-            raise ValueError("Cannot retrieve a time series for a location level without an office id")
+            raise ValueError(
+                "Cannot retrieve a time series for a location level without an office id")
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{location_level_id}/timeseries"
 
         params = {
@@ -500,5 +506,4 @@ class CwmsLevel(_CwmsBase):
         headers = {
             "Accept": HEADER_JSON_V2
         }
-        return queryCDA(self, end_point, params, headers, DICT_FORMAT, None)
-
+        return queryCDA(self, end_point, params, headers)

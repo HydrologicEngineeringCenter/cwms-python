@@ -1,9 +1,8 @@
 from .utils import queryCDA, return_df
-from ._constants import *
+from ._constants import OFFICE_PARAM, HEADER_JSON_V1, HEADER_JSON_V2
 from .core import CwmsApiSession
 from .core import _CwmsBase
 import pandas as pd
-import json
 
 
 class CwmsLoc(_CwmsBase):
