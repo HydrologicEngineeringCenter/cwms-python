@@ -25,6 +25,7 @@ from .utils import raise_for_status
 
 
 class CwmsLevel(_CwmsBase):
+
     """
     `CwmsLevel` class
 
@@ -48,6 +49,7 @@ class CwmsLevel(_CwmsBase):
 
         """
         super().__init__(cwms_api_session)
+
 
     def retrieve_specified_levels_json(self, specified_level_mask: str = "*", office_id: str = "*") -> dict:
         """
@@ -76,16 +78,15 @@ class CwmsLevel(_CwmsBase):
         ServerError
             If a 500 range error code response is returned from the server.
         """
+
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
 
-        params = {
-            OFFICE_PARAM: office_id,
-            TEMPLATE_ID_MASK_PARAM: specified_level_mask
-        }
-        headers = {
-            "Accept": HEADER_JSON_V2
-        }
-        response = queryCDA(self, end_point, params, headers, DICT_FORMAT, None)
+        params = {OFFICE_PARAM: office_id,
+                  TEMPLATE_ID_MASK_PARAM: specified_level_mask}
+
+        headers = {"Accept": HEADER_JSON_V2}
+
+        response = queryCDA(self, end_point, params, headers)
         return response
 
     def retrieve_specified_level_json(self, specified_level_id: str, office_id: str) -> dict:
@@ -116,18 +117,17 @@ class CwmsLevel(_CwmsBase):
             If a 500 range error code response is returned from the server.
         """
         if specified_level_id is None:
-            raise ValueError("Cannot retrieve a single specified level without an id")
+            raise ValueError(
+                "Cannot retrieve a single specified level without an id")
         if office_id is None:
-            raise ValueError("Cannot retrieve a single specified level without an office id")
+            raise ValueError(
+                "Cannot retrieve a single specified level without an office id"
+            )
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
 
-        params = {
-            OFFICE_PARAM: office_id
-        }
-        headers = {
-            "Accept": HEADER_JSON_V2
-        }
-        response = queryCDA(self, end_point, params, headers, DICT_FORMAT, None)
+        params = {OFFICE_PARAM: office_id}
+        headers = {"Accept": HEADER_JSON_V2}
+        response = queryCDA(self, end_point, params, headers)
         return response
 
     def store_specified_level_json(self, data: dict, fail_if_exists: bool = True) -> None:
@@ -159,8 +159,11 @@ class CwmsLevel(_CwmsBase):
             If a 500 range error code response is returned from the server.
         """
         if dict is None:
-            raise ValueError("Cannot store a specified level without a JSON data dictionary")
+            raise ValueError(
+                "Cannot store a specified level without a JSON data dictionary"
+            )
         end_point = CwmsLevel._SPECIFIED_LEVELS_ENDPOINT
+
 
         params = {
             FAIL_IF_EXISTS: fail_if_exists
@@ -200,15 +203,12 @@ class CwmsLevel(_CwmsBase):
         if specified_level_id is None:
             raise ValueError("Cannot delete a specified level without an id")
         if office_id is None:
-            raise ValueError("Cannot delete a specified level without an office id")
+            raise ValueError(
+                "Cannot delete a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
 
-        params = {
-            OFFICE_PARAM: office_id
-        }
-        headers = {
-            "Content-Type": HEADER_JSON_V2
-        }
+        params = {OFFICE_PARAM: office_id}
+        headers = {"Content-Type": HEADER_JSON_V2}
         response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
 
@@ -222,6 +222,7 @@ class CwmsLevel(_CwmsBase):
             The new specified level ID that will replace the old ID.
         office_id : str
             The ID of the office associated with the specified level.
+
 
         Returns
         -------
@@ -238,21 +239,21 @@ class CwmsLevel(_CwmsBase):
         ServerError
             If a 500 range error code response is returned from the server.
         """
+
         if old_specified_level_id is None:
-            raise ValueError("Cannot update a specified level without an old id")
+            raise ValueError(
+                "Cannot update a specified level without an old id")
         if new_specified_level_id is None:
-            raise ValueError("Cannot update a specified level without a new id")
+            raise ValueError(
+                "Cannot update a specified level without a new id")
         if office_id is None:
-            raise ValueError("Cannot update a specified level without an office id")
+            raise ValueError(
+                "Cannot update a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{old_specified_level_id}"
 
-        params = {
-            OFFICE_PARAM: office_id,
-            "specified-level-id": new_specified_level_id
-        }
-        headers = {
-            "Content-Type": HEADER_JSON_V2
-        }
+        params = {OFFICE_PARAM: office_id,
+                  "specified-level-id": new_specified_level_id}
+        headers = {"Content-Type": HEADER_JSON_V2}
         response = self.get_session().patch(end_point, params=params, headers=headers)
         raise_for_status(response)
 
@@ -344,6 +345,7 @@ class CwmsLevel(_CwmsBase):
         ------
         ValueError
             If `level_id`, `office_id`, or `effective_date` is None.
+
 
         Raises
         ------
@@ -499,3 +501,4 @@ class CwmsLevel(_CwmsBase):
             "Accept": HEADER_JSON_V2
         }
         return queryCDA(self, end_point, params, headers, DICT_FORMAT, None)
+
