@@ -25,7 +25,7 @@ def queryCDA(self, endpoint: str, payload: dict, headerList: dict):
 
     response = self.get_session().get(endpoint, params=payload, headers=headerList)
 
-    raise_for_status(response)
+    response = raise_for_status(response)
     return response
 
 
