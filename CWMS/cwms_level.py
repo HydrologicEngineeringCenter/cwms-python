@@ -397,7 +397,7 @@ class CwmsLevel(_CwmsBase):
             If a 500 range error code response is returned from the server.
 
         """
-        if dict is None:
+        if data is None:
             raise ValueError(
                 "Cannot store a location level without a JSON data dictionary")
         end_point = CwmsLevel._LEVELS_ENDPOINT
