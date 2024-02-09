@@ -1,5 +1,5 @@
 from .utils import queryCDA, return_df
-from ._constants import OFFICE_PARAM, HEADER_JSON_V1, HEADER_JSON_V2
+import CWMS._constants as constants
 from .core import CwmsApiSession
 from .core import _CwmsBase
 import pandas as pd
@@ -30,9 +30,10 @@ class CwmsLoc(_CwmsBase):
 
         end_point = f'{CwmsLoc._LOCATION_GROUP_ENDPOINT}/{loc_group_id}'
 
-        params = {OFFICE_PARAM: office_id, "category-id": category_id}
+        params = {constants.OFFICE_PARAM: office_id,
+                  "category-id": category_id}
 
-        header = {"Accept": HEADER_JSON_V1}
+        header = {"Accept": constants.HEADER_JSON_V1}
 
         responce = queryCDA(self, end_point, params, header)
 
@@ -66,12 +67,12 @@ class CwmsLoc(_CwmsBase):
         end_point = CwmsLoc._LOCATION_GROUP_ENDPOINT
 
         params = {
-            OFFICE_PARAM: office_id,
+            constants.OFFICE_PARAM: office_id,
             'names': loc_ids,
             'units': units,
             'datum': datum,
         }
-        header = {"Accept": HEADER_JSON_V2}
+        header = {"Accept": constants.HEADER_JSON_V2}
 
         responce = queryCDA(self, end_point, params, header)
         # if output = 'dataframe':

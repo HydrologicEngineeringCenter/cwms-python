@@ -1,6 +1,5 @@
 from .utils import queryCDA, return_df
-from ._constants import OFFICE_PARAM, HEADER_JSON_V1, HEADER_JSON_V2, UNIT
-from ._constants import DATUM, BEGIN, END, PAGE_SIZE, TIMEZONE, NAME
+import CWMS._constants as constants
 from .core import CwmsApiSession
 from .core import _CwmsBase
 import pandas as pd
@@ -60,9 +59,10 @@ class CwmsTs(_CwmsBase):
 
         end_point = f"{CwmsTs._TIMESERIES_GROUP_ENDPOINT}/{group_id}"
 
-        params = {OFFICE_PARAM: office_id, "category-id": category_id}
+        params = {constants.OFFICE_PARAM: office_id,
+                  "category-id": category_id}
 
-        headerList = {"Accept": HEADER_JSON_V1}
+        headerList = {"Accept": constants.HEADER_JSON_V1}
 
         responce = queryCDA(self, end_point, params, headerList)
 
@@ -186,17 +186,17 @@ class CwmsTs(_CwmsBase):
             end = end.strftime('%Y-%m-%dT%H:%M:%S')
 
         params = {
-            OFFICE_PARAM: office_id,
-            NAME: tsId,
-            UNIT: unit,
-            DATUM: datum,
-            BEGIN: begin,
-            END: end,
-            TIMEZONE: timezone,
-            PAGE_SIZE: page_size,
+            constants.OFFICE_PARAM: office_id,
+            constants.NAME: tsId,
+            constants.UNIT: unit,
+            constants.DATUM: datum,
+            constants.BEGIN: begin,
+            constants.END: end,
+            constants.TIMEZONE: timezone,
+            constants.PAGE_SIZE: page_size,
         }
 
-        headerList = {"Accept": HEADER_JSON_V2}
+        headerList = {"Accept": constants.HEADER_JSON_V2}
         responce = queryCDA(self, end_point, params, headerList)
 
         return responce
@@ -253,14 +253,14 @@ class CwmsTs(_CwmsBase):
         end_point = CwmsTs._TIMESERIES_ENDPOINT
         params = {
             'version-date': version_date,
-            TIMEZONE: timezone,
+            constants.TIMEZONE: timezone,
             'create-as-lrts': create_as_ltrs,
             'store-rule': store_rule,
             'override-protection': override_protection,
         }
         headerList = {
             'accept': '*/*',
-            'Content-Type': HEADER_JSON_V2,
+            'Content-Type': constants.HEADER_JSON_V2,
         }
         if isinstance(data, pd.DataFrame):
             # grab time series information
