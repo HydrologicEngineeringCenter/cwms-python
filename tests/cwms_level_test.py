@@ -16,8 +16,6 @@ from CWMS.core import CwmsApiSession
 from CWMS.cwms_level import CwmsLevel
 
 
-
-
 _SPEC_LEVELS_JSON = read_resource_file("specified_levels.json")
 _SPEC_LEVEL_JSON = read_resource_file("specified_level.json")
 _LOC_LEVELS_JSON = read_resource_file("location_levels.json")
@@ -50,7 +48,8 @@ class TestSpecLevels(unittest.TestCase):
         m.get(f"{TestSpecLevels._MOCK_ROOT}/specified-levels/Bottom%20of%20Exclusive%20Flood%20Control?office=CWMS",
               json=_SPEC_LEVEL_JSON)
         cwms_levels = CwmsLevel(CwmsApiSession(TestSpecLevels._MOCK_ROOT))
-        levels = cwms_levels.retrieve_specified_level_json("Bottom of Exclusive Flood Control", "CWMS")
+        levels = cwms_levels.retrieve_specified_level_json(
+            "Bottom of Exclusive Flood Control", "CWMS")
         self.assertEqual(_SPEC_LEVEL_JSON, levels)
 
     @requests_mock.Mocker()
@@ -131,7 +130,8 @@ class TestLocLevels(unittest.TestCase):
         unit = "m"
         timezone = pytz.timezone("US/Pacific")
         effective_date = timezone.localize(datetime(2020, 2, 14, 10, 30, 0))
-        levels = cwms_levels.retrieve_location_level_json(level_id, office_id, effective_date, unit)
+        levels = cwms_levels.retrieve_location_level_json(
+            level_id, office_id, effective_date, unit)
         self.assertEqual(_LOC_LEVEL_JSON, levels)
 
     @requests_mock.Mocker()
@@ -146,14 +146,15 @@ class TestLocLevels(unittest.TestCase):
     @requests_mock.Mocker()
     def test_delete_loc_level(self, m):
         m.delete(f"{TestLocLevels._MOCK_ROOT}/levels/AARK.Elev.Inst.0.Bottom%20of%20Inlet?office=SWT&"
-              "effective-date=2020-02-14T10%3A30%3A00-08%3A00&cascade-delete=True",
-              json=_LOC_LEVEL_JSON)
+                 "effective-date=2020-02-14T10%3A30%3A00-08%3A00&cascade-delete=True",
+                 json=_LOC_LEVEL_JSON)
         cwms_levels = CwmsLevel(CwmsApiSession(TestSpecLevels._MOCK_ROOT))
         level_id = "AARK.Elev.Inst.0.Bottom of Inlet"
         office_id = "SWT"
         timezone = pytz.timezone("US/Pacific")
         effective_date = timezone.localize(datetime(2020, 2, 14, 10, 30, 0))
-        cwms_levels.delete_location_level(level_id, office_id, effective_date, True)
+        cwms_levels.delete_location_level(
+            level_id, office_id, effective_date, True)
         assert m.called
         assert m.call_count == 1
 
@@ -169,7 +170,8 @@ class TestLocLevels(unittest.TestCase):
         timezone = pytz.timezone("US/Pacific")
         begin = timezone.localize(datetime(2020, 2, 14, 10, 30, 0))
         end = timezone.localize(datetime(2020, 3, 14, 10, 30, 0))
-        levels = cwms_levels.retrieve_level_as_timeseries_json(level_id, office_id, begin, end, interval)
+        levels = cwms_levels.retrieve_level_as_timeseries_json(
+            level_id, office_id, begin, end, interval)
         self.assertEqual(_LOC_LEVEL_TS_JSON, levels)
 
 
