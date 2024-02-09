@@ -3,28 +3,19 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 
-import json
 import unittest
 from datetime import datetime
-from pathlib import Path
 
 import pytest
 import pytz
 import requests_mock
 from requests.exceptions import HTTPError
 
+from ._test_utils import read_resource_file
 from CWMS.core import CwmsApiSession
 from CWMS.cwms_level import CwmsLevel
 
 
-def read_resource_file(file_name):
-    current_path = Path(__file__).resolve().parent
-    resource_path = current_path / "resources" / file_name
-
-    with open(resource_path, "r") as file:
-        data = json.load(file)
-
-    return data
 
 
 _SPEC_LEVELS_JSON = read_resource_file("specified_levels.json")

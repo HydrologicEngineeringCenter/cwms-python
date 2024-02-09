@@ -1,4 +1,5 @@
 from ._constants import *
+from .exceptions import *
 import pandas as pd
 
 def queryCDA(self, endpoint, payload, headerList, return_type, dict_key):
@@ -28,18 +29,17 @@ def queryCDA(self, endpoint, payload, headerList, return_type, dict_key):
 
 
     response = self.get_session().get(endpoint, params=payload, headers=headerList, verify=False)
-
-    if response.status_code == 400:
-        raise ValueError(
-            f'Bad Request, check that your parameters are correct. URL: {response.url}'
-        )
-    elif response.status_code == 404:
-        raise ValueError(
-            'Page Not Found Error. May be the result of an empty query. '
-            + f'URL: {response.url}'
-        )
-    response.raise_for_status()
+    raise_for_status(response)
     return output_type(response, return_type, dict_key)
+
+
+def raise_for_status(response : Response):
+    if response.status_code == 404:
+        raise NoDataFoundError(response)
+    elif response.status_code >= 500:
+        raise ServerError(response)
+    elif response.status_code >= 400:
+        raise ClientError(response)
 
 def output_type(response, return_type, dict_key):
     """Convert output to correct format requested by user 
