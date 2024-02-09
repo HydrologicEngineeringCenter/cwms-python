@@ -25,8 +25,8 @@ def queryCDA(self, endpoint: str, payload: dict, headerList: dict):
 
     response = self.get_session().get(endpoint, params=payload, headers=headerList)
 
-    response = raise_for_status(response)
-    return response
+    raise_for_status(response)
+    return response.json()
 
 
 def raise_for_status(response: Response):
@@ -43,7 +43,7 @@ def raise_for_status(response: Response):
      #       f'Error Code: {response.status_code} \n Bad Request for URL: {response.url} \n response.text'
      #   )
 
-    return response.json()
+    return response
 
 
 def return_df(dict: dict, dict_key: list):
