@@ -76,47 +76,6 @@ class CwmsLevel(_CwmsBase):
         response = queryCDA(self, end_point, params, headers)
         return response
 
-    def retrieve_specified_level_json(self, specified_level_id: str, office_id: str) -> dict:
-        """
-        Retrieve JSON Data for a single specified level from CWMS Data API.
-
-        Parameters
-        ----------
-        specified_level_id : str
-            The ID of the specified level to retrieve.
-        office_id : str
-            The office for the specified level.
-
-        Returns
-        -------
-        response : dict
-            The response JSON text in a dict format of the specified level.
-
-        Raises
-        ------
-        ValueError
-            If either specified_level_id or office_id is None.
-        ClientError
-            If a 400 range error code response is returned from the server.
-        NoDataFoundError
-            If a 404 range error code response is returned from the server.
-        ServerError
-            If a 500 range error code response is returned from the server.
-        """
-        if specified_level_id is None:
-            raise ValueError(
-                "Cannot retrieve a single specified level without an id")
-        if office_id is None:
-            raise ValueError(
-                "Cannot retrieve a single specified level without an office id"
-            )
-        end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
-
-        params = {constants.OFFICE_PARAM: office_id}
-        headers = {"Accept": constants.HEADER_JSON_V2}
-        response = queryCDA(self, end_point, params, headers)
-        return response
-
     def store_specified_level_json(self, data: dict, fail_if_exists: bool = True) -> None:
         """
         This method is used to store a specified level through CWMS Data API.
@@ -391,7 +350,7 @@ class CwmsLevel(_CwmsBase):
                 "Cannot store a location level without a JSON data dictionary")
         end_point = CwmsLevel._LEVELS_ENDPOINT
         headers = {
-            "Content-Type": constants.HEADER_JSON_V2
+            "Content-Type": constants.HEADER_JSON_V1
         }
         response = self.get_session().post(end_point, params=None,
                                            headers=headers, data=json.dumps(data))
@@ -443,8 +402,11 @@ class CwmsLevel(_CwmsBase):
         response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
 
-    def retrieve_level_as_timeseries_json(self, location_level_id: str, office_id: str, begin: datetime = None,
-                                          end: datetime = None, interval: str = None) -> dict:
+    def retrieve_level_as_timeseries_json(self, location_level_id: str,
+                                          office_id: str, unit: str,
+                                          begin: datetime = None,
+                                          end: datetime = None,
+                                          interval: str = None) -> dict:
         """
         Parameters
         ----------
@@ -452,6 +414,8 @@ class CwmsLevel(_CwmsBase):
             The ID of the location level for which the time series data will be retrieved.
         office_id : str
             The ID of the office for which the time series data will be retrieved.
+        unit : str
+            The unit for the data of the time series response to be returned as.
         begin : datetime, optional
             The start datetime for the time series data. Defaults to None.
             If the datetime has a timezone it will be used, otherwise it is assumed to be in UTC.
@@ -490,7 +454,8 @@ class CwmsLevel(_CwmsBase):
             constants.OFFICE_PARAM: office_id,
             constants.BEGIN: begin.isoformat() if begin else None,
             constants.END: end.isoformat() if end else None,
-            "interval": interval
+            "interval": interval,
+            constants.UNIT: unit
         }
         headers = {
             "Accept": constants.HEADER_JSON_V2

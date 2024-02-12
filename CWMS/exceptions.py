@@ -33,7 +33,8 @@ class CwmsDataApiError(HTTPError):
             The response object containing information about the incident identifier.
 
         """
-        self.incident_identifier = response.json().get("incidentIdentifier")
+        if response.text:
+            self.incident_identifier = response.json().get("incidentIdentifier")
         super().__init__(message, response=response)
 
 
