@@ -19,6 +19,12 @@ class TextTsMode(Enum):
     ALL = auto()
 
 
+class DeleteMethod(Enum):
+    DELETE_ALL = auto(),
+    DELETE_KEY = auto(),
+    DELETE_DATA = auto()
+
+
 class CwmsTextTs(_CwmsBase):
     """
     `CwmsTextTs` class
@@ -30,6 +36,7 @@ class CwmsTextTs(_CwmsBase):
     Write operations require authentication
     """
     _TEXT_TS_ENDPOINT = "timeseries/text"
+    _STD_TEXT_ENDPOINT = f"{_TEXT_TS_ENDPOINT}/standard-text-id"
 
     def __init__(self, cwms_api_session: CwmsApiSession):
         """
@@ -160,11 +167,11 @@ class CwmsTextTs(_CwmsBase):
         raise_for_status(response)
 
     def delete_text_ts(self, timeseries_id: str,
-                               office_id: str, begin: datetime, end: datetime,
-                               mode: TextTsMode = TextTsMode.REGULAR,
-                               text_mask: str = "*",
-                               min_attribute: float = None,
-                               max_attribute: float = None) -> None:
+                       office_id: str, begin: datetime, end: datetime,
+                       mode: TextTsMode = TextTsMode.REGULAR,
+                       text_mask: str = "*",
+                       min_attribute: float = None,
+                       max_attribute: float = None) -> None:
         """
         Deletes text timeseries data with the given ID and office ID and time range.
 
@@ -236,4 +243,166 @@ class CwmsTextTs(_CwmsBase):
         headers = {"Content-Type": constants.HEADER_JSON_V2}
         response = self.get_session().delete(end_point, params=params,
                                              headers=headers)
+        raise_for_status(response)
+
+    def retrieve_std_txt_cat_json(self, text_id_mask: str = None,
+                                  office_id_mask: str = None) -> dict:
+        """
+        Retrieves standard text catalog for the given ID and office ID filters.
+
+        Parameters
+        ----------
+        text_id_mask : str
+            The ID filter of the standard text value to retrieve.
+        office_id_mask : str
+            The ID filter of the office that the standard text belongs to.
+
+        Returns
+        -------
+        response : dict
+            the JSON response from CWMS Data API.
+
+        Raises
+        ------
+        ClientError
+            If a 400 range error code response is returned from the server.
+        NoDataFoundError
+            If a 404 range error code response is returned from the server.
+        ServerError
+            If a 500 range error code response is returned from the server.
+        """
+
+        params = {
+            "text-id-mask": text_id_mask,
+            "office-id-mask": office_id_mask
+        }
+        headers = {"Accept": constants.HEADER_JSON_V2}
+        end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}"
+        return queryCDA(self, end_point, params, headers)
+
+    def retrieve_std_txt_json(self, text_id: str, office_id: str) -> dict:
+        """
+        Retrieves standard text for the given ID and office ID.
+
+        Parameters
+        ----------
+        text_id : str
+            The ID of the standard text value to retrieve.
+        office_id : str
+            The ID of the office that the standard text belongs to.
+
+        Returns
+        -------
+        response : dict
+            the JSON response from CWMS Data API.
+
+        Raises
+        ------
+        ValueError
+            If any of timeseries_id, office_id, begin, or end is None.
+        ClientError
+            If a 400 range error code response is returned from the server.
+        NoDataFoundError
+            If a 404 range error code response is returned from the server.
+        ServerError
+            If a 500 range error code response is returned from the server.
+        """
+        if text_id is None:
+            raise ValueError("Retrieving standard text requires an id")
+        if office_id is None:
+            raise ValueError("Retrieving standard timeseries requires an office")
+
+        params = {constants.OFFICE_PARAM: office_id}
+        headers = {"Accept": constants.HEADER_JSON_V2}
+        end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}/{text_id}"
+        return queryCDA(self, end_point, params, headers)
+
+    def delete_std_txt(self, text_id: str, delete_method: DeleteMethod,
+                       office_id: str):
+        """
+        Deletes standard text for the given ID and office ID.
+
+        Parameters
+        ----------
+        text_id : str
+            The ID of the standard text value to be deleted.
+        office_id : str
+            The ID of the office that the standard text belongs to.
+        delete_method : str
+            Delete method for the standard text id.
+            DELETE_ALL - deletes the key and the value from the clob table
+            DELETE_KEY - deletes the text id key, but leaves the value in the clob table
+            DELETE_DATA - deletes the value from the clob table but leaves the text id key
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If any of timeseries_id, office_id, begin, or end is None.
+        ClientError
+            If a 400 range error code response is returned from the server.
+        NoDataFoundError
+            If a 404 range error code response is returned from the server.
+        ServerError
+            If a 500 range error code response is returned from the server.
+        """
+        if text_id is None:
+            raise ValueError("Deleting standard text requires an id")
+        if office_id is None:
+            raise ValueError("Deleting standard timeseries requires an office")
+        if delete_method is None:
+            raise ValueError("Deleting standard timeseries requires a delete method")
+
+        params = {
+            constants.OFFICE_PARAM: office_id,
+            "method": delete_method.name
+        }
+        headers = {"Content-Type": constants.HEADER_JSON_V2}
+        end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}/{text_id}"
+        response = self.get_session().delete(end_point, params=params,
+                                             headers=headers)
+        raise_for_status(response)
+
+    def store_std_txt_json(self, data: dict,
+                           fail_if_exists: bool = False) -> None:
+        """
+        This method is used to store a standard text value through CWMS Data API.
+
+        Parameters
+        ----------
+        data : dict
+            A dictionary representing the JSON data to be stored.
+            If the `data` value is None, a `ValueError` will be raised.
+        fail_if_exists : str, optional
+            Throw a ClientError if the text id already exists.
+            Default is `False`.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If either dict is None.
+        ClientError
+            If a 400 range error code response is returned from the server.
+        NoDataFoundError
+            If a 404 range error code response is returned from the server.
+        ServerError
+            If a 500 range error code response is returned from the server.
+        """
+        if dict is None:
+            raise ValueError(
+                "Cannot store a standard text without a JSON data dictionary")
+        end_point = CwmsTextTs._STD_TEXT_ENDPOINT
+
+        params = {"fail-if-exists": fail_if_exists}
+        headers = {"Content-Type": constants.HEADER_JSON_V2}
+        response = self.get_session().post(end_point, params=params,
+                                           headers=headers,
+                                           data=json.dumps(data))
         raise_for_status(response)

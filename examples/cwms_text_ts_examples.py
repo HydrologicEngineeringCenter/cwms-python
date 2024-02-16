@@ -9,9 +9,10 @@ import pytz
 
 import CWMS._constants as constants
 from CWMS.core import CwmsApiSession
-from CWMS.cwms_text_ts import CwmsTextTs
+from CWMS.cwms_text_ts import CwmsTextTs, DeleteMethod
+from CWMS.exceptions import NoDataFoundError
 
-session = CwmsApiSession("http://localhost:7000/spk-data/", "apikey testkey")
+session = CwmsApiSession("http://localhost:7001/spk-data/", "apikey testkey")
 text_ts_api = CwmsTextTs(session)
 
 
@@ -87,5 +88,32 @@ def run_text_ts_examples():
     print(text_ts_dict)
 
 
+def run_std_text_examples():
+    text_ts = json.loads(
+        '''
+        {
+          "id": {
+            "office-id": "SPK",
+            "id": "HW"
+          },
+          "standard-text": "Hello, World"
+        }
+        ''')
+    office_id = text_ts.get("id").get("office-id")
+    text_id = text_ts.get("id").get("id")
+    print(f"Storing standard text id: {text_id}")
+    text_ts_api.store_std_txt_json(text_ts)
+    print(f"Retrieving standard text id: {text_id}")
+    print(text_ts_api.retrieve_std_txt_json(text_id, office_id))
+    print(f"Deleting standard text id: {text_id}")
+    text_ts_api.delete_std_txt(text_id, DeleteMethod.DELETE_ALL, office_id)
+    try:
+        text_ts_api.retrieve_std_txt_json(text_id, office_id)
+    except NoDataFoundError:
+        print(f"Confirmed standard text was deleted: {text_id}")
+
+
+
 if __name__ == "__main__":
     run_text_ts_examples()
+    run_std_text_examples()
