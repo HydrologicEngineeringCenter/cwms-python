@@ -2,6 +2,19 @@
 tmp
 **/\.~lock*
 
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
