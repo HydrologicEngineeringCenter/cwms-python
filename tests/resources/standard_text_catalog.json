@@ -1,0 +1,137 @@
+{
+  "values": [
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "A"
+      },
+      "standard-text": "NO RECORD"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "B"
+      },
+      "standard-text": "CHANNEL DRY"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "C"
+      },
+      "standard-text": "POOL STAGE"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "D"
+      },
+      "standard-text": "AFFECTED BY WIND"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "E"
+      },
+      "standard-text": "ESTIMATED"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "F"
+      },
+      "standard-text": "NOT AT STATED TIME"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "G"
+      },
+      "standard-text": "GATES CLOSED"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "H"
+      },
+      "standard-text": "PEAK STAGE"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "I"
+      },
+      "standard-text": "ICE/SHORE ICE"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "J"
+      },
+      "standard-text": "INTAKES OUT OF WATER"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "K"
+      },
+      "standard-text": "FLOAT FROZEN/FLOATING ICE"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "L"
+      },
+      "standard-text": "GAGE FROZEN"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "M"
+      },
+      "standard-text": "MALFUNCTION"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "N"
+      },
+      "standard-text": "MEAN STAGE FOR THE DAY"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "O"
+      },
+      "standard-text": "OBSERVERS READING"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "P"
+      },
+      "standard-text": "INTERPOLATED"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "Q"
+      },
+      "standard-text": "DISCHARGE MISSING"
+    },
+    {
+      "id": {
+        "office-id": "CWMS",
+        "id": "R"
+      },
+      "standard-text": "HIGH WATER, NO ACCESS"
+    },
+    {
+      "id": {
+        "office-id": "SPK",
+        "id": "ABCD"
+      },
+      "standard-text": "B"
+    }
+  ]
+}

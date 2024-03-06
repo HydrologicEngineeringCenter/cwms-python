@@ -1,0 +1,43 @@
+{
+  "office-id": "SWT",
+  "name": "TEST.Text.Inst.1Hour.0.MockTest",
+  "regular-text-values": [
+    {
+      "date-time": "2024-02-12T00:00:00Z",
+      "version-date": "2024-02-12T00:00:00Z",
+      "data-entry-date": "2024-02-12T00:00:00Z",
+      "attribute": 0,
+      "text-id": "id1",
+      "text-value": "Hello, Davis"
+    },
+    {
+      "date-time": "2024-02-12T01:00:00Z",
+      "version-date": "2024-02-12T00:00:00Z",
+      "data-entry-date": "2024-02-12T00:00:00Z",
+      "text-id": "id2",
+      "text-value": "Hello, USA"
+    }
+  ],
+  "standard-text-values": [
+    {
+      "date-time": "2024-02-12T02:00:00Z",
+      "version-date": "2024-02-12T00:00:00Z",
+      "data-entry-date": "2024-02-12T00:00:00Z",
+      "attribute": 0,
+      "office-id": "CWMS",
+      "standard-text-id": "HW",
+      "text-value": "Hello, World"
+    }
+  ],
+  "standard-text-catalog": [
+    {
+      "office-id": "CWMS",
+      "entries": [
+        {
+          "id": "HW",
+          "value": "Hello, World"
+        }
+      ]
+    }
+  ]
+}
