@@ -4,6 +4,13 @@
 
 We want to formalize the file and directory structure for the `cwms-python` module source code.
 
+Ideally, we would have a one-to-one mapping between CDA endpoints and the `cwms-python` modules that implement the interfaces for those endpoints. There are two primary benefits that we hope achieve:
+
+1. `cwms-python` developers will be able to easily reference the CDA documentation related to the module they are working on.
+2. CDA developers who want to look at the python implementation for a collection of endpoints will know exactly where to look, even if they are not a `cwms-python` developer.
+
+The goal is to make it easier to update and maintain the project in the long term, and to reduce the effort required by new developers (and external collaborators) to contribute to the project. This decision is focused only on developer workflow and should have no impact on `cwms-python` users.
+
 ## Considered Options
 
 Each top-level CWMS Data API endpoint corresponds to a `cwms-python` submodule. Nested endpoints would then map to a sub-directory within the submodule. The table below lists some example API endpoints and the corresponding submodule.
@@ -41,14 +48,18 @@ The first option is nice from user perspective, as it only requires a single imp
 cwms
 |--- levels
 |    |--- __init__.py
-|    |--- levels.py
+|    |--- location_levels.py
 |    |--- specified_levels.py
 |--- locations
      |--- __init__.py
      |--- category.py
      |--- group.py
-     |--- locations.py
+     |--- physical_locations.py
 ```
+
+**NOTE:** The modules for the top-level `/cwms-data/levels` and `/cwms-data/locations` endpoints have been named `specified_levels.py` and `physical_locations.py` since this terminology is commonly used in CWMS and matches the underlying data schema.
+
+### Example Usage
 
 Users would have the option of importing directly from a specific submodule file (`cwms.levels.specified_levels`) if needed, but would generally import from the submodule itself, which would expose the functions defined in the nested files.
 
@@ -56,14 +67,16 @@ Users would have the option of importing directly from a specific submodule file
 # Import the entire submodule
 import cwms.levels
 
-# Import specific functions from submodule
+# Import specific functions from top-level module (normal, documented usage)
 from cwms.levels import get_location_levels, get_specified_levels
 
-# Import directly from submodule file
+# Import directly from submodule (possible, but not recommend)
 from cwms.levels.specified_level import get_specified_levels
 ```
 
 ## Decision Outcome
+
+We will adopt the directory/file structure outlined above. Whenever possible we will directly map `cwms-python` module names to the corresponding CDA endpoints. Exceptions may be made, as in the cases discussed above, but these should be kept to minimum. This decision should be revisited as additional endpoints are added to the CDA.
 
 ## References
 
