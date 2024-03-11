@@ -11,9 +11,9 @@ import pytz
 import requests_mock
 from requests.exceptions import HTTPError
 
-from ._test_utils import read_resource_file
-from CWMS.core import CwmsApiSession
-from CWMS.cwms_level import CwmsLevel
+from tests._test_utils import read_resource_file
+from cwms.core import CwmsApiSession
+from cwms.levels.location_levels import CwmsLevel
 
 
 _SPEC_LEVELS_JSON = read_resource_file("specified_levels.json")

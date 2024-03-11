@@ -5,11 +5,11 @@
 import datetime
 import json
 
-import CWMS._constants as constants
-from .core import CwmsApiSession
-from .core import _CwmsBase
-from .utils import queryCDA
-from .utils import raise_for_status
+import cwms._constants as constants
+from cwms.core import CwmsApiSession
+from cwms.core import _CwmsBase
+from cwms.utils import queryCDA
+from cwms.utils import raise_for_status
 
 
 class CwmsLevel(_CwmsBase):
