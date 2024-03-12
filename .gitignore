@@ -8,6 +8,8 @@ tmp
 *$py.class
 .pytest_cache/
 
+.venv/
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
