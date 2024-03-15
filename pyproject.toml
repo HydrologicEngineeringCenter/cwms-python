@@ -23,7 +23,7 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools]
-packages = ["CWMS"]
+packages = ["cwms"]
 
 [project.optional-dependencies]
 test = [
@@ -41,7 +41,7 @@ homepage = "https://github.com/HydrologicEngineeringCenter/cwms-python"
 repository = "https://github.com/HydrologicEngineeringCenter/cwms-python.git"
 
 [tool.setuptools_scm]
-write_to = "CWMS/_version.py"
+write_to = "cwms/_version.py"
 
 [tool.isort]
 profile = "black"

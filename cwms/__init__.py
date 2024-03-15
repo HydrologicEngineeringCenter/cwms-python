@@ -1,8 +1,8 @@
 from importlib.metadata import PackageNotFoundError, version
 
-from .cwms_loc import *
-from .cwms_ts import *
-from .cwms_level import *
+from .locations.physical_locations import *
+from .timeseries import *
+from .levels.location_levels import *
 from .core import CwmsApiSession
 
 try:

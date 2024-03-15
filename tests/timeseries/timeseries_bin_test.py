@@ -9,9 +9,9 @@ from datetime import datetime
 import pytz
 import requests_mock
 
-from CWMS.core import CwmsApiSession
-from CWMS.cwms_bin_ts import CwmsBinTs
-from ._test_utils import read_resource_file
+from cwms.core import CwmsApiSession
+from cwms.timeseries.timeseries_bin import CwmsBinTs
+from tests._test_utils import read_resource_file
 
 _BIN_TS_JSON = read_resource_file("binarytimeseries.json")
 

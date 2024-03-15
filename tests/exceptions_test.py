@@ -10,11 +10,11 @@ import unittest
 from requests.models import Request
 from requests.models import Response
 
-from CWMS.exceptions import ClientError
-from CWMS.exceptions import NoDataFoundError
-from CWMS.exceptions import ServerError
-from CWMS.utils import raise_for_status
-from ._test_utils import read_resource_file
+from cwms.exceptions import ClientError
+from cwms.exceptions import NoDataFoundError
+from cwms.exceptions import ServerError
+from cwms.utils import raise_for_status
+from tests._test_utils import read_resource_file
 
 _ERROR_CODE_500_JSON = read_resource_file("error_code_500.json")
 

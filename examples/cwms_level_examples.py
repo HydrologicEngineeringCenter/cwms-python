@@ -5,9 +5,9 @@
 import json
 from datetime import datetime
 
-import CWMS._constants as constants
-from CWMS.core import CwmsApiSession
-from CWMS.cwms_level import CwmsLevel
+import cwms._constants as constants
+from cwms.core import CwmsApiSession
+from cwms.levels.location_levels import CwmsLevel
 
 session = CwmsApiSession("http://localhost:7000/cwms-data/", "apikey testkey")
 level_api = CwmsLevel(session)

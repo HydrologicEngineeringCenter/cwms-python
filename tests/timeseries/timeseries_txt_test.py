@@ -9,9 +9,9 @@ from datetime import datetime
 import pytz
 import requests_mock
 
-from CWMS.core import CwmsApiSession
-from CWMS.cwms_text_ts import CwmsTextTs, TextTsMode, DeleteMethod
-from ._test_utils import read_resource_file
+from cwms.core import CwmsApiSession
+from cwms.timeseries.timeseries_txt import CwmsTextTs, TextTsMode, DeleteMethod
+from tests._test_utils import read_resource_file
 
 _TEXT_TS_JSON = read_resource_file("texttimeseries.json")
 _STD_TEXT_JSON = read_resource_file("standard_text.json")

@@ -7,9 +7,9 @@ from datetime import datetime
 
 import pytz
 
-import CWMS._constants as constants
-from CWMS.core import CwmsApiSession
-from CWMS.cwms_bin_ts import CwmsBinTs
+import cwms._constants as constants
+from cwms.core import CwmsApiSession
+from cwms.timeseries.timeseries_bin import CwmsBinTs
 
 session = CwmsApiSession("http://localhost:7001/spk-data/", "apikey testkey")
 bin_ts_api = CwmsBinTs(session)

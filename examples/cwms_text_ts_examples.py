@@ -7,10 +7,10 @@ from datetime import datetime
 
 import pytz
 
-import CWMS._constants as constants
-from CWMS.core import CwmsApiSession
-from CWMS.cwms_text_ts import CwmsTextTs, DeleteMethod, TextTsMode
-from CWMS.exceptions import NoDataFoundError
+import cwms._constants as constants
+from cwms.core import CwmsApiSession
+from cwms.timeseries.timeseries_txt import CwmsTextTs, DeleteMethod, TextTsMode
+from cwms.exceptions import NoDataFoundError
 
 session = CwmsApiSession("http://localhost:7001/spk-data/", "apikey testkey")
 text_ts_api = CwmsTextTs(session)
