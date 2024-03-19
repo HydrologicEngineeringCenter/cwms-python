@@ -136,6 +136,7 @@ class CwmsTs(_CwmsBase):
         end: datetime = None,
         timezone: str = None,
         page_size: int = 500000,
+        version_date: datetime = None,
     ) -> dict:
         """Retrieves time series data from a specified time series and time window.  Value date-times 
         obtained are always in UTC.
@@ -169,7 +170,9 @@ class CwmsTs(_CwmsBase):
                 This value does not impact the values in response.  response is always in UTC.
             page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in 
                 a single call.
-
+            version_date: datetime, optional, default is None
+                Version date of time series values being requested. If this field is not specified and
+                the timeseries is versioned, the query will return the max aggregate for the time period.
         Returns
         -------
         response : dict
@@ -185,6 +188,9 @@ class CwmsTs(_CwmsBase):
         if end is not None:
             end = end.strftime('%Y-%m-%dT%H:%M:%S')
 
+        if version_date is not None:
+            version_date = version_date.strftime('%Y-%m-%dT%H:%M:%S')
+
         params = {
             constants.OFFICE_PARAM: office_id,
             constants.NAME: tsId,
@@ -194,17 +200,17 @@ class CwmsTs(_CwmsBase):
             constants.END: end,
             constants.TIMEZONE: timezone,
             constants.PAGE_SIZE: page_size,
+            constants.VERSION_DATE: version_date,
         }
 
         headerList = {"Accept": constants.HEADER_JSON_V2}
-        responce = queryCDA(self, end_point, params, headerList)
+        response = queryCDA(self, end_point, params, headerList)
 
-        return responce
+        return response
 
     def write_ts(
         self,
         data,
-        version_date: str = None,
         timezone: str = None,
         create_as_ltrs: bool = False,
         store_rule: str = None,
@@ -227,8 +233,6 @@ class CwmsTs(_CwmsBase):
                     1   2023-12-20T15:00:00.000-05:00  99.8           0
                     2   2023-12-20T15:15:00.000-05:00  98.5           0
                     3   2023-12-20T15:30:00.000-05:00  98.5           0
-            version_date: str, optional, default is None
-                The version date for the timeseries to create. The format for this field is ISO 8601 extended.
             timezone: str, optional, default is None)
                 Specifies the time zone of the version-date field (unless otherwise specified). If this field is 
                 not specified, the default time zone of UTC shall be used.  Ignored if version-date was specified 
@@ -252,7 +256,6 @@ class CwmsTs(_CwmsBase):
 
         end_point = CwmsTs._TIMESERIES_ENDPOINT
         params = {
-            'version-date': version_date,
             constants.TIMEZONE: timezone,
             'create-as-lrts': create_as_ltrs,
             'store-rule': store_rule,
@@ -267,6 +270,7 @@ class CwmsTs(_CwmsBase):
             tsId = data.tsId
             office = data.office
             units = data.units
+            version_date = data.versionDate
 
             # check dataframe columns
             if 'quality-code' not in data:
@@ -294,6 +298,7 @@ class CwmsTs(_CwmsBase):
                 "office-id": office,
                 "units": units,
                 "values": data.values.tolist(),
+                "version-date": version_date,
             }
 
         elif isinstance(data, dict):
@@ -304,7 +309,6 @@ class CwmsTs(_CwmsBase):
 
         # print(ts_dict)
         response = self.get_session().post(
-            end_point, params=params, headers=headerList, data=json.dumps(
-                ts_dict)
+            end_point, params=params, headers=headerList, data=json.dumps(ts_dict)
         )
         return response
