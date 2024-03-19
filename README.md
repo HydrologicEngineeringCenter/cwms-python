@@ -1,6 +1,56 @@
 # CWMSpy
 CWMS REST API for Data Retrieval
 
+## Development
+
+In order to set up the development environment you will need to have [poetry][poetry] installed on your computed. To install all of the project's dependencies, run the following command:
+
+```sh
+poetry install
+```
+
+This will create a virtual environment in `.venv/` in the project's root directory.
+
+
+### Running Tests and Type Checker
+
+The following commands can be used to run the test suite and the static type checker.
+
+```sh
+# Run all tests
+poetry run pytest -v tests/
+
+# Check types
+poetry run mypy --strict cwms/
+```
+
+Contributors are encouraged to run the tests and type checker before making commits, since both of these are included in the CI pipeline.
+
+
+### Contributing
+
+In order for code to be committed to the repo it must be formatted using [black][black] and [isort][isort]. Developers are encouraged to integrate these tools into their workflow. Run the following command to install both tools as pre-commit hooks. Once installed, all staged source files will be automatically formatted before being committed.
+
+```sh
+poetry run pre-commit install
+```
+
+It is also possible to run the pre-commit hooks without committing if you simply want to format the code.
+
+```sh
+# Will format all staged files
+poetry run pre-commit run
+
+# Will format all project files
+poetry run pre-commit run --all-files
+```
+
+
+[black]: https://black.readthedocs.io/en/stable/
+[isort]: https://pycqa.github.io/isort/index.html
+[poetry]: https://python-poetry.org/docs/
+
+
 ## Requirements.
 
 Python 3.8+
