@@ -101,10 +101,13 @@ class CwmsTs(_CwmsBase):
             begin: datetime, optional, default is None 
                 Start of the time window for data to be included in the response. If this field is 
                 not specified, any required time window begins 24 hours prior to the specified 
-                or default end time.
+                or default end time. Any timezone information should be passed within the datetime
+                object. If no timezone information is given, default will be UTC.
             end: datetime, optional, default is None
                 End of the time window for data to be included in the response. If this field is 
-                not specified, any required time window ends at the current time.
+                not specified, any required time window ends at the current time. Any timezone
+                information should be passed within the datetime object. If no timezone information
+                is given, default will be UTC.
             page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in
                 a single call.
 
