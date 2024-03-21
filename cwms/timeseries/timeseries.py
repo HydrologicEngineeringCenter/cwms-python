@@ -76,7 +76,6 @@ class CwmsTs(_CwmsBase):
         datum: str = None,
         begin: datetime = None,
         end: datetime = None,
-        timezone: str = None,
         page_size: int = 500000,
     ) -> pd.DataFrame:
         """Retrieves time series data from a specified time series and time window.  
@@ -102,14 +101,14 @@ class CwmsTs(_CwmsBase):
             begin: datetime, optional, default is None 
                 Start of the time window for data to be included in the response. If this field is 
                 not specified, any required time window begins 24 hours prior to the specified 
-                or default end time.
+                or default end time. Any timezone information should be passed within the datetime
+                object. If no timezone information is given, default will be UTC.
             end: datetime, optional, default is None
                 End of the time window for data to be included in the response. If this field is 
-                not specified, any required time window ends at the current time.
-            timezone: str, optional, default is None: 
-                Specifies the time zone of the values of the begin and end fields. UTC is the default. 
-                This value does not impact the values in response.  response is always in UTC.
-            page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in 
+                not specified, any required time window ends at the current time. Any timezone
+                information should be passed within the datetime object. If no timezone information
+                is given, default will be UTC.
+            page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in
                 a single call.
 
         Returns
@@ -119,7 +118,7 @@ class CwmsTs(_CwmsBase):
         """
 
         responce = CwmsTs.retrieve_ts_json(
-            self, tsId, office_id, unit, datum, begin, end, timezone, page_size
+            self, tsId, office_id, unit, datum, begin, end, page_size
         )
 
         df = return_df(responce, dict_key=['values'])
@@ -134,7 +133,6 @@ class CwmsTs(_CwmsBase):
         datum: str = None,
         begin: datetime = None,
         end: datetime = None,
-        timezone: str = None,
         page_size: int = 500000,
         version_date: datetime = None,
     ) -> dict:
@@ -161,13 +159,13 @@ class CwmsTs(_CwmsBase):
             begin: datetime, optional, default is None 
                 Start of the time window for data to be included in the response. If this field is 
                 not specified, any required time window begins 24 hours prior to the specified 
-                or default end time.
+                or default end time. Any timezone information should be passed within the datetime
+                object. If no timezone information is given, default will be UTC.
             end: datetime, optional, default is None
                 End of the time window for data to be included in the response. If this field is 
-                not specified, any required time window ends at the current time.
-            timezone: str, optional, default is None: 
-                Specifies the time zone of the values of the begin and end fields. UTC is the default. 
-                This value does not impact the values in response.  response is always in UTC.
+                not specified, any required time window ends at the current time. Any timezone
+                information should be passed within the datetime object. If no timezone information
+                is given, default will be UTC.
             page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in 
                 a single call.
             version_date: datetime, optional, default is None
@@ -183,13 +181,13 @@ class CwmsTs(_CwmsBase):
         end_point = CwmsTs._TIMESERIES_ENDPOINT
 
         if begin is not None:
-            begin = begin.strftime('%Y-%m-%dT%H:%M:%S')
+            begin = begin.isoformat()
 
         if end is not None:
-            end = end.strftime('%Y-%m-%dT%H:%M:%S')
+            end = end.isoformat()
 
         if version_date is not None:
-            version_date = version_date.strftime('%Y-%m-%dT%H:%M:%S')
+            version_date = version_date.isoformat()
 
         params = {
             constants.OFFICE_PARAM: office_id,
@@ -198,7 +196,6 @@ class CwmsTs(_CwmsBase):
             constants.DATUM: datum,
             constants.BEGIN: begin,
             constants.END: end,
-            constants.TIMEZONE: timezone,
             constants.PAGE_SIZE: page_size,
             constants.VERSION_DATE: version_date,
         }
@@ -211,7 +208,6 @@ class CwmsTs(_CwmsBase):
     def write_ts(
         self,
         data,
-        timezone: str = None,
         create_as_ltrs: bool = False,
         store_rule: str = None,
         override_protection: bool = False,
@@ -233,10 +229,6 @@ class CwmsTs(_CwmsBase):
                     1   2023-12-20T15:00:00.000-05:00  99.8           0
                     2   2023-12-20T15:15:00.000-05:00  98.5           0
                     3   2023-12-20T15:30:00.000-05:00  98.5           0
-            timezone: str, optional, default is None)
-                Specifies the time zone of the version-date field (unless otherwise specified). If this field is 
-                not specified, the default time zone of UTC shall be used.  Ignored if version-date was specified 
-                with offset and timezone.
             create_as_ltrs: bool, optional, defualt is False
                 Flag indicating if timeseries should be created as Local Regular Time Series.
             store_rule: str, optional, default is None: 
@@ -256,7 +248,6 @@ class CwmsTs(_CwmsBase):
 
         end_point = CwmsTs._TIMESERIES_ENDPOINT
         params = {
-            constants.TIMEZONE: timezone,
             'create-as-lrts': create_as_ltrs,
             'store-rule': store_rule,
             'override-protection': override_protection,
