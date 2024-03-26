@@ -9,7 +9,7 @@ class CwmsApiSession:
             raise ValueError("CWMS API root URL cannot be None")
         self.__session = sessions.BaseUrlSession(base_url=api_root)
         if api_key is not None:
-            self.__session.headers.update({'Authorization': api_key})
+            self.__session.headers.update({"Authorization": api_key})
 
     def get_session(self):
         return self.__session

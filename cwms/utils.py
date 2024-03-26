@@ -1,6 +1,7 @@
-from .exceptions import NoDataFoundError, ServerError, ClientError
-from requests.models import Response
 import pandas as pd
+from requests.models import Response
+
+from .exceptions import ClientError, NoDataFoundError, ServerError
 
 
 def queryCDA(self, endpoint: str, payload: dict, headerList: dict):
@@ -39,9 +40,9 @@ def raise_for_status(response: Response):
 
     # if response.status_code > 200:
 
-     #   raise Exception(
-     #       f'Error Code: {response.status_code} \n Bad Request for URL: {response.url} \n response.text'
-     #   )
+    #   raise Exception(
+    #       f'Error Code: {response.status_code} \n Bad Request for URL: {response.url} \n response.text'
+    #   )
 
     return response
 
@@ -67,10 +68,10 @@ def return_df(dict: dict, dict_key: list):
     df = pd.DataFrame(temp_dict)
 
     # if timeseries values are present then grab the values and put into dataframe
-    if dict_key[-1] == 'values':
-        df.columns = [sub['name'] for sub in dict['value-columns']]
+    if dict_key[-1] == "values":
+        df.columns = [sub["name"] for sub in dict["value-columns"]]
 
-        if 'date-time' in df.columns:
-            df['date-time'] = pd.to_datetime(df['date-time'], unit='ms')
+        if "date-time" in df.columns:
+            df["date-time"] = pd.to_datetime(df["date-time"], unit="ms")
 
     return df

@@ -60,8 +60,10 @@ class ClientError(CwmsDataApiError):
         response : Response
             The response object that triggered the error.
         """
-        message = (f"CWMS Client error occurred for request:\n{response.request.url}\n"
-                   f"Response was:\n{response.text}")
+        message = (
+            f"CWMS Client error occurred for request:\n{response.request.url}\n"
+            f"Response was:\n{response.text}"
+        )
         super().__init__(message, response=response)
 
 
@@ -90,8 +92,10 @@ class ServerError(CwmsDataApiError):
             The response object from the CWMS server.
 
         """
-        message = (f"CWMS Server error occurred for request:\n{response.request.url}\n"
-                   f"Response was:\n{response.text}")
+        message = (
+            f"CWMS Server error occurred for request:\n{response.request.url}\n"
+            f"Response was:\n{response.text}"
+        )
         super().__init__(message, response=response)
 
 
@@ -120,6 +124,8 @@ class NoDataFoundError(CwmsDataApiError):
             The response object from the CWMS server.
 
         """
-        message = (f"No data found for request:\n{response.request.url}\n"
-                   f"Response was:\n{response.text}")
+        message = (
+            f"No data found for request:\n{response.request.url}\n"
+            f"Response was:\n{response.text}"
+        )
         super().__init__(message, response=response)
