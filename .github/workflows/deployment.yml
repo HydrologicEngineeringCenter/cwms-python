@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+  # Allow the workflow to be manually triggered from the Actions tab.
+  workflow_dispatch:
+
 jobs:
   # Build and test the distribution before deploying to the various platforms. This allows
   # us to store the build artifacts and reuse them in the deployment jobs below.
