@@ -21,6 +21,12 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v3
 
+      - name: Cache Virtual Environment
+        uses: actions/cache@v3
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
       - name: Install Dependencies
         run: poetry install
 
