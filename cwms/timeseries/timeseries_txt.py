@@ -2,12 +2,14 @@
 #  United States Army Corps of Engineers - Hydrologic Engineering Center (USACE/HEC)
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
-import datetime
 import json
+from datetime import datetime
 from enum import Enum, auto
+from typing import Optional
 
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
+from cwms.types import JSON
 from cwms.utils import queryCDA, raise_for_status
 
 
@@ -56,9 +58,9 @@ class CwmsTextTs(_CwmsBase):
         begin: datetime,
         end: datetime,
         mode: TextTsMode = TextTsMode.REGULAR,
-        min_attribute: float = None,
-        max_attribute: float = None,
-    ) -> dict:
+        min_attribute: Optional[float] = None,
+        max_attribute: Optional[float] = None,
+    ) -> JSON:
         """
         Parameters
         ----------
@@ -126,7 +128,7 @@ class CwmsTextTs(_CwmsBase):
 
         return queryCDA(self, end_point, params, headers)
 
-    def store_text_ts_json(self, data: dict, replace_all: bool = False) -> None:
+    def store_text_ts_json(self, data: JSON, replace_all: bool = False) -> None:
         """
         This method is used to store a text time series through CWMS Data API.
 
@@ -174,8 +176,8 @@ class CwmsTextTs(_CwmsBase):
         end: datetime,
         mode: TextTsMode = TextTsMode.REGULAR,
         text_mask: str = "*",
-        min_attribute: float = None,
-        max_attribute: float = None,
+        min_attribute: Optional[float] = None,
+        max_attribute: Optional[float] = None,
     ) -> None:
         """
         Deletes text timeseries data with the given ID and office ID and time range.
@@ -250,8 +252,8 @@ class CwmsTextTs(_CwmsBase):
         raise_for_status(response)
 
     def retrieve_std_txt_cat_json(
-        self, text_id_mask: str = None, office_id_mask: str = None
-    ) -> dict:
+        self, text_id_mask: Optional[str] = None, office_id_mask: Optional[str] = None
+    ) -> JSON:
         """
         Retrieves standard text catalog for the given ID and office ID filters.
 
@@ -282,7 +284,7 @@ class CwmsTextTs(_CwmsBase):
         end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}"
         return queryCDA(self, end_point, params, headers)
 
-    def retrieve_std_txt_json(self, text_id: str, office_id: str) -> dict:
+    def retrieve_std_txt_json(self, text_id: str, office_id: str) -> JSON:
         """
         Retrieves standard text for the given ID and office ID.
 
@@ -319,7 +321,9 @@ class CwmsTextTs(_CwmsBase):
         end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}/{text_id}"
         return queryCDA(self, end_point, params, headers)
 
-    def delete_std_txt(self, text_id: str, delete_method: DeleteMethod, office_id: str):
+    def delete_std_txt(
+        self, text_id: str, delete_method: DeleteMethod, office_id: str
+    ) -> None:
         """
         Deletes standard text for the given ID and office ID.
 
@@ -363,7 +367,7 @@ class CwmsTextTs(_CwmsBase):
         response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
 
-    def store_std_txt_json(self, data: dict, fail_if_exists: bool = False) -> None:
+    def store_std_txt_json(self, data: JSON, fail_if_exists: bool = False) -> None:
         """
         This method is used to store a standard text value through CWMS Data API.
 

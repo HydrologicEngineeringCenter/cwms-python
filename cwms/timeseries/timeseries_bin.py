@@ -2,12 +2,14 @@
 #  United States Army Corps of Engineers - Hydrologic Engineering Center (USACE/HEC)
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
-import datetime
 import json
+from datetime import datetime
 from enum import Enum, auto
+from typing import Optional
 
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
+from cwms.types import JSON
 from cwms.utils import queryCDA, raise_for_status
 
 
@@ -50,9 +52,9 @@ class CwmsBinTs(_CwmsBase):
         begin: datetime,
         end: datetime,
         bin_type_mask: str = "*",
-        min_attribute: float = None,
-        max_attribute: float = None,
-    ) -> dict:
+        min_attribute: Optional[float] = None,
+        max_attribute: Optional[float] = None,
+    ) -> JSON:
         """
         Parameters
         ----------
@@ -122,7 +124,7 @@ class CwmsBinTs(_CwmsBase):
 
         return queryCDA(self, end_point, params, headers)
 
-    def store_bin_ts_json(self, data: dict, replace_all: bool = False) -> None:
+    def store_bin_ts_json(self, data: JSON, replace_all: bool = False) -> None:
         """
         This method is used to store a binary time series through CWMS Data API.
 
@@ -169,8 +171,8 @@ class CwmsBinTs(_CwmsBase):
         begin: datetime,
         end: datetime,
         bin_type_mask: str = "*",
-        min_attribute: float = None,
-        max_attribute: float = None,
+        min_attribute: Optional[float] = None,
+        max_attribute: Optional[float] = None,
     ) -> None:
         """
         Deletes binary timeseries data with the given ID,

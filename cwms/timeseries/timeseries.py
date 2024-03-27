@@ -1,10 +1,13 @@
-import datetime
 import json
+from datetime import datetime
+from typing import Optional
 
 import pandas as pd
+from requests import Response
 
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
+from cwms.types import JSON
 from cwms.utils import queryCDA, return_df
 
 
@@ -43,7 +46,7 @@ class CwmsTs(_CwmsBase):
 
     def retrieve_ts_group_json(
         self, group_id: str, category_id: str, office_id: str
-    ) -> dict:
+    ) -> JSON:
         """Retreives time series stored in the requested time series group as a dictionary
 
         Parameters
@@ -76,9 +79,9 @@ class CwmsTs(_CwmsBase):
         tsId: str,
         office_id: str,
         unit: str = "EN",
-        datum: str = None,
-        begin: datetime = None,
-        end: datetime = None,
+        datum: Optional[str] = None,
+        begin: Optional[datetime] = None,
+        end: Optional[datetime] = None,
         page_size: int = 500000,
     ) -> pd.DataFrame:
         """Retrieves time series data from a specified time series and time window.
@@ -133,12 +136,12 @@ class CwmsTs(_CwmsBase):
         tsId: str,
         office_id: str,
         unit: str = "EN",
-        datum: str = None,
-        begin: datetime = None,
-        end: datetime = None,
+        datum: Optional[str] = None,
+        begin: Optional[datetime] = None,
+        end: Optional[datetime] = None,
         page_size: int = 500000,
-        version_date: datetime = None,
-    ) -> dict:
+        version_date: Optional[datetime] = None,
+    ) -> JSON:
         """Retrieves time series data from a specified time series and time window.  Value date-times
         obtained are always in UTC.
 
@@ -183,24 +186,15 @@ class CwmsTs(_CwmsBase):
         # creates the dataframe from the timeseries data
         end_point = CwmsTs._TIMESERIES_ENDPOINT
 
-        if begin is not None:
-            begin = begin.isoformat()
-
-        if end is not None:
-            end = end.isoformat()
-
-        if version_date is not None:
-            version_date = version_date.isoformat()
-
         params = {
             constants.OFFICE_PARAM: office_id,
             constants.NAME: tsId,
             constants.UNIT: unit,
             constants.DATUM: datum,
-            constants.BEGIN: begin,
-            constants.END: end,
+            constants.BEGIN: begin.isoformat() if begin else "",
+            constants.END: end.isoformat() if end else "",
             constants.PAGE_SIZE: page_size,
-            constants.VERSION_DATE: version_date,
+            constants.VERSION_DATE: version_date.isoformat() if version_date else "",
         }
 
         headerList = {"Accept": constants.HEADER_JSON_V2}
@@ -210,11 +204,11 @@ class CwmsTs(_CwmsBase):
 
     def write_ts(
         self,
-        data,
+        data: JSON,
         create_as_ltrs: bool = False,
-        store_rule: str = None,
+        store_rule: Optional[str] = None,
         override_protection: bool = False,
-    ):
+    ) -> Response:
         """Will Create new TimeSeries if not already present.  Will store any data provided
 
         Parameters
@@ -301,7 +295,7 @@ class CwmsTs(_CwmsBase):
             raise TypeError("data is not of type dataframe or dictionary")
 
         # print(ts_dict)
-        response = self.get_session().post(
+        response: Response = self.get_session().post(
             end_point, params=params, headers=headerList, data=json.dumps(ts_dict)
         )
         return response

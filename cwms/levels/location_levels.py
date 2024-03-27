@@ -2,11 +2,13 @@
 #  United States Army Corps of Engineers - Hydrologic Engineering Center (USACE/HEC)
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
-import datetime
 import json
+from datetime import datetime
+from typing import Optional
 
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
+from cwms.types import JSON
 from cwms.utils import queryCDA, raise_for_status
 
 
@@ -38,7 +40,7 @@ class CwmsLevel(_CwmsBase):
 
     def retrieve_specified_levels_json(
         self, specified_level_mask: str = "*", office_id: str = "*"
-    ) -> dict:
+    ) -> JSON:
         """
         Retrieve JSON data for multiple specified levels from CWMS Data API.
 
@@ -79,7 +81,7 @@ class CwmsLevel(_CwmsBase):
         return response
 
     def store_specified_level_json(
-        self, data: dict, fail_if_exists: bool = True
+        self, data: JSON, fail_if_exists: bool = True
     ) -> None:
         """
         This method is used to store a specified level through CWMS Data API.
@@ -207,14 +209,14 @@ class CwmsLevel(_CwmsBase):
     def retrieve_location_levels_json(
         self,
         level_id_mask: str = "*",
-        office_id: str = None,
-        unit: str = None,
-        datum: str = None,
-        begin: datetime = None,
-        end: datetime = None,
-        page: str = None,
-        page_size: int = None,
-    ) -> dict:
+        office_id: Optional[str] = None,
+        unit: Optional[str] = None,
+        datum: Optional[str] = None,
+        begin: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+        page: Optional[str] = None,
+        page_size: Optional[int] = None,
+    ) -> JSON:
         """
         Parameters
         ----------
@@ -262,8 +264,8 @@ class CwmsLevel(_CwmsBase):
             "level-id-mask": level_id_mask,
             constants.UNIT: unit,
             constants.DATUM: datum,
-            constants.BEGIN: begin.isoformat() if begin else None,
-            constants.END: end.isoformat() if begin else None,
+            constants.BEGIN: begin.isoformat() if begin else "",
+            constants.END: end.isoformat() if end else "",
             constants.PAGE: page,
             constants.PAGE_SIZE: page_size,
         }
@@ -272,8 +274,12 @@ class CwmsLevel(_CwmsBase):
         return response
 
     def retrieve_location_level_json(
-        self, level_id: str, office_id: str, effective_date: datetime, unit: str = None
-    ) -> dict:
+        self,
+        level_id: str,
+        office_id: str,
+        effective_date: datetime,
+        unit: Optional[str] = None,
+    ) -> JSON:
         """
         Parameters
         ----------
@@ -333,7 +339,7 @@ class CwmsLevel(_CwmsBase):
         response = queryCDA(self, end_point, params, headers)
         return response
 
-    def store_location_level_json(self, data: dict) -> None:
+    def store_location_level_json(self, data: JSON) -> None:
         """
         Parameters
         ----------
@@ -367,8 +373,8 @@ class CwmsLevel(_CwmsBase):
         self,
         location_level_id: str,
         office_id: str,
-        effective_date: datetime = None,
-        cascade_delete: bool = None,
+        effective_date: Optional[datetime] = None,
+        cascade_delete: bool = False,
     ) -> None:
         """
         Parameters
@@ -418,10 +424,10 @@ class CwmsLevel(_CwmsBase):
         location_level_id: str,
         office_id: str,
         unit: str,
-        begin: datetime = None,
-        end: datetime = None,
-        interval: str = None,
-    ) -> dict:
+        begin: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+        interval: Optional[str] = None,
+    ) -> JSON:
         """
         Parameters
         ----------

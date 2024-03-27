@@ -1,7 +1,11 @@
+from typing import Optional
+
 import pandas as pd
+from pandas import DataFrame
 
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
+from cwms.types import JSON
 from cwms.utils import queryCDA, return_df
 
 
@@ -14,7 +18,7 @@ class CwmsLoc(_CwmsBase):
 
     def retreive_loc_group_df(
         self, loc_group_id: str, category_id: str, office_id: str
-    ):
+    ) -> DataFrame:
 
         responce = CwmsLoc.retreive_loc_group_json(
             self, loc_group_id, category_id, office_id
@@ -26,7 +30,7 @@ class CwmsLoc(_CwmsBase):
 
     def retreive_loc_group_json(
         self, loc_group_id: str, category_id: str, office_id: str
-    ):
+    ) -> JSON:
 
         end_point = f"{CwmsLoc._LOCATION_GROUP_ENDPOINT}/{loc_group_id}"
 
@@ -43,12 +47,12 @@ class CwmsLoc(_CwmsBase):
 
     def retrieve_locs_df(
         self,
-        office_id: str = None,
-        loc_ids: str = None,
-        units: str = None,
-        datum: str = None,
-    ):
-        responce = CwmsLoc.etreive_locs_json(self, office_id, loc_ids, units, datum)
+        office_id: Optional[str] = None,
+        loc_ids: Optional[str] = None,
+        units: Optional[str] = None,
+        datum: Optional[str] = None,
+    ) -> DataFrame:
+        responce = CwmsLoc.retreive_locs_json(self, office_id, loc_ids, units, datum)
 
         df = return_df(responce, dict_key=["locations", "locations"])
 
@@ -56,11 +60,11 @@ class CwmsLoc(_CwmsBase):
 
     def retreive_locs_json(
         self,
-        office_id: str = None,
-        loc_ids: str = None,
-        units: str = None,
-        datum: str = None,
-    ):
+        office_id: Optional[str] = None,
+        loc_ids: Optional[str] = None,
+        units: Optional[str] = None,
+        datum: Optional[str] = None,
+    ) -> JSON:
 
         end_point = CwmsLoc._LOCATION_GROUP_ENDPOINT
 
@@ -77,8 +81,7 @@ class CwmsLoc(_CwmsBase):
         # responce =
         return responce
 
-    def ExpandLocations(df):
-
+    def ExpandLocations(self, df: DataFrame) -> DataFrame:
         df_alias = pd.DataFrame()
         temp = df.aliases.apply(pd.Series)
         for i in temp.columns:
