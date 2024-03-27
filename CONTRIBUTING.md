@@ -22,7 +22,7 @@ poetry run mypy --strict cwms/
 
 ### Code Style
 
-In order for a pull request to be accepted, the code must be formatted using [black][black] and [isort][isort]. Developers are encouraged to integrate these tools into their workflow. Pre-commit hooks can be installed to automatically validate any code changes, and reformat if necessary.
+In order for a pull request to be accepted, python code must be formatted using [black][black] and [isort][isort]. YAML files should also be formatted using either Prettier or the provided pre-commit hook. Developer are encouraged to integrate these tools into their workflow. Pre-commit hooks can be installed to automatically validate any code changes, and reformat if necessary.
 
 ```sh
 poetry run pre-commit install
@@ -37,7 +37,6 @@ poetry run pre-commit run
 # Format all source files
 poetry run pre-commit run --all-files
 ```
-
 
 [black]: https://black.readthedocs.io/en/stable/
 [isort]: https://pycqa.github.io/isort/index.html

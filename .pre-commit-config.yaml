@@ -13,8 +13,8 @@ repos:
         language: system
         types: [file, python]
 
-      - id: yamllint
-        name: yamllint
-        entry: poetry run yamllint
+      - id: yamlfix
+        name: yamlfix
+        entry: poetry run yamlfix
         language: system
         types: [file, yaml]
