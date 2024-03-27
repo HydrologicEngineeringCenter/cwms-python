@@ -14,14 +14,14 @@ from cwms.utils import queryCDA, raise_for_status
 
 
 class TextTsMode(Enum):
-    REGULAR = (auto(),)
-    STANDARD = (auto(),)
+    REGULAR = auto()
+    STANDARD = auto()
     ALL = auto()
 
 
 class DeleteMethod(Enum):
-    DELETE_ALL = (auto(),)
-    DELETE_KEY = (auto(),)
+    DELETE_ALL = auto()
+    DELETE_KEY = auto()
     DELETE_DATA = auto()
 
 
