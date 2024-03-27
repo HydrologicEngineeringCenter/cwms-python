@@ -7,12 +7,9 @@
 import json
 import unittest
 
-from requests.models import Request
-from requests.models import Response
+from requests.models import PreparedRequest, Response
 
-from cwms.exceptions import ClientError
-from cwms.exceptions import NoDataFoundError
-from cwms.exceptions import ServerError
+from cwms.exceptions import ClientError, NoDataFoundError, ServerError
 from cwms.utils import raise_for_status
 from tests._test_utils import read_resource_file
 
@@ -50,8 +47,10 @@ class TestCwmsDataApiError(unittest.TestCase):
         response.status_code = status_code
         json_string = json.dumps(_ERROR_CODE_500_JSON)
         response._content = json_string.encode("utf-8")
-        response.request = Request()
-        response.request.url = "https://mockwebserver.cwms.gov/cwms-data/hello-world?parameter=true"
+        response.request = PreparedRequest()
+        response.request.url = (
+            "https://mockwebserver.cwms.gov/cwms-data/hello-world?parameter=true"
+        )
         return response
 
 

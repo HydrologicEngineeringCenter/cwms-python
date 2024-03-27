@@ -7,6 +7,7 @@
 import json
 from pathlib import Path
 
+
 def read_resource_file(file_name):
     current_path = Path(__file__).resolve().parent
     resource_path = current_path / "resources" / file_name

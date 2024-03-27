@@ -10,7 +10,7 @@ import pytz
 import requests_mock
 
 from cwms.core import CwmsApiSession
-from cwms.timeseries.timeseries_txt import CwmsTextTs, TextTsMode, DeleteMethod
+from cwms.timeseries.timeseries_txt import CwmsTextTs, DeleteMethod, TextTsMode
 from tests._test_utils import read_resource_file
 
 _TEXT_TS_JSON = read_resource_file("texttimeseries.json")
@@ -28,16 +28,17 @@ class TestTextTs(unittest.TestCase):
             "/timeseries/text?office=SWT&name=TEST.Text.Inst.1Hour.0.MockTest&"
             "begin=2024-02-12T00%3A00%3A00-08%3A00&"
             "end=2020-02-12T02%3A00%3A00-08%3A00&mode=REGULAR",
-            json=_TEXT_TS_JSON)
+            json=_TEXT_TS_JSON,
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         timeseries_id = "TEST.Text.Inst.1Hour.0.MockTest"
         office_id = "SWT"
         timezone = pytz.timezone("US/Pacific")
         begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
         end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
-        timeseries = cwms_text_ts.retrieve_text_ts_json(timeseries_id,
-                                                        office_id,
-                                                        begin, end)
+        timeseries = cwms_text_ts.retrieve_text_ts_json(
+            timeseries_id, office_id, begin, end
+        )
         self.assertEqual(_TEXT_TS_JSON, timeseries)
 
     @requests_mock.Mocker()
@@ -48,18 +49,17 @@ class TestTextTs(unittest.TestCase):
             "min-attribute=-1000&max-attribute=1000.0&"
             "begin=2024-02-12T00%3A00%3A00-08%3A00&"
             "end=2020-02-12T02%3A00%3A00-08%3A00&mode=STANDARD",
-            json=_TEXT_TS_JSON)
+            json=_TEXT_TS_JSON,
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         timeseries_id = "TEST.Text.Inst.1Hour.0.MockTest"
         office_id = "SWT"
         timezone = pytz.timezone("US/Pacific")
         begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
         end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
-        timeseries = cwms_text_ts.retrieve_text_ts_json(timeseries_id,
-                                                        office_id,
-                                                        begin, end,
-                                                        TextTsMode.STANDARD,
-                                                        -1000, 1000.0)
+        timeseries = cwms_text_ts.retrieve_text_ts_json(
+            timeseries_id, office_id, begin, end, TextTsMode.STANDARD, -1000, 1000.0
+        )
         self.assertEqual(_TEXT_TS_JSON, timeseries)
 
     @requests_mock.Mocker()
@@ -80,7 +80,8 @@ class TestTextTs(unittest.TestCase):
             "begin=2024-02-12T00%3A00%3A00-08%3A00&"
             "end=2020-02-12T02%3A00%3A00-08%3A00&mode=STANDARD&"
             "text-mask=Hello%2C+World",
-            json=_TEXT_TS_JSON)
+            json=_TEXT_TS_JSON,
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         level_id = "TEST.Text.Inst.1Hour.0.MockTest"
         office_id = "SWT"
@@ -88,8 +89,15 @@ class TestTextTs(unittest.TestCase):
         begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
         end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
         cwms_text_ts.delete_text_ts(
-            level_id, office_id, begin, end, TextTsMode.STANDARD,
-            "Hello, World", -999.9, 999)
+            level_id,
+            office_id,
+            begin,
+            end,
+            TextTsMode.STANDARD,
+            "Hello, World",
+            -999.9,
+            999,
+        )
         assert m.called
         assert m.call_count == 1
 
@@ -98,7 +106,8 @@ class TestTextTs(unittest.TestCase):
         m.get(
             f"{TestTextTs._MOCK_ROOT}"
             "/timeseries/text/standard-text-id/HW?office=SPK",
-            json=_TEXT_TS_JSON)
+            json=_TEXT_TS_JSON,
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         text_id = "HW"
         office_id = "SPK"
@@ -108,9 +117,9 @@ class TestTextTs(unittest.TestCase):
     @requests_mock.Mocker()
     def test_retrieve_std_text_cat_json_default(self, m):
         m.get(
-            f"{TestTextTs._MOCK_ROOT}"
-            "/timeseries/text/standard-text-id",
-            json=_TEXT_TS_JSON)
+            f"{TestTextTs._MOCK_ROOT}" "/timeseries/text/standard-text-id",
+            json=_TEXT_TS_JSON,
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         standard_txt = cwms_text_ts.retrieve_std_txt_cat_json()
         self.assertEqual(_TEXT_TS_JSON, standard_txt)
@@ -120,7 +129,8 @@ class TestTextTs(unittest.TestCase):
         m.get(
             f"{TestTextTs._MOCK_ROOT}"
             "/timeseries/text/standard-text-id?text-id-mask=HW&office-id-mask=SPK",
-            json=_TEXT_TS_JSON)
+            json=_TEXT_TS_JSON,
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         text_id = "HW"
         office_id = "SPK"
@@ -131,7 +141,8 @@ class TestTextTs(unittest.TestCase):
     def test_store_std_text_json(self, m):
         m.post(
             f"{TestTextTs._MOCK_ROOT}"
-            "/timeseries/text/standard-text-id?fail-if-exists=True")
+            "/timeseries/text/standard-text-id?fail-if-exists=True"
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         cwms_text_ts.store_std_txt_json(_STD_TEXT_JSON, fail_if_exists=True)
         assert m.called
@@ -141,7 +152,8 @@ class TestTextTs(unittest.TestCase):
     def test_delete_std_text_json(self, m):
         m.delete(
             f"{TestTextTs._MOCK_ROOT}"
-            "/timeseries/text/standard-text-id/HW?office=SPK&method=DELETE_ALL")
+            "/timeseries/text/standard-text-id/HW?office=SPK&method=DELETE_ALL"
+        )
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
         text_id = "HW"
         office_id = "SPK"

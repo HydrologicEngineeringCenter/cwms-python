@@ -24,6 +24,8 @@ pre-commit = "^3.6.2"
 pytest = "^8.1.1"
 requests-mock = "^1.11.0"
 pytest-cov = "^4.1.0"
+pandas-stubs = "^2.2.1.240316"
+types-requests = "^2.31.0.20240311"
 
 [build-system]
 requires = ["poetry-core"]
