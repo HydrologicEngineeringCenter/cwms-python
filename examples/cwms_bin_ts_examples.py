@@ -18,7 +18,7 @@ bin_ts_api = CwmsBinTs(session)
 def run_bin_ts_examples():
     print("------Running through text ts examples-------")
 
-    location = '''
+    location = """
         {
           "name": "TEST",
           "latitude": 0,
@@ -39,16 +39,15 @@ def run_bin_ts_examples():
           "bounding-office-id": "SPK",
           "office-id": "SPK"
         }
-        '''
-    headers = {
-        "Content-Type": constants.HEADER_JSON_V1
-    }
+        """
+    headers = {"Content-Type": constants.HEADER_JSON_V1}
     print("Storing location TEST")
-    bin_ts_api.get_session().post("locations", params=None,
-                                   headers=headers, data=location)
+    bin_ts_api.get_session().post(
+        "locations", params=None, headers=headers, data=location
+    )
 
     bin_ts = json.loads(
-        '''
+        """
         {
           "office-id": "SPK",
           "name": "TEST.Binary.Inst.1Hour.0.MockTest",
@@ -79,21 +78,20 @@ def run_bin_ts_examples():
             }
           ]
         }
-        ''')
+        """
+    )
     print(f"Storing text ts {bin_ts['name']}")
     bin_ts_api.store_bin_ts_json(bin_ts, False)
 
     timezone = pytz.timezone("UTC")
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2024, 2, 12, 2, 0, 0))
-    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(
-        bin_ts['name'], "SPK", begin, end)
+    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(bin_ts["name"], "SPK", begin, end)
     print(bin_ts_dict)
 
     print(f"Deleting text ts {bin_ts['name']}")
-    bin_ts_api.delete_bin_ts(bin_ts['name'], "SPK", begin, end)
-    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(
-        bin_ts['name'], "SPK", begin, end)
+    bin_ts_api.delete_bin_ts(bin_ts["name"], "SPK", begin, end)
+    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(bin_ts["name"], "SPK", begin, end)
     print(f"Confirming delete of text ts {bin_ts['name']}")
     print(bin_ts_dict)
 
