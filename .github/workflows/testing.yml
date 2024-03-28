@@ -14,7 +14,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: '3.x'
 
       # Unlike the code-check workflow, this job requires the dev dependencies to be
       # installed to make sure we have the necessary, tools, stub files, etc.
@@ -51,5 +51,5 @@ jobs:
         uses: x-color/github-actions-job-summary@v0.1.1
         with:
           file: ./code-coverage-results.md
-          vars: |
+          vars: |-
             empty: empty
