@@ -51,9 +51,8 @@ class CwmsBinTs(_CwmsBase):
         office_id: str,
         begin: datetime,
         end: datetime,
-        bin_type_mask: str = "*",
-        min_attribute: Optional[float] = None,
-        max_attribute: Optional[float] = None,
+        version_date: Optional[datetime] = None,
+        bin_type_mask: Optional[str] = "*",
     ) -> JSON:
         """
         Parameters
@@ -70,17 +69,15 @@ class CwmsBinTs(_CwmsBase):
             The end date and time of the time range.
             If the datetime has a timezone it will be used,
             otherwise it is assumed to be in UTC.
+        version_date : datetime, optional
+            The time series date version to retrieve. If not supplied,
+            the maximum date version for each time step in the retrieval
+            window will be retrieved.
         bin_type_mask : str, optional
             The binary media type pattern to match.
             Use glob-style wildcard characters instead of sql-style wildcard
             characters for pattern matching.
             Default value is `"*"`
-        min_attribute : float, optional
-            The minimum attribute value to filter the timeseries data.
-            Default is `None`.
-        max_attribute : float, optional
-            The maximum attribute value to filter the timeseries data.
-            Default is `None`.
 
         Returns
         -------
@@ -110,13 +107,13 @@ class CwmsBinTs(_CwmsBase):
 
         end_point = CwmsBinTs._BIN_TS_ENDPOINT
 
+        version_date_str = version_date.isoformat() if version_date else ""
         params = {
             constants.OFFICE_PARAM: office_id,
             constants.NAME: timeseries_id,
-            constants.MIN_ATTRIBUTE: min_attribute,
-            constants.MAX_ATTRIBUTE: max_attribute,
             constants.BEGIN: begin.isoformat(),
             constants.END: end.isoformat(),
+            constants.VERSION_DATE: version_date_str,
             constants.BINARY_TYPE_MASK: bin_type_mask,
         }
 
@@ -170,9 +167,8 @@ class CwmsBinTs(_CwmsBase):
         office_id: str,
         begin: datetime,
         end: datetime,
-        bin_type_mask: str = "*",
-        min_attribute: Optional[float] = None,
-        max_attribute: Optional[float] = None,
+        version_date: Optional[datetime] = None,
+        bin_type_mask: Optional[str] = "*",
     ) -> None:
         """
         Deletes binary timeseries data with the given ID,
@@ -184,11 +180,6 @@ class CwmsBinTs(_CwmsBase):
             The ID of the binary time series data to be deleted.
         office_id : str
             The ID of the office that the binary time series belongs to.
-        bin_type_mask : str, optional
-            The binary media type pattern to match.
-            Use glob-style wildcard characters instead of sql-style wildcard
-            characters for pattern matching.
-            Default value is `"*"`
         begin : datetime
             The start date and time of the time range.
             If the datetime has a timezone it will be used,
@@ -197,12 +188,15 @@ class CwmsBinTs(_CwmsBase):
             The end date and time of the time range.
             If the datetime has a timezone it will be used,
             otherwise it is assumed to be in UTC.
-        min_attribute : float, optional
-            The minimum attribute value to filter the timeseries data.
-            Default is `None`.
-        max_attribute : float, optional
-            The maximum attribute value to filter the timeseries data.
-            Default is `None`.
+        version_date : Optional[datetime]
+            The time series date version to retrieve. If not supplied,
+            the maximum date version for each time step in the retrieval
+            window will be deleted.
+        bin_type_mask : str, optional
+            The binary media type pattern to match.
+            Use glob-style wildcard characters instead of sql-style wildcard
+            characters for pattern matching.
+            Default value is `"*"`
 
         Returns
         -------
@@ -229,12 +223,12 @@ class CwmsBinTs(_CwmsBase):
             raise ValueError("Deleting binary timeseries requires a time window")
         end_point = f"{CwmsBinTs._BIN_TS_ENDPOINT}/{timeseries_id}"
 
+        version_date_str = version_date.isoformat() if version_date else ""
         params = {
             constants.OFFICE_PARAM: office_id,
-            constants.MIN_ATTRIBUTE: min_attribute,
-            constants.MAX_ATTRIBUTE: max_attribute,
             constants.BEGIN: begin.isoformat(),
             constants.END: end.isoformat(),
+            constants.VERSION_DATE: version_date_str,
             constants.BINARY_TYPE_MASK: bin_type_mask,
         }
         headers = {"Content-Type": constants.HEADER_JSON_V2}

@@ -53,14 +53,14 @@ def run_bin_ts_examples():
           "name": "TEST.Binary.Inst.1Hour.0.MockTest",
           "interval-offset": 0,
           "time-zone": "America/Los_Angeles",
+          "version-date": "2024-02-12T00:00:00Z",
           "binary-values": [
             {
               "date-time": "2024-02-12T00:00:00Z",
-              "version-date": "2024-02-12T00:00:00Z",
               "data-entry-date": "2024-02-12T00:00:00Z",
-              "attribute": 0,
-              "media-type": "text/plain",
-              "file-extension": "txt",
+              "media-type": "image/png",
+              "filename": "test.png",
+              "quality": 0,
               "binary-value": [
                 72,
                 101,
