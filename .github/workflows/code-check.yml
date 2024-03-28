@@ -1,0 +1,19 @@
+name: Code Check
+
+# Run the workflow on all branches.
+on: [push, pull_request]
+
+jobs:
+  # Run basic code quality checks.
+  check-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Verify that python files are formatted using black and isort. Both of the actions
+      # below simply check the source code and fail if they find any files that need to be
+      # formatted. The code is not automatically reformatted like it is when running the
+      # pre-commit hooks.
+      - uses: psf/black@stable
+      - uses: isort/isort-action@v1

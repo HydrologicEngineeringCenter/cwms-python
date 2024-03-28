@@ -6,9 +6,15 @@ repos:
         entry: poetry run black
         language: system
         types: [file, python]
-    
+
       - id: isort
         name: isort
         entry: poetry run isort
         language: system
         types: [file, python]
+
+      - id: yamlfix
+        name: yamlfix
+        entry: poetry run yamlfix
+        language: system
+        types: [file, yaml]

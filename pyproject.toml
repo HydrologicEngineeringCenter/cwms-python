@@ -5,9 +5,7 @@ description = "Corps water managerment systems (CWMS) REST API for Data Retrieva
 readme = "README.md"
 license = "LICENSE"
 keywords = ["USACE", "water data"]
-authors = [
-    "Eric Novotny <eric.v.novotny@usace.army.mil>"
-]
+authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -26,6 +24,7 @@ requests-mock = "^1.11.0"
 pytest-cov = "^4.1.0"
 pandas-stubs = "^2.2.1.240316"
 types-requests = "^2.31.0.20240311"
+yamlfix = "^1.16.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -33,3 +32,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.yamlfix]
+comments_min_spaces_from_content = 1
+whitelines = 1
+explicit_start = false
+preserve_quotes = true
