@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cwms"
+name = "cwms-python"
 version = "0.1.0"
 description = "Corps water managerment systems (CWMS) REST API for Data Retrieval of USACE water data"
 readme = "README.md"
