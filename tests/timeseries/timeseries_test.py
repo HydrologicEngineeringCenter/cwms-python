@@ -22,7 +22,7 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
-def test_retrieve_unversioned_ts_json_default(requests_mock):
+def test_get_timeseries_json_unversioned_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"
@@ -42,13 +42,13 @@ def test_retrieve_unversioned_ts_json_default(requests_mock):
     begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
     end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
 
-    data = timeseries.retrieve_ts_json(
+    data = timeseries.get_timeseries_json(
         tsId=timeseries_id, office_id=office_id, begin=begin, end=end
     )
     assert data == _UNVERS_TS_JSON
 
 
-def test_store_unversioned_ts_json_default(requests_mock):
+def test_create_timeseries_unversioned_default(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}/timeseries?"
         f"create-as-lrts=False&"
@@ -56,13 +56,13 @@ def test_store_unversioned_ts_json_default(requests_mock):
     )
 
     data = _UNVERS_TS_JSON
-    timeseries.write_ts(data=data)
+    timeseries.create_timeseries(data=data)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
 
 
-def test_retrieve_versioned_ts_json_default(requests_mock):
+def test_get_timeseries_json_versioned_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"
@@ -84,7 +84,7 @@ def test_retrieve_versioned_ts_json_default(requests_mock):
     end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
     version_date = timezone.localize(datetime(2021, 6, 20, 8, 0, 0))
 
-    data = timeseries.retrieve_ts_json(
+    data = timeseries.get_timeseries_json(
         tsId=timeseries_id,
         office_id=office_id,
         begin=begin,
@@ -94,7 +94,7 @@ def test_retrieve_versioned_ts_json_default(requests_mock):
     assert data == _VERS_TS_JSON
 
 
-def test_store_versioned_ts_json_default(requests_mock):
+def test_create_timeseries_versioned_default(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}/timeseries?"
         f"create-as-lrts=False&"
@@ -102,7 +102,7 @@ def test_store_versioned_ts_json_default(requests_mock):
     )
 
     data = _VERS_TS_JSON
-    timeseries.write_ts(data=data)
+    timeseries.create_timeseries(data=data)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

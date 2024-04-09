@@ -17,7 +17,7 @@ class DeleteMethod(Enum):
     DELETE_DATA = auto()
 
 
-def retrieve_bin_ts_json(
+def get_binary_timeseries_json(
     timeseries_id: str,
     office_id: str,
     begin: datetime,
@@ -93,7 +93,7 @@ def retrieve_bin_ts_json(
     return api.get(endpoint, params)
 
 
-def store_bin_ts_json(data: JSON, replace_all: bool = False) -> JSON:
+def create_binary_timeseries_json(data: JSON, replace_all: bool = False) -> JSON:
     """
     This method is used to store a binary time series through CWMS Data API.
 
@@ -130,7 +130,7 @@ def store_bin_ts_json(data: JSON, replace_all: bool = False) -> JSON:
     return api.post(endpoint, data, params)
 
 
-def delete_bin_ts(
+def delete_binary_timeseries(
     timeseries_id: str,
     office_id: str,
     begin: datetime,

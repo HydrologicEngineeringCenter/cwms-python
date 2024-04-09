@@ -21,7 +21,7 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
-def test_retrieve_bin_ts_json_default(requests_mock):
+def test_get_binary_timeseries_json_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/binary?office=SPK&name=TEST.Binary.Inst.1Hour.0.MockTest&"
@@ -36,11 +36,11 @@ def test_retrieve_bin_ts_json_default(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.retrieve_bin_ts_json(timeseries_id, office_id, begin, end)
+    data = timeseries.get_binary_timeseries_json(timeseries_id, office_id, begin, end)
     assert data == _BIN_TS_JSON
 
 
-def test_retrieve_bin_ts_json(requests_mock):
+def test_get_binary_timeseries_json(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/binary?office=SPK&name=TEST.Binary.Inst.1Hour.0.MockTest&"
@@ -57,23 +57,23 @@ def test_retrieve_bin_ts_json(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.retrieve_bin_ts_json(
+    data = timeseries.get_binary_timeseries_json(
         timeseries_id, office_id, begin, end, "text/plain", -1000, 1000.0
     )
     assert data == _BIN_TS_JSON
 
 
-def test_store_bin_ts_json(requests_mock):
+def test_create_binary_timeseries_json(requests_mock):
     requests_mock.post(f"{_MOCK_ROOT}/timeseries/binary?replace-all=True")
 
     data = _BIN_TS_JSON
-    timeseries.store_bin_ts_json(data, True)
+    timeseries.create_binary_timeseries_json(data, True)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
 
 
-def test_delete_bin_ts(requests_mock):
+def test_delete_binary_timeseries(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}"
         "/timeseries/binary/TEST.Binary.Inst.1Hour.0.MockTest?office=SPK&"
@@ -90,7 +90,9 @@ def test_delete_bin_ts(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    timeseries.delete_bin_ts(level_id, office_id, begin, end, "text/plain", -999.9, 999)
+    timeseries.delete_binary_timeseries(
+        level_id, office_id, begin, end, "text/plain", -999.9, 999
+    )
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

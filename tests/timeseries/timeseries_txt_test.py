@@ -24,7 +24,7 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
-def test_retrieve_text_ts_json_default(requests_mock):
+def test_get_text_timeseries_json_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/text?office=SWT&name=TEST.Text.Inst.1Hour.0.MockTest&"
@@ -39,11 +39,11 @@ def test_retrieve_text_ts_json_default(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.retrieve_text_ts_json(timeseries_id, office_id, begin, end)
+    data = timeseries.get_text_timeseries_json(timeseries_id, office_id, begin, end)
     assert data == _TEXT_TS_JSON
 
 
-def test_retrieve_text_ts_json(requests_mock):
+def test_get_text_timeseries_json(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/text?office=SWT&name=TEST.Text.Inst.1Hour.0.MockTest&"
@@ -59,23 +59,23 @@ def test_retrieve_text_ts_json(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.retrieve_text_ts_json(
+    data = timeseries.get_text_timeseries_json(
         timeseries_id, office_id, begin, end, TextTsMode.STANDARD, -1000, 1000.0
     )
     assert data == _TEXT_TS_JSON
 
 
-def test_store_text_ts_json(requests_mock):
+def test_create_text_timeseries_json(requests_mock):
     requests_mock.post(f"{_MOCK_ROOT}/timeseries/text?replace-all=True")
 
     data = _TEXT_TS_JSON
-    timeseries.store_text_ts_json(data, True)
+    timeseries.create_text_timeseries_json(data, True)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
 
 
-def test_delete_text_ts(requests_mock):
+def test_delete_text_timeseries(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}"
         "/timeseries/text/TEST.Text.Inst.1Hour.0.MockTest?office=SWT&"
@@ -92,7 +92,7 @@ def test_delete_text_ts(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    timeseries.delete_text_ts(
+    timeseries.delete_text_timeseries(
         level_id,
         office_id,
         begin,
@@ -107,7 +107,7 @@ def test_delete_text_ts(requests_mock):
     assert requests_mock.call_count == 1
 
 
-def test_retrieve_std_text_json(requests_mock):
+def test_get_standard_text_json(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}" "/timeseries/text/standard-text-id/HW?office=SPK",
         json=_TEXT_TS_JSON,
@@ -116,21 +116,21 @@ def test_retrieve_std_text_json(requests_mock):
     text_id = "HW"
     office_id = "SPK"
 
-    data = timeseries.retrieve_std_txt_json(text_id, office_id)
+    data = timeseries.get_standard_text_json(text_id, office_id)
     assert data == _TEXT_TS_JSON
 
 
-def test_retrieve_std_text_cat_json_default(requests_mock):
+def test_get_standard_text_catalog_json_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}" "/timeseries/text/standard-text-id",
         json=_TEXT_TS_JSON,
     )
 
-    data = timeseries.retrieve_std_txt_cat_json()
+    data = timeseries.get_standard_text_catalog_json()
     assert data == _TEXT_TS_JSON
 
 
-def test_retrieve_std_text_cat_json(requests_mock):
+def test_get_standard_text_catalog_json(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/text/standard-text-id?text-id-mask=HW&office-id-mask=SPK",
@@ -140,22 +140,22 @@ def test_retrieve_std_text_cat_json(requests_mock):
     text_id = "HW"
     office_id = "SPK"
 
-    data = timeseries.retrieve_std_txt_cat_json(text_id, office_id)
+    data = timeseries.get_standard_text_catalog_json(text_id, office_id)
     assert data == _TEXT_TS_JSON
 
 
-def test_store_std_text_json(requests_mock):
+def test_create_standard_text_json(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}" "/timeseries/text/standard-text-id?fail-if-exists=True"
     )
 
-    timeseries.store_std_txt_json(_STD_TEXT_JSON, fail_if_exists=True)
+    timeseries.create_standard_text_json(_STD_TEXT_JSON, fail_if_exists=True)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
 
 
-def test_delete_std_text_json(requests_mock):
+def test_delete_standard_text(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}"
         "/timeseries/text/standard-text-id/HW?office=SPK&method=DELETE_ALL"
@@ -164,7 +164,7 @@ def test_delete_std_text_json(requests_mock):
     text_id = "HW"
     office_id = "SPK"
 
-    timeseries.delete_std_txt(text_id, DeleteMethod.DELETE_ALL, office_id)
+    timeseries.delete_standard_text(text_id, DeleteMethod.DELETE_ALL, office_id)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

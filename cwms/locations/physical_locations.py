@@ -8,15 +8,15 @@ from cwms.types import JSON
 from cwms.utils import return_df
 
 
-def retreive_loc_group_df(
+def get_location_group_df(
     loc_group_id: str, category_id: str, office_id: str
 ) -> DataFrame:
 
-    response = retreive_loc_group_json(loc_group_id, category_id, office_id)
+    response = get_location_group_json(loc_group_id, category_id, office_id)
     return return_df(response, dict_key=["assigned-locations"])
 
 
-def retreive_loc_group_json(
+def get_location_group_json(
     loc_group_id: str, category_id: str, office_id: str
 ) -> JSON:
 
@@ -26,18 +26,18 @@ def retreive_loc_group_json(
     return api.get(endpoint, params, api_version=1)
 
 
-def retrieve_locs_df(
+def get_locations_df(
     office_id: Optional[str] = None,
     loc_ids: Optional[str] = None,
     units: Optional[str] = None,
     datum: Optional[str] = None,
 ) -> DataFrame:
 
-    response = retreive_locs_json(office_id, loc_ids, units, datum)
+    response = get_locations_json(office_id, loc_ids, units, datum)
     return return_df(response, dict_key=["locations", "locations"])
 
 
-def retreive_locs_json(
+def get_locations_json(
     office_id: Optional[str] = None,
     loc_ids: Optional[str] = None,
     units: Optional[str] = None,

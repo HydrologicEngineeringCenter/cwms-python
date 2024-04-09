@@ -8,7 +8,7 @@ from cwms.types import JSON
 from cwms.utils import return_df
 
 
-def retrieve_ts_group_df(
+def get_timeseries_group_df(
     group_id: str, category_id: str, office_id: str
 ) -> pd.DataFrame:
     """Retreives time series stored in the requested time series groupas a dataframe
@@ -28,11 +28,11 @@ def retrieve_ts_group_df(
             The pandas dataframe containing the time series group information.
     """
 
-    response = retrieve_ts_group_json(group_id, category_id, office_id)
+    response = get_timeseries_group_json(group_id, category_id, office_id)
     return return_df(response, dict_key=["assigned-time-series"])
 
 
-def retrieve_ts_group_json(group_id: str, category_id: str, office_id: str) -> JSON:
+def get_timeseries_group_json(group_id: str, category_id: str, office_id: str) -> JSON:
     """Retreives time series stored in the requested time series group as a dictionary
 
     Parameters
@@ -56,7 +56,7 @@ def retrieve_ts_group_json(group_id: str, category_id: str, office_id: str) -> J
     return api.get(endpoint, params)
 
 
-def retrieve_ts_df(
+def get_timeseries_df(
     tsId: str,
     office_id: str,
     unit: str = "EN",
@@ -104,11 +104,11 @@ def retrieve_ts_df(
         The pandas dataframe containing the time series dates, values, and quality codes. Values are always in UTC.
     """
 
-    response = retrieve_ts_json(tsId, office_id, unit, datum, begin, end, page_size)
+    response = get_timeseries_json(tsId, office_id, unit, datum, begin, end, page_size)
     return return_df(response, dict_key=["values"])
 
 
-def retrieve_ts_json(
+def get_timeseries_json(
     tsId: str,
     office_id: str,
     unit: str = "EN",
@@ -175,7 +175,7 @@ def retrieve_ts_json(
     return api.get(endpoint, params)
 
 
-def write_ts(
+def create_timeseries(
     data: JSON,
     create_as_ltrs: bool = False,
     store_rule: Optional[str] = None,

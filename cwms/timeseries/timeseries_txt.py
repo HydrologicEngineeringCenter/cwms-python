@@ -23,7 +23,7 @@ class DeleteMethod(Enum):
     DELETE_DATA = auto()
 
 
-def retrieve_text_ts_json(
+def get_text_timeseries_json(
     timeseries_id: str,
     office_id: str,
     begin: datetime,
@@ -97,7 +97,7 @@ def retrieve_text_ts_json(
     return api.get(endpoint, params)
 
 
-def store_text_ts_json(data: JSON, replace_all: bool = False) -> JSON:
+def create_text_timeseries_json(data: JSON, replace_all: bool = False) -> JSON:
     """
     This method is used to store a text time series through CWMS Data API.
 
@@ -136,7 +136,7 @@ def store_text_ts_json(data: JSON, replace_all: bool = False) -> JSON:
     return api.post(endpoint, data, params)
 
 
-def delete_text_ts(
+def delete_text_timeseries(
     timeseries_id: str,
     office_id: str,
     begin: datetime,
@@ -219,7 +219,7 @@ def delete_text_ts(
     return api.delete(endpoint, params)
 
 
-def retrieve_std_txt_cat_json(
+def get_standard_text_catalog_json(
     text_id_mask: Optional[str] = None, office_id_mask: Optional[str] = None
 ) -> JSON:
     """
@@ -253,7 +253,7 @@ def retrieve_std_txt_cat_json(
     return api.get(endpoint, params)
 
 
-def retrieve_std_txt_json(text_id: str, office_id: str) -> JSON:
+def get_standard_text_json(text_id: str, office_id: str) -> JSON:
     """
     Retrieves standard text for the given ID and office ID.
 
@@ -292,7 +292,9 @@ def retrieve_std_txt_json(text_id: str, office_id: str) -> JSON:
     return api.get(endpoint, params)
 
 
-def delete_std_txt(text_id: str, delete_method: DeleteMethod, office_id: str) -> None:
+def delete_standard_text(
+    text_id: str, delete_method: DeleteMethod, office_id: str
+) -> None:
     """
     Deletes standard text for the given ID and office ID.
 
@@ -337,7 +339,7 @@ def delete_std_txt(text_id: str, delete_method: DeleteMethod, office_id: str) ->
     return api.delete(endpoint, params)
 
 
-def store_std_txt_json(data: JSON, fail_if_exists: bool = False) -> JSON:
+def create_standard_text_json(data: JSON, fail_if_exists: bool = False) -> JSON:
     """
     This method is used to store a standard text value through CWMS Data API.
 
