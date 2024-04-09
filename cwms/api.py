@@ -1,0 +1,288 @@
+""" Session management and REST functions for CWMS Data API.
+
+This module provides functions for making REST calls to the CWMS Data API (CDA). These
+functions should be used internally to interact with the API. The user should not have to
+interact with these directly.
+
+The `init_session()` function can be used to specify an alternative root URL, and to
+provide an authentication key (if required). If `init_session()` is not called, the
+default root URL (see `API_ROOT` below) will be used, and no authentication keys will be
+included when making API calls.
+
+Example: Initializing a session
+
+    # Specify an alternate URL
+    init_session(api_root="https://example.com/cwms-data")
+
+    # Specify an alternate URL and an auth key
+    init_session(api_root="https://example.com/cwms-data", api_key="API_KEY")
+
+Functions which make API calls that _may_ return a JSON response will return a `dict`
+containing the deserialized data. If the API response does not include data, an empty
+`dict` will be returned.
+
+In the event the API returns an error response, the function will raise an `APIError`
+which includes the response object and provides some hints to the user on how to address
+the error.
+"""
+
+import json
+import logging
+from json import JSONDecodeError
+from typing import Optional, cast
+
+from requests import Response
+from requests_toolbelt import sessions  # type: ignore
+from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
+
+from cwms.types import JSON, RequestParams
+
+# Specify the default API root URL and version.
+API_ROOT = "https://cwms-data-test.cwbi.us/cwms-data/"
+API_VERSION = 2
+
+# Initialize a non-authenticated session with the default root URL.
+SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
+
+
+class InvalidVersion(Exception):
+    pass
+
+
+class ApiError(Exception):
+    """CWMS Data Api Error.
+
+    This class is a light wrapper around a `requests.Response` object. Its primary purpose
+    is to generate an error message that includes the request URL and provide additional
+    information to the user to help them resolve the error.
+    """
+
+    def __init__(self, response: Response):
+        self.response = response
+
+    def __str__(self) -> str:
+        # Include the request URL in the error message.
+        message = f"CWMS API Error ({self.response.url})"
+
+        # If a reason is provided in the response, add it to the message.
+        if reason := self.response.reason:
+            message += f" {reason}"
+
+        message += "."
+
+        # Add additional context to help the user resolve the issue.
+        if hint := self.hint():
+            message += f" {hint}"
+
+        return message
+
+    def hint(self) -> str:
+        """Return a message with additional information on how to resolve the error."""
+
+        match self.response.status_code:
+            case 400:
+                return "Check that your parameters are correct."
+            case 404:
+                return "May be the result of an empty query."
+            case _:
+                return ""
+
+
+def init_session(
+    *, api_root: str | None = None, api_key: str | None = None
+) -> BaseUrlSession:
+    """Specify a root URL and authentication key for the CWMS Data API.
+
+    This function can be used to change the root URL used when interacting with the CDA.
+    All API calls made after this function is called will use the specified URL. If an
+    authentication key is given it will be included in all future request headers.
+
+    Keyword Args:
+        api_root (optional): The root URL for the CWMS Data API.
+        api_key (optional): An authentication key.
+
+    Returns:
+        Returns the updated session object.
+    """
+
+    global SESSION
+
+    if api_root:
+        logging.debug(f"Initializing root URL: api_root={api_root}")
+        SESSION = sessions.BaseUrlSession(base_url=api_root)
+
+    if api_key:
+        logging.debug(f"Setting authorization key: api_key={api_key}")
+        SESSION.headers.update({"Authorization": api_key})
+
+    return SESSION
+
+
+def api_headers(api_version: int) -> dict[str, str]:
+    """Initialize CDA request headers.
+
+    The CDA supports multiple versions. To request a specific version, the version number
+    must be included in the request headers.
+
+    Args:
+        api_version: The CDA version to use for the request.
+
+    Returns:
+        A dict containing the request headers.
+
+    Raises:
+        InvalidVersion: If an unsupported API version is specified.
+    """
+
+    match api_version:
+        case 1:
+            headers = {"Accept": "application/json"}
+        case 2:
+            headers = {"Accept": "application/json;version=2"}
+        case _:
+            raise InvalidVersion(f"API version {api_version} is not supported.")
+
+    return headers
+
+
+def get(
+    endpoint: str,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> JSON:
+    """Make a GET request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record(s).
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The deserialized JSON response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    headers = api_headers(api_version)
+    response = SESSION.get(endpoint, params=params, headers=headers)
+
+    if response.status_code != 200:
+        logging.error(f"CDA Error: response={response}")
+        raise ApiError(response)
+
+    return cast(JSON, response.json())
+
+
+def post(
+    endpoint: str,
+    data: JSON,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> JSON:
+    """Make a POST request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record type.
+        data: A dict containing the new record data. Must be JSON-serializable.
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The deserialized JSON response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    headers = api_headers(api_version)
+    response = SESSION.post(
+        endpoint, params=params, headers=headers, data=json.dumps(data)
+    )
+
+    if response.status_code != 200:
+        logging.error(f"CDA Error: response={response}")
+        raise ApiError(response)
+
+    try:
+        return cast(JSON, response.json())
+    except JSONDecodeError as error:
+        logging.error(f"Error decoding CDA response: {error}")
+        return {}
+
+
+def patch(
+    endpoint: str,
+    data: JSON,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> JSON:
+    """Make a PATCH request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record.
+        data: A dict containing the updated record data. Must be JSON-serializable.
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The deserialized JSON response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    headers = api_headers(api_version)
+    response = SESSION.patch(
+        endpoint, params=params, headers=headers, data=json.dumps(data)
+    )
+
+    if response.status_code != 200:
+        logging.error(f"CDA Error: response={response}")
+        raise ApiError(response)
+
+    try:
+        return cast(JSON, response.json())
+    except JSONDecodeError as error:
+        logging.error(f"Error decoding CDA response: {error}")
+        return {}
+
+
+def delete(
+    endpoint: str,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> None:
+    """Make a DELETE request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record.
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    headers = api_headers(api_version)
+    response = SESSION.delete(endpoint, params=params, headers=headers)
+
+    if response.status_code != 200:
+        logging.error(f"CDA Error: response={response}")
+        raise ApiError(response)
