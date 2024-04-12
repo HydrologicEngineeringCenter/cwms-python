@@ -1,0 +1,52 @@
+[
+  {
+    "spec": {
+      "office-id": "SWT",
+      "spec-id": "test-spec",
+      "designator": "designator",
+      "location-ids": [
+        "FcstInstTestLoc"
+      ]
+    },
+    "date-time": 1624284010000,
+    "issue-date-time": 1653221020000,
+    "first-date-time": 1692702150000,
+    "last-date-time": 1727017260000,
+    "max-age": 5,
+    "time-series-count": 3,
+    "notes": "test notes",
+    "metadata": {
+      "key1": "value1",
+      "key2": "value2",
+      "key3": "value3"
+    },
+    "filename": "testFilename.txt",
+    "file-description": "test file description",
+    "file-data": "dGVzdCBmaWxlIGNvbnRlbnQ="
+  },
+  {
+    "spec": {
+      "office-id": "SWT",
+      "spec-id": "test-spec2",
+      "designator": "designator2",
+      "location-ids": [
+        "FcstInstTestLoc2"
+      ]
+    },
+    "date-time": 1624284020000,
+    "issue-date-time": 1653221030000,
+    "first-date-time": 1692702160000,
+    "last-date-time": 1727017270000,
+    "max-age": 6,
+    "time-series-count": 3,
+    "notes": "test notes2",
+    "metadata": {
+      "key1": "valueA",
+      "key2": "valueB",
+      "key3": "valueC"
+    },
+    "filename": "testFilename2.txt",
+    "file-description": "test file description2",
+    "file-data": "dGVzdCBmaWxlIGNvbnRlbnQ="
+  }
+]

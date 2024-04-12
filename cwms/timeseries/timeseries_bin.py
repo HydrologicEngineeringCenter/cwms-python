@@ -148,7 +148,7 @@ class CwmsBinTs(_CwmsBase):
         ServerError
             If a 500 range error code response is returned from the server.
         """
-        if dict is None:
+        if data is None:
             raise ValueError(
                 "Storing binary time series requires a JSON data dictionary"
             )
