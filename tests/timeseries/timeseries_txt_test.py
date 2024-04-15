@@ -62,6 +62,21 @@ class TestTextTs(unittest.TestCase):
         self.assertEqual(_TEXT_TS_JSON, timeseries)
 
     @requests_mock.Mocker()
+    def tests_retrieve_large_clob(self, m):
+        url = "https://example.com/large_clob"
+        m.get(
+            url,
+            text="Example text data but short",
+            headers={"content-type": "text/plain"},
+        )
+
+        cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))
+        clob_data = cwms_text_ts.retrieve_large_clob(url)
+
+        self.assertEqual(type(clob_data), str)
+        self.assertEqual(clob_data, "Example text data but short")
+
+    @requests_mock.Mocker()
     def test_store_text_ts_json(self, m):
         m.post(f"{TestTextTs._MOCK_ROOT}/timeseries/text?replace-all=True")
         cwms_text_ts = CwmsTextTs(CwmsApiSession(TestTextTs._MOCK_ROOT))

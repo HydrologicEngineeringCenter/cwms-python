@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
 
+import requests
+
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
 from cwms.types import JSON
@@ -112,6 +114,19 @@ class CwmsTextTs(_CwmsBase):
         headers = {"Accept": constants.HEADER_JSON_V2}
 
         return queryCDA(self, end_point, params, headers)
+
+    def retrieve_large_clob(self, url: str, encoding: str = "utf-8") -> str:
+        """
+        Retrieves large clob data greater than 64kb from CWMS data api
+        :param url: str
+            Url used in query by CDA
+        :param encoding: str, optional
+            Encoding used to decode text data. Default utf-8
+        :return: str
+            Large text data
+        """
+        response = requests.get(url)
+        return response.content.decode(encoding)
 
     def store_text_ts_json(
         self, data: JSON, replace_all: Optional[bool] = False
