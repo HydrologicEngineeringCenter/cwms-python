@@ -26,16 +26,17 @@ class TestBinTs(unittest.TestCase):
             "/timeseries/binary?office=SPK&name=TEST.Binary.Inst.1Hour.0.MockTest&"
             "begin=2024-02-12T00%3A00%3A00-08%3A00&"
             "end=2020-02-12T02%3A00%3A00-08%3A00",
-            json=_BIN_TS_JSON)
+            json=_BIN_TS_JSON,
+        )
         cwms_bin_ts = CwmsBinTs(CwmsApiSession(TestBinTs._MOCK_ROOT))
         timeseries_id = "TEST.Binary.Inst.1Hour.0.MockTest"
         office_id = "SPK"
         timezone = pytz.timezone("US/Pacific")
         begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
         end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
-        timeseries = cwms_bin_ts.retrieve_bin_ts_json(timeseries_id,
-                                                      office_id,
-                                                      begin, end)
+        timeseries = cwms_bin_ts.retrieve_bin_ts_json(
+            timeseries_id, office_id, begin, end
+        )
         self.assertEqual(_BIN_TS_JSON, timeseries)
 
     @requests_mock.Mocker()
@@ -43,21 +44,20 @@ class TestBinTs(unittest.TestCase):
         m.get(
             f"{TestBinTs._MOCK_ROOT}"
             "/timeseries/binary?office=SPK&name=TEST.Binary.Inst.1Hour.0.MockTest&"
-            "min-attribute=-1000&max-attribute=1000.0&"
             "begin=2024-02-12T00%3A00%3A00-08%3A00&"
             "end=2020-02-12T02%3A00%3A00-08%3A00&"
             "binary-type-mask=text%2Fplain",
-            json=_BIN_TS_JSON)
+            json=_BIN_TS_JSON,
+        )
         cwms_bin_ts = CwmsBinTs(CwmsApiSession(TestBinTs._MOCK_ROOT))
         timeseries_id = "TEST.Binary.Inst.1Hour.0.MockTest"
         office_id = "SPK"
         timezone = pytz.timezone("US/Pacific")
         begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
         end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
-        timeseries = cwms_bin_ts.retrieve_bin_ts_json(timeseries_id,
-                                                      office_id,
-                                                      begin, end, "text/plain",
-                                                      -1000, 1000.0)
+        timeseries = cwms_bin_ts.retrieve_bin_ts_json(
+            timeseries_id, office_id, begin, end, bin_type_mask="text/plain"
+        )
         self.assertEqual(_BIN_TS_JSON, timeseries)
 
     @requests_mock.Mocker()
@@ -85,11 +85,11 @@ class TestBinTs(unittest.TestCase):
         m.delete(
             f"{TestBinTs._MOCK_ROOT}"
             "/timeseries/binary/TEST.Binary.Inst.1Hour.0.MockTest?office=SPK&"
-            "min-attribute=-999.9&max-attribute=999&"
             "begin=2024-02-12T00%3A00%3A00-08%3A00&"
             "end=2020-02-12T02%3A00%3A00-08%3A00&"
             "binary-type-mask=text%2Fplain",
-            json=_BIN_TS_JSON)
+            json=_BIN_TS_JSON,
+        )
         cwms_bin_ts = CwmsBinTs(CwmsApiSession(TestBinTs._MOCK_ROOT))
         level_id = "TEST.Binary.Inst.1Hour.0.MockTest"
         office_id = "SPK"
@@ -97,8 +97,8 @@ class TestBinTs(unittest.TestCase):
         begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
         end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
         cwms_bin_ts.delete_bin_ts(
-            level_id, office_id, begin, end,
-            "text/plain", -999.9, 999)
+            level_id, office_id, begin, end, bin_type_mask="text/plain"
+        )
         assert m.called
         assert m.call_count == 1
 

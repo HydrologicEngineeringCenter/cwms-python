@@ -2,27 +2,25 @@
 #  United States Army Corps of Engineers - Hydrologic Engineering Center (USACE/HEC)
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
-import datetime
 import json
+from datetime import datetime
 from enum import Enum, auto
+from typing import Optional
 
 import cwms._constants as constants
 import requests
 from cwms.core import CwmsApiSession
 from cwms.core import _CwmsBase
-from cwms.utils import queryCDA
-from cwms.utils import raise_for_status
-
+from cwms.utils import queryCDA, raise_for_status
 
 class TextTsMode(Enum):
     REGULAR = auto(),
     STANDARD = auto(),
     ALL = auto()
 
-
 class DeleteMethod(Enum):
-    DELETE_ALL = auto(),
-    DELETE_KEY = auto(),
+    DELETE_ALL = auto()
+    DELETE_KEY = auto()
     DELETE_DATA = auto()
 
 
@@ -36,6 +34,7 @@ class CwmsTextTs(_CwmsBase):
     -----
     Write operations require authentication
     """
+
     _TEXT_TS_ENDPOINT = "timeseries/text"
     _STD_TEXT_ENDPOINT = f"{_TEXT_TS_ENDPOINT}/standard-text-id"
 
@@ -51,11 +50,14 @@ class CwmsTextTs(_CwmsBase):
         """
         super().__init__(cwms_api_session)
 
-    def retrieve_text_ts_json(self, timeseries_id: str, office_id: str,
-                              begin: datetime, end: datetime,
-                              mode: TextTsMode = TextTsMode.REGULAR,
-                              min_attribute: float = None,
-                              max_attribute: float = None) -> dict:
+    def retrieve_text_ts_json(
+        self,
+        timeseries_id: str,
+        office_id: str,
+        begin: datetime,
+        end: datetime,
+        version_date: Optional[datetime] = None,
+    ) -> JSON:
         """
         Parameters
         ----------
@@ -71,15 +73,10 @@ class CwmsTextTs(_CwmsBase):
             The end date and time of the time range.
             If the datetime has a timezone it will be used,
             otherwise it is assumed to be in UTC.
-        mode : TextTsMode, optional
-            The mode for retrieving text timeseries data.
-            Default is `TextTsMode.REGULAR`.
-        min_attribute : float, optional
-            The minimum attribute value to filter the timeseries data.
-            Default is `None`.
-        max_attribute : float, optional
-            The maximum attribute value to filter the timeseries data.
-            Default is `None`.
+        version_date : datetime, optional
+            The time series date version to retrieve. If not supplied,
+            the maximum date version for each time step in the retrieval
+            window will be returned.
 
         Returns
         -------
@@ -108,15 +105,13 @@ class CwmsTextTs(_CwmsBase):
             raise ValueError("Retrieve text timeseries requires a time window")
 
         end_point = CwmsTextTs._TEXT_TS_ENDPOINT
-
+        version_date_str = version_date.isoformat() if version_date else ""
         params = {
             constants.OFFICE_PARAM: office_id,
             constants.NAME: timeseries_id,
-            constants.MIN_ATTRIBUTE: min_attribute,
-            constants.MAX_ATTRIBUTE: max_attribute,
             constants.BEGIN: begin.isoformat(),
             constants.END: end.isoformat(),
-            constants.MODE: mode.name
+            constants.VERSION_DATE: version_date_str,
         }
 
         headers = {"Accept": constants.HEADER_JSON_V2}
@@ -162,28 +157,28 @@ class CwmsTextTs(_CwmsBase):
         ServerError
             If a 500 range error code response is returned from the server.
         """
-        if dict is None:
+        if data is None:
             raise ValueError(
-                "Cannot store a text time series without a JSON data dictionary")
+                "Cannot store a text time series without a JSON data dictionary"
+            )
         end_point = CwmsTextTs._TEXT_TS_ENDPOINT
 
-        params = {
-            "replace-all": replace_all
-        }
-        headers = {
-            "Content-Type": constants.HEADER_JSON_V2
-        }
-        response = self.get_session().post(end_point, params=params,
-                                           headers=headers,
-                                           data=json.dumps(data))
+        params = {"replace-all": replace_all}
+        headers = {"Content-Type": constants.HEADER_JSON_V2}
+        response = self.get_session().post(
+            end_point, params=params, headers=headers, data=json.dumps(data)
+        )
         raise_for_status(response)
 
-    def delete_text_ts(self, timeseries_id: str,
-                       office_id: str, begin: datetime, end: datetime,
-                       mode: TextTsMode = TextTsMode.REGULAR,
-                       text_mask: str = "*",
-                       min_attribute: float = None,
-                       max_attribute: float = None) -> None:
+    def delete_text_ts(
+        self,
+        timeseries_id: str,
+        office_id: str,
+        begin: datetime,
+        end: datetime,
+        version_date: Optional[datetime] = None,
+        text_mask: Optional[str] = "*",
+    ) -> None:
         """
         Deletes text timeseries data with the given ID and office ID and time range.
 
@@ -193,13 +188,6 @@ class CwmsTextTs(_CwmsBase):
             The ID of the text time series data to be deleted.
         office_id : str
             The ID of the office that the text time series belongs to.
-        text_mask : str, optional
-            The standard text pattern to match.
-            Use glob-style wildcard characters instead of sql-style wildcard
-            characters for pattern matching.
-            For StandardTextTimeSeries this should be the Standard_Text_Id
-            (such as 'E' for ESTIMATED)
-            Default value is `"*"`
         begin : datetime
             The start date and time of the time range.
             If the datetime has a timezone it will be used,
@@ -208,15 +196,17 @@ class CwmsTextTs(_CwmsBase):
             The end date and time of the time range.
             If the datetime has a timezone it will be used,
             otherwise it is assumed to be in UTC.
-        mode : TextTsMode, optional
-            The mode for deleting text timeseries data.
-            Default is `TextTsMode.REGULAR`.
-        min_attribute : float, optional
-            The minimum attribute value to filter the timeseries data.
-            Default is `None`.
-        max_attribute : float, optional
-            The maximum attribute value to filter the timeseries data.
-            Default is `None`.
+        version_date : datetime, optional
+            The time series date version to retrieve. If not supplied,
+            the maximum date version for each time step in the retrieval
+            window will be deleted.
+        text_mask : str, optional
+            The standard text pattern to match.
+            Use glob-style wildcard characters instead of sql-style wildcard
+            characters for pattern matching.
+            For StandardTextTimeSeries this should be the Standard_Text_Id
+            (such as 'E' for ESTIMATED)
+            Default value is `"*"`
 
         Returns
         -------
@@ -243,22 +233,21 @@ class CwmsTextTs(_CwmsBase):
             raise ValueError("Deleting text timeseries requires a time window")
         end_point = f"{CwmsTextTs._TEXT_TS_ENDPOINT}/{timeseries_id}"
 
+        version_date_str = version_date.isoformat() if version_date else ""
         params = {
             constants.OFFICE_PARAM: office_id,
-            constants.MIN_ATTRIBUTE: min_attribute,
-            constants.MAX_ATTRIBUTE: max_attribute,
             constants.BEGIN: begin.isoformat(),
             constants.END: end.isoformat(),
-            constants.MODE: mode.name,
-            "text-mask": text_mask
+            constants.VERSION_DATE: version_date_str,
+            "text-mask": text_mask,
         }
         headers = {"Content-Type": constants.HEADER_JSON_V2}
-        response = self.get_session().delete(end_point, params=params,
-                                             headers=headers)
+        response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
 
-    def retrieve_std_txt_cat_json(self, text_id_mask: str = None,
-                                  office_id_mask: str = None) -> dict:
+    def retrieve_std_txt_cat_json(
+        self, text_id_mask: Optional[str] = None, office_id_mask: Optional[str] = None
+    ) -> JSON:
         """
         Retrieves standard text catalog for the given ID and office ID filters.
 
@@ -284,15 +273,12 @@ class CwmsTextTs(_CwmsBase):
             If a 500 range error code response is returned from the server.
         """
 
-        params = {
-            "text-id-mask": text_id_mask,
-            "office-id-mask": office_id_mask
-        }
+        params = {"text-id-mask": text_id_mask, "office-id-mask": office_id_mask}
         headers = {"Accept": constants.HEADER_JSON_V2}
         end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}"
         return queryCDA(self, end_point, params, headers)
 
-    def retrieve_std_txt_json(self, text_id: str, office_id: str) -> dict:
+    def retrieve_std_txt_json(self, text_id: str, office_id: str) -> JSON:
         """
         Retrieves standard text for the given ID and office ID.
 
@@ -329,8 +315,9 @@ class CwmsTextTs(_CwmsBase):
         end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}/{text_id}"
         return queryCDA(self, end_point, params, headers)
 
-    def delete_std_txt(self, text_id: str, delete_method: DeleteMethod,
-                       office_id: str):
+    def delete_std_txt(
+        self, text_id: str, delete_method: DeleteMethod, office_id: str
+    ) -> None:
         """
         Deletes standard text for the given ID and office ID.
 
@@ -368,18 +355,13 @@ class CwmsTextTs(_CwmsBase):
         if delete_method is None:
             raise ValueError("Deleting standard timeseries requires a delete method")
 
-        params = {
-            constants.OFFICE_PARAM: office_id,
-            "method": delete_method.name
-        }
+        params = {constants.OFFICE_PARAM: office_id, "method": delete_method.name}
         headers = {"Content-Type": constants.HEADER_JSON_V2}
         end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}/{text_id}"
-        response = self.get_session().delete(end_point, params=params,
-                                             headers=headers)
+        response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
 
-    def store_std_txt_json(self, data: dict,
-                           fail_if_exists: bool = False) -> None:
+    def store_std_txt_json(self, data: JSON, fail_if_exists: bool = False) -> None:
         """
         This method is used to store a standard text value through CWMS Data API.
 
@@ -407,14 +389,15 @@ class CwmsTextTs(_CwmsBase):
         ServerError
             If a 500 range error code response is returned from the server.
         """
-        if dict is None:
+        if data is None:
             raise ValueError(
-                "Cannot store a standard text without a JSON data dictionary")
+                "Cannot store a standard text without a JSON data dictionary"
+            )
         end_point = CwmsTextTs._STD_TEXT_ENDPOINT
 
         params = {"fail-if-exists": fail_if_exists}
         headers = {"Content-Type": constants.HEADER_JSON_V2}
-        response = self.get_session().post(end_point, params=params,
-                                           headers=headers,
-                                           data=json.dumps(data))
+        response = self.get_session().post(
+            end_point, params=params, headers=headers, data=json.dumps(data)
+        )
         raise_for_status(response)

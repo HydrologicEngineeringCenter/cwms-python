@@ -16,37 +16,37 @@ level_api = CwmsLevel(session)
 def run_spec_level_examples():
     print("------Running through spec level examples-------")
     specified_level = json.loads(
-        '''
+        """
         {
             "office-id": "SPK",
             "id": "Top of Surcharge",
             "description": "TestLevel"
         }
-        ''')
+        """
+    )
     print(f"Storing a specified level {specified_level['id']}")
     level_api.store_specified_level_json(specified_level, False)
 
     spec_level_dict = level_api.retrieve_specified_levels_json(
-        "Top of Surcharge", "SPK")[0]
+        "Top of Surcharge", "SPK"
+    )[0]
     print(spec_level_dict)
 
     new_id = "Top of Surcharge2"
-    print(
-        f"Changing the name of specified level {specified_level['id']} to {new_id}")
+    print(f"Changing the name of specified level {specified_level['id']} to {new_id}")
     level_api.update_specified_level("Top of Surcharge", new_id, "SPK")
     spec_level_dict = level_api.retrieve_specified_levels_json(new_id, "SPK")[0]
     print(spec_level_dict["id"])
     print(f"Deleting specified level id {new_id}")
     level_api.delete_specified_level("Top of Surcharge2", "SPK")
-    spec_levels = level_api.retrieve_specified_levels_json(
-        "Top of Surcharge*", "SPK")
+    spec_levels = level_api.retrieve_specified_levels_json("Top of Surcharge*", "SPK")
     print(f"Confirming delete of spec id")
     print(spec_levels)
 
 
 def run_loc_level_examples():
     print("------Running through loc level examples-------")
-    location = '''
+    location = """
         {
           "name": "TEST",
           "latitude": 0,
@@ -67,14 +67,14 @@ def run_loc_level_examples():
           "bounding-office-id": "SPK",
           "office-id": "SPK"
         }
-        '''
-    headers = {
-        "Content-Type": constants.HEADER_JSON_V1
-    }
+        """
+    headers = {"Content-Type": constants.HEADER_JSON_V1}
     print("Storing location TEST")
-    level_api.get_session().post("locations", params=None,
-                                 headers=headers, data=location)
-    level_dict = json.loads('''
+    level_api.get_session().post(
+        "locations", params=None, headers=headers, data=location
+    )
+    level_dict = json.loads(
+        """
         {
           "location-level-id": "TEST.Elev.Inst.0.Top of Dam",
           "office-id": "SPK",
@@ -86,21 +86,20 @@ def run_loc_level_examples():
           "level-date": "1900-01-01T06:00:00Z",
           "duration-id": "0"
         }
-        ''')
+        """
+    )
     print(f"Storing location level {level_dict['location-level-id']}")
     level_api.store_location_level_json(level_dict)
     date_string = "1900-01-01T06:00:00"
     office_id = "SPK"
     effective_date = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
-    level_id = level_dict['location-level-id']
-    level = level_api.retrieve_location_level_json(level_id, office_id,
-                                                   effective_date)
+    level_id = level_dict["location-level-id"]
+    level = level_api.retrieve_location_level_json(level_id, office_id, effective_date)
     print(level)
-    print(
-        f"Retrieving level {level_id} as an hourly timeseries for the past day")
-    time_series = level_api.retrieve_level_as_timeseries_json(level_id,
-                                                              office_id, "m",
-                                                              interval="1Hour")
+    print(f"Retrieving level {level_id} as an hourly timeseries for the past day")
+    time_series = level_api.retrieve_level_as_timeseries_json(
+        level_id, office_id, "m", interval="1Hour"
+    )
     print(time_series)
     print(f"Deleting level {level_id}")
     level_api.delete_location_level(level_id, office_id, effective_date)

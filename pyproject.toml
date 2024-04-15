@@ -1,50 +1,43 @@
-[build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "cwms-python"
+version = "0.1.0"
+packages = [
+    { include = "cwms" },
+]
 description = "Corps water managerment systems (CWMS) REST API for Data Retrieval of USACE water data"
 readme = "README.md"
-requires-python = ">=3.8"
+license = "LICENSE"
 keywords = ["USACE", "water data"]
-license = {file = "LICENSE.md"}
-maintainers = [
-  {name = "Eric Novotny", email = "eric.v.novotny@usace.army.mil"},
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-]
-dependencies = [
-    "requests_toolbelt",
-    "requests",
-    "pandas",
-]
-dynamic = ["version"]
+authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 
-[tool.setuptools]
-packages = ["cwms"]
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.2.1"
+numpy = "^1.26.4"
+requests-toolbelt = "^1.0.0"
+requests = "^2.31.0"
 
-[project.optional-dependencies]
-test = [
-    "pytest > 8.0.0",
-    "pytest-cov[all]",
-    "requests_mock > 1.11.0",
-    "pytz > 2024.1"
-]
-doc = [
-  "sphinx",
-]
+[tool.poetry.group.dev.dependencies]
+black = "^24.2.0"
+isort = "^5.13.2"
+mypy = "^1.9.0"
+pre-commit = "^3.6.2"
+pytest = "^8.1.1"
+requests-mock = "^1.11.0"
+pytest-cov = "^4.1.0"
+pandas-stubs = "^2.2.1.240316"
+types-requests = "^2.31.0.20240311"
+yamlfix = "^1.16.0"
 
-[project.urls]
-homepage = "https://github.com/HydrologicEngineeringCenter/cwms-python"
-repository = "https://github.com/HydrologicEngineeringCenter/cwms-python.git"
-
-[tool.setuptools_scm]
-write_to = "cwms/_version.py"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
 
-[tool.black]
-skip-string-normalization = true
+[tool.yamlfix]
+comments_min_spaces_from_content = 1
+whitelines = 1
+explicit_start = false
+preserve_quotes = true

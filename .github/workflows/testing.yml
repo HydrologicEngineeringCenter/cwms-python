@@ -1,0 +1,55 @@
+name: Testing
+
+# Run the workflow on all branches.
+on: [push, pull_request]
+
+jobs:
+  # Run tests and generate code coverage report.
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # Unlike the code-check workflow, this job requires the dev dependencies to be
+      # installed to make sure we have the necessary, tools, stub files, etc.
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+
+      - name: Cache Virtual Environment
+        uses: actions/cache@v4
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install Dependencies
+        run: poetry install
+
+      # Run pytest and generate coverage report data.
+      - name: Run Tests
+        run: poetry run pytest tests/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
+
+      # Run mypy with strict mode enabled. Only the main source code is type checked (test
+      # and example code is excluded).
+      - name: Check Types
+        run: poetry run mypy --strict cwms/
+
+      - name: Generate Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: out/coverage.xml
+          format: markdown
+          output: both
+          badge: true
+
+      - name: Generate Job Summary
+        uses: x-color/github-actions-job-summary@v0.1.1
+        with:
+          file: ./code-coverage-results.md
+          vars: |-
+            empty: empty
