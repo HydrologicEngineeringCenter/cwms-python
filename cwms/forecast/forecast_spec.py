@@ -77,10 +77,10 @@ class CwmsForecastSpec(_CwmsBase):
 
         params = {
             constants.OFFICE_PARAM: office,
-            "id_mask": id_mask,
-            "designator-mask": designator_mask,
-            "location-mask": location_mask,
-            "source-entity": source_entity,
+            constants.ID_MASK: id_mask,
+            constants.DESIGNATOR_MASK: designator_mask,
+            constants.LOCATION_MASK: location_mask,
+            constants.SOURCE_ENTITY: source_entity,
         }
 
         headers = {"Accept": constants.HEADER_JSON_V2}
@@ -128,7 +128,7 @@ class CwmsForecastSpec(_CwmsBase):
 
         params = {
             constants.OFFICE_PARAM: office,
-            "designator": designator,
+            constants.DESIGNATOR: designator,
         }
 
         headers = {"Accept": constants.HEADER_JSON_V2}
@@ -208,7 +208,7 @@ class CwmsForecastSpec(_CwmsBase):
 
         params = {
             constants.OFFICE_PARAM: office,
-            "designator": designator,
+            constants.DESIGNATOR: designator,
         }
         headers = {"Content-Type": constants.HEADER_JSON_V2}
         response = self.get_session().delete(end_point, params=params, headers=headers)
