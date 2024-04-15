@@ -70,6 +70,17 @@ class TestBinTs(unittest.TestCase):
         assert m.call_count == 1
 
     @requests_mock.Mocker()
+    def tests_retrieve_large_blob(self, m):
+        url = 'https://example.com/large_blob'
+        m.get(url, text='Example byte data but short', headers={'content-type': 'application/octet-stream'})
+
+        cwms_bin_ts = CwmsBinTs(CwmsApiSession(TestBinTs._MOCK_ROOT))
+        blob_data = cwms_bin_ts.retrieve_large_blob(url)
+
+        self.assertEqual(type(blob_data), bytes)
+        self.assertEqual(blob_data, b'Example byte data but short')
+
+    @requests_mock.Mocker()
     def test_delete_bin_ts(self, m):
         m.delete(
             f"{TestBinTs._MOCK_ROOT}"

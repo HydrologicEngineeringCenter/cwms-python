@@ -7,6 +7,7 @@ import json
 from enum import Enum, auto
 
 import cwms._constants as constants
+import requests
 from cwms.core import CwmsApiSession
 from cwms.core import _CwmsBase
 from cwms.utils import queryCDA
@@ -121,6 +122,17 @@ class CwmsTextTs(_CwmsBase):
         headers = {"Accept": constants.HEADER_JSON_V2}
 
         return queryCDA(self, end_point, params, headers)
+
+    def retrieve_large_clob(self, url):
+        """
+        Retrieves large clob data from CWMS data api
+        :param url:
+            Url used by CDA in query
+        :return:
+            Large text data
+        """
+        response = requests.get(url)
+        return response.content.decode('utf-8')
 
     def store_text_ts_json(self, data: dict,
                            replace_all: bool = False) -> None:
