@@ -61,6 +61,21 @@ class TestBinTs(unittest.TestCase):
         self.assertEqual(_BIN_TS_JSON, timeseries)
 
     @requests_mock.Mocker()
+    def tests_retrieve_large_blob(self, m):
+        url = "https://example.com/large_blob"
+        m.get(
+            url,
+            text="Example byte data but short",
+            headers={"content-type": "application/octet-stream"},
+        )
+
+        cwms_bin_ts = CwmsBinTs(CwmsApiSession(TestBinTs._MOCK_ROOT))
+        blob_data = cwms_bin_ts.retrieve_large_blob(url)
+
+        self.assertEqual(type(blob_data), bytes)
+        self.assertEqual(blob_data, b"Example byte data but short")
+
+    @requests_mock.Mocker()
     def test_store_bin_ts_json(self, m):
         m.post(f"{TestBinTs._MOCK_ROOT}/timeseries/binary?replace-all=True")
         cwms_bin_ts = CwmsBinTs(CwmsApiSession(TestBinTs._MOCK_ROOT))

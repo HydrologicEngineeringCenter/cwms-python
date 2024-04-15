@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
 
+import requests
+
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
 from cwms.types import JSON
@@ -120,6 +122,17 @@ class CwmsBinTs(_CwmsBase):
         headers = {"Accept": constants.HEADER_JSON_V2}
 
         return queryCDA(self, end_point, params, headers)
+
+    def retrieve_large_blob(self, url: str) -> bytes:
+        """
+        Retrieves large blob data greater than 64kb from CWMS data api
+        :param url: str
+            Url used in query by CDA
+        :return: bytes
+            Large binary data
+        """
+        response = requests.get(url)
+        return response.content
 
     def store_bin_ts_json(self, data: JSON, replace_all: bool = False) -> None:
         """
