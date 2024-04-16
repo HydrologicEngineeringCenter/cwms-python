@@ -8,7 +8,7 @@ from enum import Enum, auto
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON
+from cwms.types import JSON, Data
 
 
 class TextTsMode(Enum):
@@ -23,7 +23,7 @@ class DeleteMethod(Enum):
     DELETE_DATA = auto()
 
 
-def get_text_timeseries_json(
+def get_text_timeseries(
     timeseries_id: str,
     office_id: str,
     begin: datetime,
@@ -31,7 +31,7 @@ def get_text_timeseries_json(
     mode: TextTsMode = TextTsMode.REGULAR,
     min_attribute: Optional[float] = None,
     max_attribute: Optional[float] = None,
-) -> JSON:
+) -> Data:
     """
     Parameters
     ----------
@@ -94,10 +94,11 @@ def get_text_timeseries_json(
         "mode": mode.name,
     }
 
-    return api.get(endpoint, params)
+    response = api.get(endpoint, params)
+    return Data(response)
 
 
-def create_text_timeseries_json(data: JSON, replace_all: bool = False) -> JSON:
+def create_text_timeseries(data: JSON, replace_all: bool = False) -> Data:
     """
     This method is used to store a text time series through CWMS Data API.
 
@@ -133,7 +134,8 @@ def create_text_timeseries_json(data: JSON, replace_all: bool = False) -> JSON:
     endpoint = "timeseries/text"
     params = {"replace-all": replace_all}
 
-    return api.post(endpoint, data, params)
+    response = api.post(endpoint, data, params)
+    return Data(response)
 
 
 def delete_text_timeseries(
@@ -219,9 +221,9 @@ def delete_text_timeseries(
     return api.delete(endpoint, params)
 
 
-def get_standard_text_catalog_json(
+def get_standard_text_catalog(
     text_id_mask: Optional[str] = None, office_id_mask: Optional[str] = None
-) -> JSON:
+) -> Data:
     """
     Retrieves standard text catalog for the given ID and office ID filters.
 
@@ -250,10 +252,11 @@ def get_standard_text_catalog_json(
     endpoint = "timeseries/text/standard-text-id"
     params = {"text-id-mask": text_id_mask, "office-id-mask": office_id_mask}
 
-    return api.get(endpoint, params)
+    response = api.get(endpoint, params)
+    return Data(response)
 
 
-def get_standard_text_json(text_id: str, office_id: str) -> JSON:
+def get_standard_text(text_id: str, office_id: str) -> Data:
     """
     Retrieves standard text for the given ID and office ID.
 
@@ -289,7 +292,8 @@ def get_standard_text_json(text_id: str, office_id: str) -> JSON:
     endpoint = f"timeseries/text/standard-text-id/{text_id}"
     params = {"office": office_id}
 
-    return api.get(endpoint, params)
+    response = api.get(endpoint, params)
+    return Data(response)
 
 
 def delete_standard_text(
@@ -339,7 +343,7 @@ def delete_standard_text(
     return api.delete(endpoint, params)
 
 
-def create_standard_text_json(data: JSON, fail_if_exists: bool = False) -> JSON:
+def create_standard_text(data: JSON, fail_if_exists: bool = False) -> Data:
     """
     This method is used to store a standard text value through CWMS Data API.
 
@@ -374,4 +378,5 @@ def create_standard_text_json(data: JSON, fail_if_exists: bool = False) -> JSON:
     endpoint = "timeseries/text/standard-text-id"
     params = {"fail-if-exists": fail_if_exists}
 
-    return api.post(endpoint, data, params)
+    response = api.post(endpoint, data, params)
+    return Data(response)

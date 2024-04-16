@@ -22,7 +22,7 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
-def test_get_timeseries_json_unversioned_default(requests_mock):
+def test_get_timeseries_unversioned_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"
@@ -42,10 +42,10 @@ def test_get_timeseries_json_unversioned_default(requests_mock):
     begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
     end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
 
-    data = timeseries.get_timeseries_json(
+    data = timeseries.get_timeseries(
         tsId=timeseries_id, office_id=office_id, begin=begin, end=end
     )
-    assert data == _UNVERS_TS_JSON
+    assert data.json == _UNVERS_TS_JSON
 
 
 def test_create_timeseries_unversioned_default(requests_mock):
@@ -62,7 +62,7 @@ def test_create_timeseries_unversioned_default(requests_mock):
     assert requests_mock.call_count == 1
 
 
-def test_get_timeseries_json_versioned_default(requests_mock):
+def test_get_timeseries_versioned_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"
@@ -84,14 +84,14 @@ def test_get_timeseries_json_versioned_default(requests_mock):
     end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
     version_date = timezone.localize(datetime(2021, 6, 20, 8, 0, 0))
 
-    data = timeseries.get_timeseries_json(
+    data = timeseries.get_timeseries(
         tsId=timeseries_id,
         office_id=office_id,
         begin=begin,
         end=end,
         version_date=version_date,
     )
-    assert data == _VERS_TS_JSON
+    assert data.json == _VERS_TS_JSON
 
 
 def test_create_timeseries_versioned_default(requests_mock):

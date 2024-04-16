@@ -8,7 +8,7 @@ from enum import Enum, auto
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON
+from cwms.types import JSON, Data
 
 
 class DeleteMethod(Enum):
@@ -17,7 +17,7 @@ class DeleteMethod(Enum):
     DELETE_DATA = auto()
 
 
-def get_binary_timeseries_json(
+def get_binary_timeseries(
     timeseries_id: str,
     office_id: str,
     begin: datetime,
@@ -25,7 +25,7 @@ def get_binary_timeseries_json(
     bin_type_mask: str = "*",
     min_attribute: Optional[float] = None,
     max_attribute: Optional[float] = None,
-) -> JSON:
+) -> Data:
     """
     Parameters
     ----------
@@ -90,10 +90,11 @@ def get_binary_timeseries_json(
         "binary-type-mask": bin_type_mask,
     }
 
-    return api.get(endpoint, params)
+    response = api.get(endpoint, params)
+    return Data(response)
 
 
-def create_binary_timeseries_json(data: JSON, replace_all: bool = False) -> JSON:
+def create_binary_timeseries(data: JSON, replace_all: bool = False) -> Data:
     """
     This method is used to store a binary time series through CWMS Data API.
 
@@ -127,7 +128,8 @@ def create_binary_timeseries_json(data: JSON, replace_all: bool = False) -> JSON
     endpoint = "timeseries/binary"
     params = {"replace-all": replace_all}
 
-    return api.post(endpoint, data, params)
+    response = api.post(endpoint, data, params)
+    return Data(response)
 
 
 def delete_binary_timeseries(

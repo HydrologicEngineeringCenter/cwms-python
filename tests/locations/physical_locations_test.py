@@ -35,7 +35,7 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
-def test_get_location_group_json(requests_mock):
+def test_get_location_group(requests_mock):
     group_id = "test-location-group"
     category_id = "test-location-category"
     office_id = "test-office"
@@ -47,28 +47,13 @@ def test_get_location_group_json(requests_mock):
         json=EXAMPLE_LOCATION_GROUP,
     )
 
-    data = locations.get_location_group_json(group_id, category_id, office_id)
-    assert data == EXAMPLE_LOCATION_GROUP
+    data = locations.get_location_group(group_id, category_id, office_id)
+    assert data.json == EXAMPLE_LOCATION_GROUP
 
+    assert type(data.df) == pd.DataFrame
+    assert data.df.shape == (1, 5)
 
-def test_get_location_group_df(requests_mock):
-    group_id = "test-location-group"
-    category_id = "test-location-category"
-    office_id = "test-office"
-
-    requests_mock.get(
-        f"{_MOCK_ROOT}/location/group/{group_id}?"
-        f"office={office_id}&"
-        f"category-id={category_id}",
-        json=EXAMPLE_LOCATION_GROUP,
-    )
-
-    data = locations.get_location_group_df(group_id, category_id, office_id)
-
-    assert type(data) == pd.DataFrame
-    assert data.shape == (1, 5)
-
-    values = data.to_numpy().tolist()
+    values = data.df.to_numpy().tolist()
     assert values[0] == [
         "test-location",
         "test-office",

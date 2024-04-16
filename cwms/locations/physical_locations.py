@@ -4,47 +4,26 @@ import pandas as pd
 from pandas import DataFrame
 
 import cwms.api as api
-from cwms.types import JSON
-from cwms.utils import return_df
+from cwms.types import Data
 
 
-def get_location_group_df(
-    loc_group_id: str, category_id: str, office_id: str
-) -> DataFrame:
-
-    response = get_location_group_json(loc_group_id, category_id, office_id)
-    return return_df(response, dict_key=["assigned-locations"])
-
-
-def get_location_group_json(
-    loc_group_id: str, category_id: str, office_id: str
-) -> JSON:
+def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> Data:
 
     endpoint = f"location/group/{loc_group_id}"
     params = {"office": office_id, "category-id": category_id}
 
-    return api.get(endpoint, params, api_version=1)
+    response = api.get(endpoint, params, api_version=1)
+    return Data(response, selector="assigned-locations")
 
 
-def get_locations_df(
+def get_locations(
     office_id: Optional[str] = None,
     loc_ids: Optional[str] = None,
     units: Optional[str] = None,
     datum: Optional[str] = None,
-) -> DataFrame:
+) -> Data:
 
-    response = get_locations_json(office_id, loc_ids, units, datum)
-    return return_df(response, dict_key=["locations", "locations"])
-
-
-def get_locations_json(
-    office_id: Optional[str] = None,
-    loc_ids: Optional[str] = None,
-    units: Optional[str] = None,
-    datum: Optional[str] = None,
-) -> JSON:
-
-    endpoint = "location/group"
+    endpoint = "locations"
     params = {
         "office": office_id,
         "names": loc_ids,
@@ -52,7 +31,8 @@ def get_locations_json(
         "datum": datum,
     }
 
-    return api.get(endpoint, params)
+    response = api.get(endpoint, params)
+    return Data(response, selector="locations.locations")
 
 
 def ExpandLocations(df: DataFrame) -> DataFrame:
