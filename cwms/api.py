@@ -73,23 +73,25 @@ class ApiError(Exception):
         # Add additional context to help the user resolve the issue.
         if hint := self.hint():
             message += f" {hint}"
+            
+        if content := self.response.content:
+            message += f" {content}"
 
         return message
 
     def hint(self) -> str:
         """Return a message with additional information on how to resolve the error."""
 
-        match self.response.status_code:
-            case 400:
+        if self.response.status_code == 400:
                 return "Check that your parameters are correct."
-            case 404:
+        elif self.response.status_code == 404:
                 return "May be the result of an empty query."
-            case _:
+        else:
                 return ""
 
 
 def init_session(
-    *, api_root: str | None = None, api_key: str | None = None
+    *, api_root: Optional[str] = None, api_key: Optional[str] = None
 ) -> BaseUrlSession:
     """Specify a root URL and authentication key for the CWMS Data API.
 
@@ -118,7 +120,7 @@ def init_session(
     return SESSION
 
 
-def api_headers(api_version: int) -> dict[str, str]:
+def api_version_text(api_version: int) -> dict[str, str]:
     """Initialize CDA request headers.
 
     The CDA supports multiple versions. To request a specific version, the version number
@@ -134,15 +136,14 @@ def api_headers(api_version: int) -> dict[str, str]:
         InvalidVersion: If an unsupported API version is specified.
     """
 
-    match api_version:
-        case 1:
-            headers = {"Accept": "application/json"}
-        case 2:
-            headers = {"Accept": "application/json;version=2"}
-        case _:
+    if api_version == 1 :
+            version = "application/json"
+    elif api_version == 2:
+            version = "application/json;version=2"
+    else:
             raise InvalidVersion(f"API version {api_version} is not supported.")
 
-    return headers
+    return version
 
 
 def get(
@@ -168,7 +169,7 @@ def get(
         ApiError: If an error response is return by the API.
     """
 
-    headers = api_headers(api_version)
+    headers = {"Accept": api_version_text(api_version)}
     response = SESSION.get(endpoint, params=params, headers=headers)
 
     if response.status_code != 200:
@@ -203,17 +204,20 @@ def post(
         ApiError: If an error response is return by the API.
     """
 
-    headers = api_headers(api_version)
+    #post requires different headers than get for 
+    headers = {'accept': '*/*',
+              'Content-Type': api_version_text(api_version)}
+
     response = SESSION.post(
         endpoint, params=params, headers=headers, data=json.dumps(data)
     )
 
     if response.status_code != 200:
-        logging.error(f"CDA Error: response={response}")
+        logging.error(f"CDA Error: response={response},{SESSION.headers}")
         raise ApiError(response)
 
     try:
-        return cast(JSON, response.json())
+        return response
     except JSONDecodeError as error:
         logging.error(f"Error decoding CDA response: {error}")
         return {}
@@ -244,7 +248,9 @@ def patch(
         ApiError: If an error response is return by the API.
     """
 
-    headers = api_headers(api_version)
+    headers = {'accept': '*/*',
+              'Content-Type': api_version_text(api_version)}
+    
     response = SESSION.patch(
         endpoint, params=params, headers=headers, data=json.dumps(data)
     )

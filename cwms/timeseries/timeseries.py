@@ -28,7 +28,7 @@ def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Dat
     endpoint = f"timeseries/group/{group_id}"
     params = {"office": office_id, "category-id": category_id}
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint=endpoint, params=params, api_version=1)
     return Data(response, selector="assigned-time-series")
 
 
@@ -100,7 +100,7 @@ def get_timeseries(
     return Data(response, selector="values")
 
 
-def create_timeseries(
+def post_timeseries(
     data: JSON,
     create_as_ltrs: bool = False,
     store_rule: Optional[str] = None,
@@ -152,7 +152,9 @@ def create_timeseries(
         tsId = data.tsId
         office = data.office
         units = data.units
-        version_date = data.versionDate
+        if hasattr(data, "versionDate"):
+            version_date = data.versionDate
+        else: version_date = None
 
         # check dataframe columns
         if "quality-code" not in data:
@@ -189,4 +191,4 @@ def create_timeseries(
         raise TypeError("data is not of type dataframe or dictionary")
 
     response = api.post(endpoint, ts_dict, params)
-    return Data(response)
+    return response
