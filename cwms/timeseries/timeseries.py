@@ -106,7 +106,7 @@ def store_timeseries(
     create_as_ltrs: bool = False,
     store_rule: Optional[str] = None,
     override_protection: bool = False,
-) -> JSON:
+) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
     Parameters
@@ -176,7 +176,8 @@ def store_timeseries(
         )
         data = data.reindex(columns=["date-time", "value", "quality-code"])
         if data.isnull().values.any():
-            raise ValueError("Null/NaN data must be removed from the dataframe")
+            raise ValueError(
+                "Null/NaN data must be removed from the dataframe")
 
         ts_dict = {
             "name": tsId,
@@ -192,5 +193,4 @@ def store_timeseries(
     else:
         raise TypeError("data is not of type dataframe or dictionary")
 
-    response = api.post(endpoint, ts_dict, params)
-    return response
+    return api.post(endpoint, ts_dict, params)

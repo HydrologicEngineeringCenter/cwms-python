@@ -176,7 +176,11 @@ def get(
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
 
-    return cast(JSON, response.json())
+    try:
+        return cast(JSON, response.json())
+    except JSONDecodeError as error:
+        logging.error(f"Error decoding CDA response: {error}")
+        return {}
 
 
 def post(
@@ -185,7 +189,7 @@ def post(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+) -> None:
     """Make a POST request to the CWMS Data API.
 
     Args:
@@ -215,12 +219,6 @@ def post(
         logging.error(f"CDA Error: response={response},{SESSION.headers}")
         raise ApiError(response)
 
-    try:
-        return cast(JSON, response.json())
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response: {error}")
-        return {}
-
 
 def patch(
     endpoint: str,
@@ -228,7 +226,7 @@ def patch(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+) -> None:
     """Make a PATCH request to the CWMS Data API.
 
     Args:
@@ -256,12 +254,6 @@ def patch(
     if response.status_code != 200:
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
-
-    try:
-        return cast(JSON, response.json())
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response: {error}")
-        return {}
 
 
 def delete(

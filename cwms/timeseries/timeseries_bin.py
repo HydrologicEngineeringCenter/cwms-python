@@ -94,7 +94,7 @@ def get_binary_timeseries(
     return Data(response)
 
 
-def store_binary_timeseries(data: JSON, replace_all: bool = False) -> Data:
+def store_binary_timeseries(data: JSON, replace_all: bool = False) -> None:
     """
     This method is used to store a binary time series through CWMS Data API.
 
@@ -123,13 +123,13 @@ def store_binary_timeseries(data: JSON, replace_all: bool = False) -> Data:
     """
 
     if data is None:
-        raise ValueError("Storing binary time series requires a JSON data dictionary")
+        raise ValueError(
+            "Storing binary time series requires a JSON data dictionary")
 
     endpoint = "timeseries/binary"
     params = {"replace-all": replace_all}
 
-    response = api.post(endpoint, data, params)
-    return Data(response)
+    return api.post(endpoint, data, params)
 
 
 def delete_binary_timeseries(
