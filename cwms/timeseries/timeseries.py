@@ -91,10 +91,10 @@ def get_timeseries(
         "name": tsId,
         "unit": unit,
         "datum": datum,
-        "begin": begin.isoformat() if begin else "",
-        "end": end.isoformat() if end else "",
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
         "page-size": page_size,
-        "version-date": version_date.isoformat() if version_date else "",
+        "version-date": version_date.isoformat() if version_date else None,
     }
 
     response = api.get(endpoint, params)
@@ -176,7 +176,8 @@ def store_timeseries(
         )
         data = data.reindex(columns=["date-time", "value", "quality-code"])
         if data.isnull().values.any():
-            raise ValueError("Null/NaN data must be removed from the dataframe")
+            raise ValueError(
+                "Null/NaN data must be removed from the dataframe")
 
         ts_dict = {
             "name": tsId,
