@@ -67,7 +67,7 @@ def test_create_binary_timeseries(requests_mock):
     requests_mock.post(f"{_MOCK_ROOT}/timeseries/binary?replace-all=True")
 
     data = _BIN_TS_JSON
-    timeseries.create_binary_timeseries(data, True)
+    timeseries.store_binary_timeseries(data, True)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

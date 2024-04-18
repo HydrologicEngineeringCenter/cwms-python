@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
+from requests import Response
 
 import cwms.api as api
 from cwms.types import JSON, Data
@@ -100,12 +101,12 @@ def get_timeseries(
     return Data(response, selector="values")
 
 
-def post_timeseries(
+def store_timeseries(
     data: JSON,
     create_as_ltrs: bool = False,
     store_rule: Optional[str] = None,
     override_protection: bool = False,
-) -> Data:
+) -> JSON:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
     Parameters
@@ -154,7 +155,8 @@ def post_timeseries(
         units = data.units
         if hasattr(data, "versionDate"):
             version_date = data.versionDate
-        else: version_date = None
+        else:
+            version_date = None
 
         # check dataframe columns
         if "quality-code" not in data:

@@ -56,7 +56,7 @@ def test_create_timeseries_unversioned_default(requests_mock):
     )
 
     data = _UNVERS_TS_JSON
-    timeseries.create_timeseries(data=data)
+    timeseries.store_timeseries(data=data)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
@@ -102,7 +102,7 @@ def test_create_timeseries_versioned_default(requests_mock):
     )
 
     data = _VERS_TS_JSON
-    timeseries.create_timeseries(data=data)
+    timeseries.store_timeseries(data=data)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

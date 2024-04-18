@@ -94,7 +94,7 @@ def get_binary_timeseries(
     return Data(response)
 
 
-def create_binary_timeseries(data: JSON, replace_all: bool = False) -> Data:
+def store_binary_timeseries(data: JSON, replace_all: bool = False) -> Data:
     """
     This method is used to store a binary time series through CWMS Data API.
 

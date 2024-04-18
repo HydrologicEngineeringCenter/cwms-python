@@ -69,7 +69,7 @@ def test_create_text_timeseries(requests_mock):
     requests_mock.post(f"{_MOCK_ROOT}/timeseries/text?replace-all=True")
 
     data = _TEXT_TS_JSON
-    timeseries.create_text_timeseries(data, True)
+    timeseries.store_text_timeseries(data, True)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
@@ -149,7 +149,7 @@ def test_create_standard_text(requests_mock):
         f"{_MOCK_ROOT}" "/timeseries/text/standard-text-id?fail-if-exists=True"
     )
 
-    timeseries.create_standard_text(_STD_TEXT_JSON, fail_if_exists=True)
+    timeseries.store_standard_text(_STD_TEXT_JSON, fail_if_exists=True)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

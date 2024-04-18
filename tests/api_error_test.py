@@ -9,13 +9,17 @@ class Response:
     url: str
     status_code: int
     reason: Optional[str] = None
+    content: Optional[str] = None
 
 
 def test_api_error():
     """Verify that the error object contains the response."""
 
     response = Response(
-        url="https://api.example.com/test", status_code=404, reason="Not Found"
+        url="https://api.example.com/test",
+        status_code=404,
+        reason="Not Found",
+        content=b"incident identifier 34566432",
     )
     error = ApiError(response)
 
@@ -28,13 +32,16 @@ def test_api_error_str():
     # The error should include both the reason returned from the API, as well as a hint
     # message.
     response = Response(
-        url="https://api.example.com/test", status_code=404, reason="Not Found"
+        url="https://api.example.com/test",
+        status_code=404,
+        reason="Not Found",
+        content=b"incident identifier 34566432",
     )
     error = ApiError(response)
 
     assert (
         str(error)
-        == "CWMS API Error (https://api.example.com/test) Not Found. May be the result of an empty query."
+        == "CWMS API Error (https://api.example.com/test) Not Found. May be the result of an empty query. incident identifier 34566432"
     )
 
     # The response should not include a reason, since it is not included in the response.
