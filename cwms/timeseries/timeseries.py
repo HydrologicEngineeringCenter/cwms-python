@@ -176,8 +176,7 @@ def store_timeseries(
         )
         data = data.reindex(columns=["date-time", "value", "quality-code"])
         if data.isnull().values.any():
-            raise ValueError(
-                "Null/NaN data must be removed from the dataframe")
+            raise ValueError("Null/NaN data must be removed from the dataframe")
 
         ts_dict = {
             "name": tsId,

@@ -334,8 +334,7 @@ def delete_standard_text(
     if office_id is None:
         raise ValueError("Deleting standard timeseries requires an office")
     if delete_method is None:
-        raise ValueError(
-            "Deleting standard timeseries requires a delete method")
+        raise ValueError("Deleting standard timeseries requires a delete method")
 
     endpoint = f"timeseries/text/standard-text-id/{text_id}"
     params = {"office": office_id, "method": delete_method.name}
@@ -373,8 +372,7 @@ def store_standard_text(data: JSON, fail_if_exists: bool = False) -> None:
     """
 
     if dict is None:
-        raise ValueError(
-            "Cannot store a standard text without a JSON data dictionary")
+        raise ValueError("Cannot store a standard text without a JSON data dictionary")
 
     endpoint = "timeseries/text/standard-text-id"
     params = {"fail-if-exists": fail_if_exists}

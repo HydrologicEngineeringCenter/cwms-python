@@ -123,8 +123,7 @@ def store_binary_timeseries(data: JSON, replace_all: bool = False) -> None:
     """
 
     if data is None:
-        raise ValueError(
-            "Storing binary time series requires a JSON data dictionary")
+        raise ValueError("Storing binary time series requires a JSON data dictionary")
 
     endpoint = "timeseries/binary"
     params = {"replace-all": replace_all}
