@@ -17,7 +17,6 @@ _ERROR_CODE_500_JSON = read_resource_file("error_code_500.json")
 
 
 class TestCwmsDataApiError(unittest.TestCase):
-
     def test_server_error(self):
         with self.assertRaises(ServerError) as e:
             raise_for_status(response=self.mock_response(500))

@@ -8,7 +8,6 @@ from cwms.types import Data
 
 
 def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> Data:
-
     endpoint = f"location/group/{loc_group_id}"
     params = {"office": office_id, "category-id": category_id}
 
@@ -22,7 +21,6 @@ def get_locations(
     units: Optional[str] = None,
     datum: Optional[str] = None,
 ) -> Data:
-
     endpoint = "locations"
     params = {
         "office": office_id,

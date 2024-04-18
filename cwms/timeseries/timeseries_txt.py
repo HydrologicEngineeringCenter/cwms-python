@@ -98,7 +98,7 @@ def get_text_timeseries(
     return Data(response)
 
 
-def create_text_timeseries(data: JSON, replace_all: bool = False) -> Data:
+def store_text_timeseries(data: JSON, replace_all: bool = False) -> Data:
     """
     This method is used to store a text time series through CWMS Data API.
 
@@ -343,7 +343,7 @@ def delete_standard_text(
     return api.delete(endpoint, params)
 
 
-def create_standard_text(data: JSON, fail_if_exists: bool = False) -> Data:
+def store_standard_text(data: JSON, fail_if_exists: bool = False) -> Data:
     """
     This method is used to store a standard text value through CWMS Data API.
 

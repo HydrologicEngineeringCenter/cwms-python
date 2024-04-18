@@ -1,6 +1,6 @@
 import pytest
 
-from cwms.api import SESSION, InvalidVersion, api_headers, init_session
+from cwms.api import SESSION, InvalidVersion, api_version_text, init_session
 
 
 def test_session_default():
@@ -43,15 +43,15 @@ def test_session_init_api_key():
 def test_api_headers():
     """Verify that the API version headers are correct."""
 
-    headers = api_headers(api_version=1)
-    assert headers["Accept"] == "application/json"
+    version = api_version_text(api_version=1)
+    assert version == "application/json"
 
-    headers = api_headers(api_version=2)
-    assert headers["Accept"] == "application/json;version=2"
+    version = api_version_text(api_version=2)
+    assert version == "application/json;version=2"
 
 
 def test_api_headers_invalid_version():
     """An exception should be raised if the API version is not valid."""
 
     with pytest.raises(InvalidVersion):
-        headers = api_headers(api_version=3)
+        version = api_version_text(api_version=3)

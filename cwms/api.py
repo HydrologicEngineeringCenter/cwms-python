@@ -73,9 +73,9 @@ class ApiError(Exception):
         # Add additional context to help the user resolve the issue.
         if hint := self.hint():
             message += f" {hint}"
-            
+
         if content := self.response.content:
-            message += f" {content}"
+            message += f" {content.decode('utf8')}"
 
         return message
 
@@ -83,11 +83,11 @@ class ApiError(Exception):
         """Return a message with additional information on how to resolve the error."""
 
         if self.response.status_code == 400:
-                return "Check that your parameters are correct."
+            return "Check that your parameters are correct."
         elif self.response.status_code == 404:
-                return "May be the result of an empty query."
+            return "May be the result of an empty query."
         else:
-                return ""
+            return ""
 
 
 def init_session(
@@ -120,7 +120,7 @@ def init_session(
     return SESSION
 
 
-def api_version_text(api_version: int) -> dict[str, str]:
+def api_version_text(api_version: int) -> str:
     """Initialize CDA request headers.
 
     The CDA supports multiple versions. To request a specific version, the version number
@@ -136,12 +136,12 @@ def api_version_text(api_version: int) -> dict[str, str]:
         InvalidVersion: If an unsupported API version is specified.
     """
 
-    if api_version == 1 :
-            version = "application/json"
+    if api_version == 1:
+        version = "application/json"
     elif api_version == 2:
-            version = "application/json;version=2"
+        version = "application/json;version=2"
     else:
-            raise InvalidVersion(f"API version {api_version} is not supported.")
+        raise InvalidVersion(f"API version {api_version} is not supported.")
 
     return version
 
@@ -204,9 +204,8 @@ def post(
         ApiError: If an error response is return by the API.
     """
 
-    #post requires different headers than get for 
-    headers = {'accept': '*/*',
-              'Content-Type': api_version_text(api_version)}
+    # post requires different headers than get for
+    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
 
     response = SESSION.post(
         endpoint, params=params, headers=headers, data=json.dumps(data)
@@ -217,7 +216,7 @@ def post(
         raise ApiError(response)
 
     try:
-        return response
+        return cast(JSON, response.json())
     except JSONDecodeError as error:
         logging.error(f"Error decoding CDA response: {error}")
         return {}
@@ -248,9 +247,8 @@ def patch(
         ApiError: If an error response is return by the API.
     """
 
-    headers = {'accept': '*/*',
-              'Content-Type': api_version_text(api_version)}
-    
+    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+
     response = SESSION.patch(
         endpoint, params=params, headers=headers, data=json.dumps(data)
     )
@@ -286,7 +284,7 @@ def delete(
         ApiError: If an error response is return by the API.
     """
 
-    headers = api_headers(api_version)
+    headers = {"Accept": api_version_text(api_version)}
     response = SESSION.delete(endpoint, params=params, headers=headers)
 
     if response.status_code != 200:
