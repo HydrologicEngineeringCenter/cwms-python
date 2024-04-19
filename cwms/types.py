@@ -41,8 +41,9 @@ class Data:
         data = deepcopy(json)
 
         if selector:
+            df_data = data
             for key in selector.split("."):
-                df_data = data[key]
+                df_data = df_data[key]
             df = DataFrame(df_data)
 
             # if timeseries values are present then grab the values and put into dataframe
