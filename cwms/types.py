@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Any, Optional
 
-from pandas import DataFrame
+from pandas import DataFrame, Index, to_datetime
 
 # Describes generic JSON serializable data.
 JSON = dict[str, Any]
@@ -42,9 +42,20 @@ class Data:
 
         if selector:
             for key in selector.split("."):
-                data = data[key]
+                df_data = data[key]
+            df = DataFrame(df_data)
 
-        return DataFrame(data)
+            # if timeseries values are present then grab the values and put into dataframe
+            if selector == "values":
+                df.columns = Index([sub["name"]
+                                   for sub in data["value-columns"]])
+
+                if "date-time" in df.columns:
+                    df["date-time"] = to_datetime(df["date-time"], unit="ms")
+        else:
+            df = DataFrame(data)
+
+        return df
 
     @property
     def df(self) -> DataFrame:
