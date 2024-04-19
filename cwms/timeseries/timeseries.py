@@ -91,10 +91,10 @@ def get_timeseries(
         "name": tsId,
         "unit": unit,
         "datum": datum,
-        "begin": begin.isoformat() if begin else "",
-        "end": end.isoformat() if end else "",
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
         "page-size": page_size,
-        "version-date": version_date.isoformat() if version_date else "",
+        "version-date": version_date.isoformat() if version_date else None,
     }
 
     response = api.get(endpoint, params)
@@ -106,7 +106,7 @@ def store_timeseries(
     create_as_ltrs: bool = False,
     store_rule: Optional[str] = None,
     override_protection: bool = False,
-) -> JSON:
+) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
     Parameters
@@ -192,5 +192,4 @@ def store_timeseries(
     else:
         raise TypeError("data is not of type dataframe or dictionary")
 
-    response = api.post(endpoint, ts_dict, params)
-    return response
+    return api.post(endpoint, ts_dict, params)
