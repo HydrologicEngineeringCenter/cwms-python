@@ -48,8 +48,7 @@ class Data:
 
             # if timeseries values are present then grab the values and put into dataframe
             if selector == "values":
-                df.columns = Index([sub["name"]
-                                   for sub in data["value-columns"]])
+                df.columns = Index([sub["name"] for sub in data["value-columns"]])
 
                 if "date-time" in df.columns:
                     df["date-time"] = to_datetime(df["date-time"], unit="ms")
