@@ -3,12 +3,19 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 import json
+from enum import Enum, auto
 from typing import Optional
 
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
 from cwms.types import JSON
 from cwms.utils import queryCDA, raise_for_status
+
+
+class DeleteMethod(Enum):
+    DELETE_ALL = auto()
+    DELETE_KEY = auto()
+    DELETE_DATA = auto()
 
 
 class CwmsForecastSpec(_CwmsBase):
@@ -42,7 +49,6 @@ class CwmsForecastSpec(_CwmsBase):
         id_mask: Optional[str] = None,
         office: Optional[str] = None,
         designator_mask: Optional[str] = None,
-        location_mask: Optional[str] = None,
         source_entity: Optional[str] = None,
     ) -> JSON:
         """
@@ -53,8 +59,6 @@ class CwmsForecastSpec(_CwmsBase):
         office : str, optional
             The regex filter for the forecast spec id.
         designator_mask : str, optional
-            The regex filter for the forecast spec id.
-        location_mask : str, optional
             The regex filter for the forecast spec id.
         source_entity : str, optional
             The regex filter for the forecast spec id.
@@ -79,7 +83,6 @@ class CwmsForecastSpec(_CwmsBase):
             constants.OFFICE_PARAM: office,
             constants.ID_MASK: id_mask,
             constants.DESIGNATOR_MASK: designator_mask,
-            constants.LOCATION_MASK: location_mask,
             constants.SOURCE_ENTITY: source_entity,
         }
 
@@ -170,7 +173,13 @@ class CwmsForecastSpec(_CwmsBase):
         )
         raise_for_status(response)
 
-    def delete_forecast_spec(self, spec_id: str, office: str, designator: str) -> None:
+    def delete_forecast_spec(
+        self,
+        spec_id: str,
+        office: str,
+        designator: str,
+        delete_method: DeleteMethod = DeleteMethod.DELETE_KEY,
+    ) -> None:
         """
         Parameters
         ----------
@@ -180,6 +189,8 @@ class CwmsForecastSpec(_CwmsBase):
             The ID of the office.
         designator : str
             The designator of the forecast spec
+        delete_method: DeleteMethod
+            The method to use to delete forecast spec data
 
         Returns
         -------
@@ -205,10 +216,11 @@ class CwmsForecastSpec(_CwmsBase):
             raise ValueError("Deleting a forecast spec requires a designator")
 
         end_point = f"{CwmsForecastSpec._FORECAST_SPEC_ENDPOINT}/{spec_id}"
-
+        print(delete_method.name)
         params = {
             constants.OFFICE_PARAM: office,
             constants.DESIGNATOR: designator,
+            constants.METHOD: delete_method.name,
         }
         headers = {"Content-Type": constants.HEADER_JSON_V2}
         response = self.get_session().delete(end_point, params=params, headers=headers)
