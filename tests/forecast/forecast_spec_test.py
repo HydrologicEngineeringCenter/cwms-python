@@ -23,7 +23,6 @@ class TestForecastSpec(unittest.TestCase):
         m.get(
             f"{TestForecastSpec._MOCK_ROOT}/forecast-spec?office=office_mask"
             f"&id_mask=id_mask&designator-mask=designator_mask"
-            f"&location-mask=location_mask"
             f"&source-entity=source_entity",
             json=_FORECAST_SPECS_JSON,
         )
@@ -33,7 +32,6 @@ class TestForecastSpec(unittest.TestCase):
             "id_mask",
             "office_mask",
             "designator_mask",
-            "location_mask",
             "source_entity",
         )
         self.assertEqual(_FORECAST_SPECS_JSON, levels)
@@ -69,7 +67,7 @@ class TestForecastSpec(unittest.TestCase):
     def test_delete_forecast_spec_json(self, m):
         m.delete(
             f"{TestForecastSpec._MOCK_ROOT}/forecast-spec/test-spec?"
-            f"office=SWT&designator=designator",
+            f"office=SWT&designator=designator&method=DELETE_KEY",
             status_code=200,
         )
         session = CwmsApiSession(TestForecastSpec._MOCK_ROOT)

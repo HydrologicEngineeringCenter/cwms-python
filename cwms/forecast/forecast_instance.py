@@ -6,6 +6,8 @@ import json
 from datetime import datetime
 from typing import Optional
 
+import requests
+
 import cwms._constants as constants
 from cwms.core import CwmsApiSession, _CwmsBase
 from cwms.types import JSON
@@ -245,3 +247,14 @@ class CwmsForecastInstance(_CwmsBase):
         headers = {"Content-Type": constants.HEADER_JSON_V2}
         response = self.get_session().delete(end_point, params=params, headers=headers)
         raise_for_status(response)
+
+    def retrieve_large_forecast_file(self, url: str) -> bytes:
+        """
+        Retrieves large blob forecast file greater than 64kb from CWMS data api
+        :param url: str
+            Url used in query by CDA
+        :return: bytes
+            Large binary data
+        """
+        response = requests.get(url)
+        return response.content

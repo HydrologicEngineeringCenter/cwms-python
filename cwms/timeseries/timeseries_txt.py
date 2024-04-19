@@ -355,7 +355,10 @@ class CwmsTextTs(_CwmsBase):
         if delete_method is None:
             raise ValueError("Deleting standard timeseries requires a delete method")
 
-        params = {constants.OFFICE_PARAM: office_id, "method": delete_method.name}
+        params = {
+            constants.OFFICE_PARAM: office_id,
+            constants.METHOD: delete_method.name,
+        }
         headers = {"Content-Type": constants.HEADER_JSON_V2}
         end_point = f"{CwmsTextTs._STD_TEXT_ENDPOINT}/{text_id}"
         response = self.get_session().delete(end_point, params=params, headers=headers)
