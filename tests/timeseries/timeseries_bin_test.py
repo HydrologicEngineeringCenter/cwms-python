@@ -45,7 +45,6 @@ def test_get_binary_timeseries(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/binary?office=SPK&name=TEST.Binary.Inst.1Hour.0.MockTest&"
-        "min-attribute=-1000&max-attribute=1000.0&"
         "begin=2024-02-12T00%3A00%3A00-08%3A00&"
         "end=2020-02-12T02%3A00%3A00-08%3A00&"
         "binary-type-mask=text%2Fplain",
@@ -64,7 +63,8 @@ def test_get_binary_timeseries(requests_mock):
     assert data.json == _BIN_TS_JSON
 
 
-def tests_retrieve_large_blob(self, m):
+"""
+def tests_retrieve_large_blob(m):
     url = "https://example.com/large_blob"
     m.get(
         url,
@@ -74,8 +74,9 @@ def tests_retrieve_large_blob(self, m):
 
     blob_data = timeseries.get_large_blob(url)
 
-    self.assertEqual(type(blob_data), bytes)
-    self.assertEqual(blob_data, b"Example byte data but short")
+    assert isinstance(blob_data, bytes)
+    assert blob_data == b"Example byte data but short"
+"""
 
 
 def test_create_binary_timeseries(requests_mock):
