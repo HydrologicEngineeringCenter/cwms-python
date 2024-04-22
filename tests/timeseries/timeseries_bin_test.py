@@ -36,7 +36,8 @@ def test_get_binary_timeseries_default(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.get_binary_timeseries(timeseries_id, office_id, begin, end)
+    data = timeseries.get_binary_timeseries(
+        timeseries_id, office_id, begin, end)
     assert data.json == _BIN_TS_JSON
 
 
@@ -58,9 +59,23 @@ def test_get_binary_timeseries(requests_mock):
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
     data = timeseries.get_binary_timeseries(
-        timeseries_id, office_id, begin, end, "text/plain", -1000, 1000.0
+        timeseries_id, office_id, begin, end, bin_type_mask="text/plain"
     )
     assert data.json == _BIN_TS_JSON
+
+
+def tests_retrieve_large_blob(self, m):
+    url = "https://example.com/large_blob"
+    m.get(
+        url,
+        text="Example byte data but short",
+        headers={"content-type": "application/octet-stream"},
+    )
+
+    blob_data = timeseries.get_large_blob(url)
+
+    self.assertEqual(type(blob_data), bytes)
+    self.assertEqual(blob_data, b"Example byte data but short")
 
 
 def test_create_binary_timeseries(requests_mock):
@@ -77,7 +92,6 @@ def test_delete_binary_timeseries(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}"
         "/timeseries/binary/TEST.Binary.Inst.1Hour.0.MockTest?office=SPK&"
-        "min-attribute=-999.9&max-attribute=999&"
         "begin=2024-02-12T00%3A00%3A00-08%3A00&"
         "end=2020-02-12T02%3A00%3A00-08%3A00&"
         "binary-type-mask=text%2Fplain",
@@ -91,7 +105,7 @@ def test_delete_binary_timeseries(requests_mock):
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
     timeseries.delete_binary_timeseries(
-        level_id, office_id, begin, end, "text/plain", -999.9, 999
+        level_id, office_id, begin, end, bin_type_mask="text/plain"
     )
 
     assert requests_mock.called

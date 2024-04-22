@@ -7,14 +7,10 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
 
+import requests
+
 import cwms.api as api
 from cwms.types import JSON, Data
-
-
-class TextTsMode(Enum):
-    REGULAR = auto()
-    STANDARD = auto()
-    ALL = auto()
 
 
 class DeleteMethod(Enum):
@@ -28,9 +24,7 @@ def get_text_timeseries(
     office_id: str,
     begin: datetime,
     end: datetime,
-    mode: TextTsMode = TextTsMode.REGULAR,
-    min_attribute: Optional[float] = None,
-    max_attribute: Optional[float] = None,
+    version_date: Optional[datetime] = None,
 ) -> Data:
     """
     Parameters
@@ -47,16 +41,10 @@ def get_text_timeseries(
         The end date and time of the time range.
         If the datetime has a timezone it will be used,
         otherwise it is assumed to be in UTC.
-    mode : TextTsMode, optional
-        The mode for retrieving text timeseries data.
-        Default is `TextTsMode.REGULAR`.
-    min_attribute : float, optional
-        The minimum attribute value to filter the timeseries data.
-        Default is `None`.
-    max_attribute : float, optional
-        The maximum attribute value to filter the timeseries data.
-        Default is `None`.
-
+    version_date : datetime, optional
+        The time series date version to retrieve. If not supplied,
+        the maximum date version for each time step in the retrieval
+        window will be returned.
     Returns
     -------
     response : dict
@@ -84,18 +72,31 @@ def get_text_timeseries(
         raise ValueError("Retrieve text timeseries requires a time window")
 
     endpoint = "timeseries/text"
+    version_date_str = version_date.isoformat() if version_date else None
     params = {
         "office": office_id,
         "name": timeseries_id,
-        "min-attribute": min_attribute,
-        "max-attribute": max_attribute,
         "begin": begin.isoformat(),
         "end": end.isoformat(),
-        "mode": mode.name,
+        "version-date": version_date_str,
     }
 
     response = api.get(endpoint, params)
     return Data(response)
+
+
+def get_large_clob(url: str, encoding: str = "utf-8") -> str:
+    """
+    Retrieves large clob data greater than 64kb from CWMS data api
+    :param url: str
+        Url used in query by CDA
+    :param encoding: str, optional
+        Encoding used to decode text data. Default utf-8
+    :return: str
+        Large text data
+    """
+    response = requests.get(url)
+    return response.content.decode(encoding)
 
 
 def store_text_timeseries(data: JSON, replace_all: bool = False) -> None:
@@ -142,10 +143,8 @@ def delete_text_timeseries(
     office_id: str,
     begin: datetime,
     end: datetime,
-    mode: TextTsMode = TextTsMode.REGULAR,
+    version_date: Optional[datetime] = None,
     text_mask: str = "*",
-    min_attribute: Optional[float] = None,
-    max_attribute: Optional[float] = None,
 ) -> None:
     """
     Deletes text timeseries data with the given ID and office ID and time range.
@@ -156,13 +155,6 @@ def delete_text_timeseries(
         The ID of the text time series data to be deleted.
     office_id : str
         The ID of the office that the text time series belongs to.
-    text_mask : str, optional
-        The standard text pattern to match.
-        Use glob-style wildcard characters instead of sql-style wildcard
-        characters for pattern matching.
-        For StandardTextTimeSeries this should be the Standard_Text_Id
-        (such as 'E' for ESTIMATED)
-        Default value is `"*"`
     begin : datetime
         The start date and time of the time range.
         If the datetime has a timezone it will be used,
@@ -171,15 +163,17 @@ def delete_text_timeseries(
         The end date and time of the time range.
         If the datetime has a timezone it will be used,
         otherwise it is assumed to be in UTC.
-    mode : TextTsMode, optional
-        The mode for deleting text timeseries data.
-        Default is `TextTsMode.REGULAR`.
-    min_attribute : float, optional
-        The minimum attribute value to filter the timeseries data.
-        Default is `None`.
-    max_attribute : float, optional
-        The maximum attribute value to filter the timeseries data.
-        Default is `None`.
+    version_date : datetime, optional
+        The time series date version to retrieve. If not supplied,
+        the maximum date version for each time step in the retrieval
+        window will be deleted.
+    text_mask : str, optional
+        The standard text pattern to match.
+        Use glob-style wildcard characters instead of sql-style wildcard
+        characters for pattern matching.
+        For StandardTextTimeSeries this should be the Standard_Text_Id
+        (such as 'E' for ESTIMATED)
+        Default value is `"*"`
 
     Returns
     -------
@@ -207,13 +201,12 @@ def delete_text_timeseries(
         raise ValueError("Deleting text timeseries requires a time window")
 
     endpoint = f"timeseries/text/{timeseries_id}"
+    version_date_str = version_date.isoformat() if version_date else None
     params = {
         "office": office_id,
-        "min-attribute": min_attribute,
-        "max-attribute": max_attribute,
         "begin": begin.isoformat(),
         "end": end.isoformat(),
-        "mode": mode.name,
+        "version-date": version_date_str,
         "text-mask": text_mask,
     }
 
@@ -334,7 +327,8 @@ def delete_standard_text(
     if office_id is None:
         raise ValueError("Deleting standard timeseries requires an office")
     if delete_method is None:
-        raise ValueError("Deleting standard timeseries requires a delete method")
+        raise ValueError(
+            "Deleting standard timeseries requires a delete method")
 
     endpoint = f"timeseries/text/standard-text-id/{text_id}"
     params = {"office": office_id, "method": delete_method.name}
@@ -371,8 +365,9 @@ def store_standard_text(data: JSON, fail_if_exists: bool = False) -> None:
         If a 500 range error code response is returned from the server.
     """
 
-    if dict is None:
-        raise ValueError("Cannot store a standard text without a JSON data dictionary")
+    if data is None:
+        raise ValueError(
+            "Cannot store a standard text without a JSON data dictionary")
 
     endpoint = "timeseries/text/standard-text-id"
     params = {"fail-if-exists": fail_if_exists}

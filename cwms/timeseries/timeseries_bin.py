@@ -10,6 +10,8 @@ from typing import Optional
 import cwms.api as api
 from cwms.types import JSON, Data
 
+import requests
+
 
 class DeleteMethod(Enum):
     DELETE_ALL = auto()
@@ -22,9 +24,8 @@ def get_binary_timeseries(
     office_id: str,
     begin: datetime,
     end: datetime,
+    version_date: Optional[datetime] = None,
     bin_type_mask: str = "*",
-    min_attribute: Optional[float] = None,
-    max_attribute: Optional[float] = None,
 ) -> Data:
     """
     Parameters
@@ -41,17 +42,16 @@ def get_binary_timeseries(
         The end date and time of the time range.
         If the datetime has a timezone it will be used,
         otherwise it is assumed to be in UTC.
+    version_date : datetime, optional
+        The time series date version to retrieve. If not supplied,
+        the maximum date version for each time step in the retrieval
+        window will be retrieved.
     bin_type_mask : str, optional
         The binary media type pattern to match.
         Use glob-style wildcard characters instead of sql-style wildcard
         characters for pattern matching.
         Default value is `"*"`
-    min_attribute : float, optional
-        The minimum attribute value to filter the timeseries data.
-        Default is `None`.
-    max_attribute : float, optional
-        The maximum attribute value to filter the timeseries data.
-        Default is `None`.
+
 
     Returns
     -------
@@ -80,18 +80,31 @@ def get_binary_timeseries(
         raise ValueError("Retrieve binary timeseries requires a time window")
 
     endpoint = "timeseries/binary"
+
+    version_date_str = version_date.isoformat() if version_date else None
     params = {
         "office": office_id,
         "name": timeseries_id,
-        "min-attribute": min_attribute,
-        "max-attribute": max_attribute,
         "begin": begin.isoformat(),
         "end": end.isoformat(),
+        "version-date": version_date_str,
         "binary-type-mask": bin_type_mask,
     }
 
     response = api.get(endpoint, params)
     return Data(response)
+
+
+def get_large_blob(url: str) -> bytes:
+    """
+    Retrieves large blob data greater than 64kb from CWMS data api
+    :param url: str
+        Url used in query by CDA
+    :return: bytes
+        Large binary data
+    """
+    response = requests.get(url)
+    return response.content
 
 
 def store_binary_timeseries(data: JSON, replace_all: bool = False) -> None:
@@ -123,7 +136,8 @@ def store_binary_timeseries(data: JSON, replace_all: bool = False) -> None:
     """
 
     if data is None:
-        raise ValueError("Storing binary time series requires a JSON data dictionary")
+        raise ValueError(
+            "Storing binary time series requires a JSON data dictionary")
 
     endpoint = "timeseries/binary"
     params = {"replace-all": replace_all}
@@ -136,9 +150,8 @@ def delete_binary_timeseries(
     office_id: str,
     begin: datetime,
     end: datetime,
+    version_date: Optional[datetime] = None,
     bin_type_mask: str = "*",
-    min_attribute: Optional[float] = None,
-    max_attribute: Optional[float] = None,
 ) -> None:
     """
     Deletes binary timeseries data with the given ID,
@@ -150,11 +163,6 @@ def delete_binary_timeseries(
         The ID of the binary time series data to be deleted.
     office_id : str
         The ID of the office that the binary time series belongs to.
-    bin_type_mask : str, optional
-        The binary media type pattern to match.
-        Use glob-style wildcard characters instead of sql-style wildcard
-        characters for pattern matching.
-        Default value is `"*"`
     begin : datetime
         The start date and time of the time range.
         If the datetime has a timezone it will be used,
@@ -163,12 +171,16 @@ def delete_binary_timeseries(
         The end date and time of the time range.
         If the datetime has a timezone it will be used,
         otherwise it is assumed to be in UTC.
-    min_attribute : float, optional
-        The minimum attribute value to filter the timeseries data.
-        Default is `None`.
-    max_attribute : float, optional
-        The maximum attribute value to filter the timeseries data.
-        Default is `None`.
+    version_date : Optional[datetime]
+        The time series date version to retrieve. If not supplied,
+        the maximum date version for each time step in the retrieval
+        window will be deleted.
+    bin_type_mask : str, optional
+        The binary media type pattern to match.
+        Use glob-style wildcard characters instead of sql-style wildcard
+        characters for pattern matching.
+        Default value is `"*"`
+
 
     Returns
     -------
@@ -196,13 +208,13 @@ def delete_binary_timeseries(
         raise ValueError("Deleting binary timeseries requires a time window")
 
     endpoint = f"timeseries/binary/{timeseries_id}"
+    version_date_str = version_date.isoformat() if version_date else None
     params = {
         "office": office_id,
-        "min-attribute": min_attribute,
-        "max-attribute": max_attribute,
         "begin": begin.isoformat(),
         "end": end.isoformat(),
         "binary-type-mask": bin_type_mask,
+        "version-date": version_date_str,
     }
 
     return api.delete(endpoint, params=params)

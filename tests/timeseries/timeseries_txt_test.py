@@ -10,7 +10,7 @@ import pytz
 
 import cwms.api
 import cwms.timeseries.timeseries_txt as timeseries
-from cwms.timeseries.timeseries_txt import DeleteMethod, TextTsMode
+from cwms.timeseries.timeseries_txt import DeleteMethod
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
@@ -29,7 +29,7 @@ def test_get_text_timeseries_default(requests_mock):
         f"{_MOCK_ROOT}"
         "/timeseries/text?office=SWT&name=TEST.Text.Inst.1Hour.0.MockTest&"
         "begin=2024-02-12T00%3A00%3A00-08%3A00&"
-        "end=2020-02-12T02%3A00%3A00-08%3A00&mode=REGULAR",
+        "end=2020-02-12T02%3A00%3A00-08%3A00",
         json=_TEXT_TS_JSON,
     )
 
@@ -49,7 +49,7 @@ def test_get_text_timeseries(requests_mock):
         "/timeseries/text?office=SWT&name=TEST.Text.Inst.1Hour.0.MockTest&"
         "min-attribute=-1000&max-attribute=1000.0&"
         "begin=2024-02-12T00%3A00%3A00-08%3A00&"
-        "end=2020-02-12T02%3A00%3A00-08%3A00&mode=STANDARD",
+        "end=2020-02-12T02%3A00%3A00-08%3A00",
         json=_TEXT_TS_JSON,
     )
 
@@ -60,7 +60,7 @@ def test_get_text_timeseries(requests_mock):
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
     data = timeseries.get_text_timeseries(
-        timeseries_id, office_id, begin, end, TextTsMode.STANDARD, -1000, 1000.0
+        timeseries_id, office_id, begin, end
     )
     assert data.json == _TEXT_TS_JSON
 
@@ -79,9 +79,8 @@ def test_delete_text_timeseries(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}"
         "/timeseries/text/TEST.Text.Inst.1Hour.0.MockTest?office=SWT&"
-        "min-attribute=-999.9&max-attribute=999&"
         "begin=2024-02-12T00%3A00%3A00-08%3A00&"
-        "end=2020-02-12T02%3A00%3A00-08%3A00&mode=STANDARD&"
+        "end=2020-02-12T02%3A00%3A00-08%3A00&"
         "text-mask=Hello%2C+World",
         json=_TEXT_TS_JSON,
     )
@@ -97,10 +96,7 @@ def test_delete_text_timeseries(requests_mock):
         office_id,
         begin,
         end,
-        TextTsMode.STANDARD,
-        "Hello, World",
-        -999.9,
-        999,
+        text_mask="Hello, World",
     )
 
     assert requests_mock.called
@@ -144,6 +140,20 @@ def test_get_standard_text_catalog(requests_mock):
     assert data.json == _TEXT_TS_JSON
 
 
+def tests_retrieve_large_clob(self, m):
+    url = "https://example.com/large_clob"
+    m.get(
+        url,
+        text="Example text data but short",
+        headers={"content-type": "text/plain"},
+    )
+
+    clob_data = cwms.get_large_clob(url)
+
+    self.assertEqual(type(clob_data), str)
+    self.assertEqual(clob_data, "Example text data but short")
+
+
 def test_create_standard_text(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}" "/timeseries/text/standard-text-id?fail-if-exists=True"
@@ -164,7 +174,8 @@ def test_delete_standard_text(requests_mock):
     text_id = "HW"
     office_id = "SPK"
 
-    timeseries.delete_standard_text(text_id, DeleteMethod.DELETE_ALL, office_id)
+    timeseries.delete_standard_text(
+        text_id, DeleteMethod.DELETE_ALL, office_id)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
