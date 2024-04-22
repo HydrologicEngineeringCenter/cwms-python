@@ -58,9 +58,7 @@ def test_get_text_timeseries(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.get_text_timeseries(
-        timeseries_id, office_id, begin, end
-    )
+    data = timeseries.get_text_timeseries(timeseries_id, office_id, begin, end)
     assert data.json == _TEXT_TS_JSON
 
 
@@ -175,8 +173,7 @@ def test_delete_standard_text(requests_mock):
     text_id = "HW"
     office_id = "SPK"
 
-    timeseries.delete_standard_text(
-        text_id, DeleteMethod.DELETE_ALL, office_id)
+    timeseries.delete_standard_text(text_id, DeleteMethod.DELETE_ALL, office_id)
 
     assert requests_mock.called
     assert requests_mock.call_count == 1

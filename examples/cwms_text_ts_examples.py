@@ -80,14 +80,12 @@ def run_text_ts_examples():
     timezone = pytz.timezone("UTC")
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2024, 2, 12, 2, 0, 0))
-    text_ts_dict = text_ts_api.retrieve_text_ts_json(
-        text_ts["name"], "SPK", begin, end)
+    text_ts_dict = text_ts_api.retrieve_text_ts_json(text_ts["name"], "SPK", begin, end)
     print(text_ts_dict)
 
     print(f"Deleting text ts {text_ts['name']}")
     text_ts_api.delete_text_ts(text_ts["name"], "SPK", begin, end)
-    text_ts_dict = text_ts_api.retrieve_text_ts_json(
-        text_ts["name"], "SPK", begin, end)
+    text_ts_dict = text_ts_api.retrieve_text_ts_json(text_ts["name"], "SPK", begin, end)
     print(f"Confirming delete of text ts {text_ts['name']}")
     print(text_ts_dict)
 

@@ -7,10 +7,10 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
 
+import requests
+
 import cwms.api as api
 from cwms.types import JSON, Data
-
-import requests
 
 
 class DeleteMethod(Enum):
@@ -136,8 +136,7 @@ def store_binary_timeseries(data: JSON, replace_all: bool = False) -> None:
     """
 
     if data is None:
-        raise ValueError(
-            "Storing binary time series requires a JSON data dictionary")
+        raise ValueError("Storing binary time series requires a JSON data dictionary")
 
     endpoint = "timeseries/binary"
     params = {"replace-all": replace_all}

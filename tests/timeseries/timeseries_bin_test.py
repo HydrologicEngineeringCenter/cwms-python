@@ -36,8 +36,7 @@ def test_get_binary_timeseries_default(requests_mock):
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2020, 2, 12, 2, 0, 0))
 
-    data = timeseries.get_binary_timeseries(
-        timeseries_id, office_id, begin, end)
+    data = timeseries.get_binary_timeseries(timeseries_id, office_id, begin, end)
     assert data.json == _BIN_TS_JSON
 
 

@@ -152,8 +152,7 @@ class CwmsLevel(_CwmsBase):
         if specified_level_id is None:
             raise ValueError("Cannot delete a specified level without an id")
         if office_id is None:
-            raise ValueError(
-                "Cannot delete a specified level without an office id")
+            raise ValueError("Cannot delete a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{specified_level_id}"
 
         params = {constants.OFFICE_PARAM: office_id}
@@ -192,14 +191,11 @@ class CwmsLevel(_CwmsBase):
         """
 
         if old_specified_level_id is None:
-            raise ValueError(
-                "Cannot update a specified level without an old id")
+            raise ValueError("Cannot update a specified level without an old id")
         if new_specified_level_id is None:
-            raise ValueError(
-                "Cannot update a specified level without a new id")
+            raise ValueError("Cannot update a specified level without a new id")
         if office_id is None:
-            raise ValueError(
-                "Cannot update a specified level without an office id")
+            raise ValueError("Cannot update a specified level without an office id")
         end_point = f"{CwmsLevel._SPECIFIED_LEVELS_ENDPOINT}/{old_specified_level_id}"
 
         params = {
@@ -323,8 +319,7 @@ class CwmsLevel(_CwmsBase):
             If a 500 range error code response is returned from the server.
         """
         if level_id is None:
-            raise ValueError(
-                "Cannot retrieve a single location level without an id")
+            raise ValueError("Cannot retrieve a single location level without an id")
         if office_id is None:
             raise ValueError(
                 "Cannot retrieve a single location level without an office id"
@@ -410,8 +405,7 @@ class CwmsLevel(_CwmsBase):
         if location_level_id is None:
             raise ValueError("Cannot delete a location level without an id")
         if office_id is None:
-            raise ValueError(
-                "Cannot delete a location level without an office id")
+            raise ValueError("Cannot delete a location level without an office id")
         end_point = f"{CwmsLevel._LEVELS_ENDPOINT}/{location_level_id}"
 
         params = {

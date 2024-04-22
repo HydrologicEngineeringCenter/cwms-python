@@ -86,14 +86,12 @@ def run_bin_ts_examples():
     timezone = pytz.timezone("UTC")
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2024, 2, 12, 2, 0, 0))
-    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(
-        bin_ts["name"], "SPK", begin, end)
+    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(bin_ts["name"], "SPK", begin, end)
     print(bin_ts_dict)
 
     print(f"Deleting text ts {bin_ts['name']}")
     bin_ts_api.delete_bin_ts(bin_ts["name"], "SPK", begin, end)
-    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(
-        bin_ts["name"], "SPK", begin, end)
+    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(bin_ts["name"], "SPK", begin, end)
     print(f"Confirming delete of text ts {bin_ts['name']}")
     print(bin_ts_dict)
 
