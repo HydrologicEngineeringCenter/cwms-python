@@ -9,9 +9,9 @@ from typing import Optional
 
 import requests
 
+
 import cwms.api as api
 from cwms.types import JSON, Data
-
 
 class DeleteMethod(Enum):
     DELETE_ALL = auto()

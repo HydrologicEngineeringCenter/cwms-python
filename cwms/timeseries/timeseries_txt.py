@@ -127,7 +127,7 @@ def store_text_timeseries(data: JSON, replace_all: bool = False) -> None:
         If a 500 range error code response is returned from the server.
     """
 
-    if dict is None:
+    if data is None:
         raise ValueError(
             "Cannot store a text time series without a JSON data dictionary"
         )
