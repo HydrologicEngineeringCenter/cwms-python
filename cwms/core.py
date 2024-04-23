@@ -5,7 +5,6 @@ from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 
 
 class CwmsApiSession:
-
     def __init__(self, api_root: str, api_key: Optional[str] = None):
         if api_root is None:
             raise ValueError("CWMS API root URL cannot be None")
@@ -18,7 +17,6 @@ class CwmsApiSession:
 
 
 class _CwmsBase:
-
     def __init__(self, cwms_api_session: CwmsApiSession):
         if cwms_api_session is None:
             raise ValueError("CWMS API session information cannot be None")
