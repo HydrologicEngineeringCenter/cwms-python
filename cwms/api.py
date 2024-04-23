@@ -183,7 +183,7 @@ def get(
     response = SESSION.get(endpoint, params=params, headers=headers)
 
     if response.status_code != 200:
-        logging.error("CDA Error: response={response}")
+        logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
 
     try:
