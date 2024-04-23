@@ -150,8 +150,7 @@ def timeseries_df_to_json(
         )
 
     # make sure that dataTime column is in iso8601 formate.
-    data["date-time"] = pd.to_datetime(data["date-time"]
-                                       ).apply(pd.Timestamp.isoformat)
+    data["date-time"] = pd.to_datetime(data["date-time"]).apply(pd.Timestamp.isoformat)
     data = data.reindex(columns=["date-time", "value", "quality-code"])
     if data.isnull().values.any():
         raise ValueError("Null/NaN data must be removed from the dataframe")
@@ -204,7 +203,6 @@ def store_timeseries(
     }
 
     if not isinstance(data, dict):
-        raise ValueError(
-            "Cannot store a timeseries without a JSON data dictionary")
+        raise ValueError("Cannot store a timeseries without a JSON data dictionary")
 
     return api.post(endpoint, data, params)
