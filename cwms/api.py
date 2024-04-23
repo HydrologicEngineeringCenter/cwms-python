@@ -127,7 +127,7 @@ def return_base_url() -> str:
         str: base URL
     """
 
-    return SESSION.base_url
+    return str(SESSION.base_url)
 
 
 def api_version_text(api_version: int) -> str:

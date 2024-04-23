@@ -101,7 +101,13 @@ def get_timeseries(
     return Data(response, selector="values")
 
 
-def timeseries_df_to_json(data: pd.DataFrame, tsId: str, units: str, office_id: str, version_date: Optional[datetime] = None):
+def timeseries_df_to_json(
+    data: pd.DataFrame,
+    tsId: str,
+    units: str,
+    office_id: str,
+    version_date: Optional[datetime] = None,
+) -> JSON:
     """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries fucntion.
 
     Parameters
@@ -126,7 +132,7 @@ def timeseries_df_to_json(data: pd.DataFrame, tsId: str, units: str, office_id: 
         units: str
             units of values to be stored (ie. ft, in, m, cfs....)
         version_date: datetime, optional, default is None
-            Version date of time series values to be posted. 
+            Version date of time series values to be posted.
 
     Returns:
         JSON
@@ -144,9 +150,8 @@ def timeseries_df_to_json(data: pd.DataFrame, tsId: str, units: str, office_id: 
         )
 
     # make sure that dataTime column is in iso8601 formate.
-    data["date-time"] = pd.to_datetime(data["date-time"]).apply(
-        pd.Timestamp.isoformat
-    )
+    data["date-time"] = pd.to_datetime(data["date-time"]
+                                       ).apply(pd.Timestamp.isoformat)
     data = data.reindex(columns=["date-time", "value", "quality-code"])
     if data.isnull().values.any():
         raise ValueError("Null/NaN data must be removed from the dataframe")
@@ -173,7 +178,7 @@ def store_timeseries(
     Parameters
     ----------
         data: JSON dictionary
-            Time Series data to be stored. 
+            Time Series data to be stored.
         create_as_ltrs: bool, optional, defualt is False
             Flag indicating if timeseries should be created as Local Regular Time Series.
         store_rule: str, optional, default is None:

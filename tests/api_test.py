@@ -8,13 +8,13 @@ def test_session_default():
 
     # The global session object should be initialized with the default root URL and no
     # authentication key.
-    assert SESSION.base_url == "https://cwms-data-test.cwbi.us/cwms-data/"
+    assert SESSION.base_url == "https://cwms-data.usace.army.mil/cwms-data/"
     assert "Authorization" not in SESSION.headers
 
     # Initializing the session with no arguments should not modify the session.
     session = init_session()
 
-    assert session.base_url == "https://cwms-data-test.cwbi.us/cwms-data/"
+    assert session.base_url == "https://cwms-data.usace.army.mil/cwms-data/"
     assert "Authorization" not in session.headers
 
 
