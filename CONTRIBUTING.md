@@ -42,6 +42,12 @@ poetry run pre-commit run --all-files
 [isort]: https://pycqa.github.io/isort/index.html
 [poetry]: https://python-poetry.org/docs/
 
-### Commiting to main and release
+### Commiting to main and releases
 
-when creating a pull request to main and you want the build to be pushed to test pypi the release
+when creating a pull request to main and you want the build to be pushed to test pypi the verion needs to be updated in pyproject.toml file. For pull requests that are only updating testpypi increase the third number 0.1.2 -> 0.1.3. Releases that will also update to pypi tag a new release in the repo and update the pyproject.toml increasing the minor version 0.1.1 -> 0.2.0.
+
+to grab the module from testpypi for testin run
+
+```sh
+python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ cwms-python
+```
