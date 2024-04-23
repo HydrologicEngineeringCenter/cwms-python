@@ -101,17 +101,12 @@ def get_timeseries(
     return Data(response, selector="values")
 
 
-def store_timeseries(
-    data: JSON,
-    create_as_ltrs: bool = False,
-    store_rule: Optional[str] = None,
-    override_protection: bool = False,
-) -> None:
-    """Will Create new TimeSeries if not already present.  Will store any data provided
+def timeseries_df_to_json(data: pd.DataFrame, tsId: str, units: str, office_id: str, version_date: Optional[datetime] = None):
+    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries fucntion.
 
     Parameters
     ----------
-        data: pd.Dataframe, or Dictionary
+        data: pd.Dataframe
             Time Series data to be stored.  If dataframe data must be provided in the following format
                 df.tsId = timeseried id:specified name of the time series to be posted to
                 df.office = the owning office of the time series
@@ -124,6 +119,61 @@ def store_timeseries(
                 1   2023-12-20T15:00:00.000-05:00  99.8           0
                 2   2023-12-20T15:15:00.000-05:00  98.5           0
                 3   2023-12-20T15:30:00.000-05:00  98.5           0
+        tsId: str
+            timeseried id:specified name of the time series to be posted to
+        office_id: str
+            the owning office of the time series
+        units: str
+            units of values to be stored (ie. ft, in, m, cfs....)
+        version_date: datetime, optional, default is None
+            Version date of time series values to be posted. 
+
+    Returns:
+        JSON
+    """
+    # check dataframe columns
+    if "quality-code" not in data:
+        data["quality-code"] = 0
+    if "date-time" not in data:
+        raise TypeError(
+            "date-time is a required column in data when posting as a dateframe"
+        )
+    if "value" not in data:
+        raise TypeError(
+            "value is a required column when posting data when posting as a dataframe"
+        )
+
+    # make sure that dataTime column is in iso8601 formate.
+    data["date-time"] = pd.to_datetime(data["date-time"]).apply(
+        pd.Timestamp.isoformat
+    )
+    data = data.reindex(columns=["date-time", "value", "quality-code"])
+    if data.isnull().values.any():
+        raise ValueError("Null/NaN data must be removed from the dataframe")
+
+    ts_dict = {
+        "name": tsId,
+        "office-id": office_id,
+        "units": units,
+        "values": data.values.tolist(),
+        "version-date": version_date,
+    }
+
+    return ts_dict
+
+
+def store_timeseries(
+    data: JSON,
+    create_as_ltrs: bool = False,
+    store_rule: Optional[str] = None,
+    override_protection: bool = False,
+) -> None:
+    """Will Create new TimeSeries if not already present.  Will store any data provided
+
+    Parameters
+    ----------
+        data: JSON dictionary
+            Time Series data to be stored. 
         create_as_ltrs: bool, optional, defualt is False
             Flag indicating if timeseries should be created as Local Regular Time Series.
         store_rule: str, optional, default is None:
@@ -148,48 +198,8 @@ def store_timeseries(
         "override-protection": override_protection,
     }
 
-    if isinstance(data, pd.DataFrame):
-        # grab time series information
-        tsId = data.tsId
-        office = data.office
-        units = data.units
-        if hasattr(data, "versionDate"):
-            version_date = data.versionDate
-        else:
-            version_date = None
+    if not isinstance(data, dict):
+        raise ValueError(
+            "Cannot store a timeseries without a JSON data dictionary")
 
-        # check dataframe columns
-        if "quality-code" not in data:
-            data["quality-code"] = 0
-        if "date-time" not in data:
-            raise TypeError(
-                "date-time is a required column in data when posting as a dateframe"
-            )
-        if "value" not in data:
-            raise TypeError(
-                "value is a required column when posting data when posting as a dataframe"
-            )
-
-        # make sure that dataTime column is in iso8601 formate.
-        data["date-time"] = pd.to_datetime(data["date-time"]).apply(
-            pd.Timestamp.isoformat
-        )
-        data = data.reindex(columns=["date-time", "value", "quality-code"])
-        if data.isnull().values.any():
-            raise ValueError("Null/NaN data must be removed from the dataframe")
-
-        ts_dict = {
-            "name": tsId,
-            "office-id": office,
-            "units": units,
-            "values": data.values.tolist(),
-            "version-date": version_date,
-        }
-
-    elif isinstance(data, dict):
-        ts_dict = data
-
-    else:
-        raise TypeError("data is not of type dataframe or dictionary")
-
-    return api.post(endpoint, ts_dict, params)
+    return api.post(endpoint, data, params)

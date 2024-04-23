@@ -38,7 +38,7 @@ from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 from cwms.types import JSON, RequestParams
 
 # Specify the default API root URL and version.
-API_ROOT = "https://cwms-data-test.cwbi.us/cwms-data/"
+API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
 
 # Initialize a non-authenticated session with the default root URL.
@@ -120,6 +120,16 @@ def init_session(
     return SESSION
 
 
+def return_base_url() -> str:
+    """returns the base URL for the CDA instance that is connected to.
+
+    Returns:
+        str: base URL
+    """
+
+    return SESSION.base_url
+
+
 def api_version_text(api_version: int) -> str:
     """Initialize CDA request headers.
 
@@ -173,7 +183,7 @@ def get(
     response = SESSION.get(endpoint, params=params, headers=headers)
 
     if response.status_code != 200:
-        logging.error(f"CDA Error: response={response}")
+        logging.error("CDA Error: response={response}")
         raise ApiError(response)
 
     try:
@@ -216,7 +226,7 @@ def post(
     )
 
     if response.status_code != 200:
-        logging.error(f"CDA Error: response={response},{SESSION.headers}")
+        logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
 
 

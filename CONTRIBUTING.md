@@ -41,3 +41,7 @@ poetry run pre-commit run --all-files
 [black]: https://black.readthedocs.io/en/stable/
 [isort]: https://pycqa.github.io/isort/index.html
 [poetry]: https://python-poetry.org/docs/
+
+### Commiting to main and release
+
+when creating a pull request to main and you want the build to be pushed to test pypi the release

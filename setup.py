@@ -16,9 +16,9 @@ setup(
     packages=find_packages(include=["cwms"]),
     url="https://github.com/HydrologicEngineeringCenter/cwms-python",
     keywords=["Swagger", "CWMS Data API"],
-    version="0.1.0",
+    version="0.1.2",
     description="A python implementation of the CWMS Data API (CDA)",
     author="Eric Novotny",
     install_requires=["pandas", "requests_toolbelt"],
-    requires_python=[">=3.8.0"],
+    requires_python=[">=3.9.0"],
 )
