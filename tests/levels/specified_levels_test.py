@@ -7,11 +7,11 @@ from datetime import datetime
 
 import pytest
 import pytz
+from requests.exceptions import HTTPError
 
 import cwms.api
 import cwms.levels.specified_levels as specified_levels
 from tests._test_utils import read_resource_file
-from requests.exceptions import HTTPError
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
 _SPEC_LEVELS_JSON = read_resource_file("specified_levels.json")

@@ -99,8 +99,7 @@ def get_forecast_instance(
     if designator is None:
         raise ValueError("Retrieve a forecast instance requires a designator")
     if forecast_date is None:
-        raise ValueError(
-            "Retrieve a forecast instance requires a forecast date")
+        raise ValueError("Retrieve a forecast instance requires a forecast date")
     if issue_date is None:
         raise ValueError("Retrieve a forecast instance requires a issue date")
 
@@ -143,9 +142,7 @@ def store_forecast_instance(data: JSON) -> None:
         If a 500 range error code response is returned from the server.
     """
     if data is None:
-        raise ValueError(
-            "Storing a forecast instance requires a JSON data dictionary"
-        )
+        raise ValueError("Storing a forecast instance requires a JSON data dictionary")
     endpoint = "forecast-instance"
 
     return api.post(endpoint, data, params=None)
@@ -196,8 +193,7 @@ def delete_forecast_instance(
     if designator is None:
         raise ValueError("Deleting a forecast instance requires a designator")
     if forecast_date is None:
-        raise ValueError(
-            "Deleting a forecast instance requires a forecast date")
+        raise ValueError("Deleting a forecast instance requires a forecast date")
     if issue_date is None:
         raise ValueError("Deleting a forecast instance requires a issue date")
 

@@ -32,7 +32,7 @@ def test_get_forecast_instances(requests_mock):
     forecast = forecast_instance.get_forecast_instances(
         "test-spec", "SWT", "designator"
     )
-    assert forecast == _FORECAST_INSTANCES_JSON
+    assert forecast.json == _FORECAST_INSTANCES_JSON
 
 
 def test_retrieve_forecast_instance_json(requests_mock):
@@ -49,7 +49,7 @@ def test_retrieve_forecast_instance_json(requests_mock):
     forecast = forecast_instance.get_forecast_instance(
         "test-spec", "SWT", "designator", forecast_date, issue_date
     )
-    assert forecast == _FORECAST_INSTANCES_JSON
+    assert forecast.json == _FORECAST_INSTANCES_JSON
 
 
 def test_store_forecast_instance_json(requests_mock):

@@ -60,9 +60,7 @@ def get_forecast_specs(
     return Data(response)
 
 
-def get_forecast_spec(
-    spec_id: str, office: str, designator: str
-) -> Data:
+def get_forecast_spec(spec_id: str, office: str, designator: str) -> Data:
     """
     Parameters
     ----------
@@ -134,8 +132,7 @@ def store_forecast_spec(data: JSON) -> None:
         If a 500 range error code response is returned from the server.
     """
     if data is None:
-        raise ValueError(
-            "Storing a forecast spec requires a JSON data dictionary")
+        raise ValueError("Storing a forecast spec requires a JSON data dictionary")
     endpoint = "forecast-spec"
 
     return api.post(endpoint, data)

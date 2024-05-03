@@ -32,19 +32,16 @@ def test_get_forecast_specs(requests_mock):
         "designator_mask",
         "source_entity",
     )
-    assert forecast == _FORECAST_SPECS_JSON
+    assert forecast.json == _FORECAST_SPECS_JSON
 
 
 def test_get_forecast_spec(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}/forecast-spec/test-spec?"
-        f"office=SWT&designator=designator",
+        f"{_MOCK_ROOT}/forecast-spec/test-spec?" f"office=SWT&designator=designator",
         json=_FORECAST_SPECS_JSON,
     )
-    forecast = forecast_spec.get_forecast_spec(
-        "test-spec", "SWT", "designator"
-    )
-    assert forecast == _FORECAST_SPECS_JSON
+    forecast = forecast_spec.get_forecast_spec("test-spec", "SWT", "designator")
+    assert forecast.json == _FORECAST_SPECS_JSON
 
 
 def test_store_forecast_spec_json(requests_mock):
