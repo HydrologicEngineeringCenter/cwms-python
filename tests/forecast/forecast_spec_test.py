@@ -7,6 +7,7 @@ import pytz
 
 import cwms.api
 import cwms.forecast.forecast_spec as forecast_spec
+from cwms.types import DeleteMethod
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
@@ -55,13 +56,15 @@ def test_store_forecast_spec_json(requests_mock):
     assert requests_mock.call_count == 1
 
 
-def test_delete_forecast_spec_json(requests_mock):
+def test_delete_forecast_spec(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}/forecast-spec/test-spec?"
         f"office=SWT&designator=designator&method=DELETE_KEY",
         status_code=200,
     )
 
-    forecast_spec.delete_forecast_spec("test-spec", "SWT", "designator")
+    forecast_spec.delete_forecast_spec(
+        "test-spec", "SWT", "designator", DeleteMethod.DELETE_KEY
+    )
     assert requests_mock.called
     assert requests_mock.call_count == 1

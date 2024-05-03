@@ -2,17 +2,10 @@
 #  United States Army Corps of Engineers - Hydrologic Engineering Center (USACE/HEC)
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
-from enum import Enum, auto
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON, Data
-
-
-class DeleteMethod(Enum):
-    DELETE_ALL = auto()
-    DELETE_KEY = auto()
-    DELETE_DATA = auto()
+from cwms.types import JSON, Data, DeleteMethod
 
 
 def get_forecast_specs(
@@ -142,7 +135,7 @@ def delete_forecast_spec(
     spec_id: str,
     office: str,
     designator: str,
-    delete_method: DeleteMethod = DeleteMethod.DELETE_KEY,
+    delete_method: DeleteMethod,
 ) -> None:
     """
     Parameters
@@ -180,7 +173,6 @@ def delete_forecast_spec(
         raise ValueError("Deleting a forecast spec requires a designator")
 
     endpoint = f"forecast-spec/{spec_id}"
-    print(delete_method.name)
     params = {
         "office": office,
         "designator": designator,
