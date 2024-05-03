@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-from requests import Response
 
 import cwms.api as api
 from cwms.types import JSON, Data
@@ -168,9 +167,9 @@ def timeseries_df_to_json(
 
 def store_timeseries(
     data: JSON,
-    create_as_ltrs: bool = False,
+    create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
-    override_protection: bool = False,
+    override_protection: Optional[bool] = False,
 ) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 

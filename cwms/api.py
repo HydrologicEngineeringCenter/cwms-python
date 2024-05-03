@@ -232,7 +232,7 @@ def post(
 
 def patch(
     endpoint: str,
-    data: JSON,
+    data: Optional[JSON] = None,
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
@@ -256,10 +256,12 @@ def patch(
     """
 
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-
-    response = SESSION.patch(
-        endpoint, params=params, headers=headers, data=json.dumps(data)
-    )
+    if data is None:
+        response = SESSION.patch(endpoint, params=params, headers=headers)
+    else:
+        response = SESSION.patch(
+            endpoint, params=params, headers=headers, data=json.dumps(data)
+        )
 
     if response.status_code != 200:
         logging.error(f"CDA Error: response={response}")
