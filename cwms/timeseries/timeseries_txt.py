@@ -4,19 +4,12 @@
 #  Source may not be released without written approval from HEC
 
 from datetime import datetime
-from enum import Enum, auto
 from typing import Optional
 
 import requests
 
 import cwms.api as api
-from cwms.types import JSON, Data
-
-
-class DeleteMethod(Enum):
-    DELETE_ALL = auto()
-    DELETE_KEY = auto()
-    DELETE_DATA = auto()
+from cwms.types import JSON, Data, DeleteMethod
 
 
 def get_text_timeseries(

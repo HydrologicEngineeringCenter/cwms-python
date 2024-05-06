@@ -1,4 +1,5 @@
 from copy import deepcopy
+from enum import Enum, auto
 from typing import Any, Optional
 
 from pandas import DataFrame, Index, to_datetime
@@ -8,6 +9,12 @@ JSON = dict[str, Any]
 
 # Describes request parameters.
 RequestParams = dict[str, Any]
+
+
+class DeleteMethod(Enum):
+    DELETE_ALL = auto()
+    DELETE_KEY = auto()
+    DELETE_DATA = auto()
 
 
 class Data:
