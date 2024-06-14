@@ -9,6 +9,8 @@ from .locations.physical_locations import *
 from .timeseries.timeseries import *
 from .timeseries.timeseries_bin import *
 from .timeseries.timeseries_txt import *
+from .ratings.ratings import *
+from .ratings.ratings_spec import *
 
 try:
     __version__ = version("cwms-python")

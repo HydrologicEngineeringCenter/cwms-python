@@ -17,6 +17,12 @@ class DeleteMethod(Enum):
     DELETE_DATA = auto()
 
 
+class RatingMethod(Enum):
+    EAGER = auto()
+    LAZY = auto()
+    REFERENCE = auto()
+
+
 class Data:
     """Wrapper for CWMS API data."""
 
@@ -47,18 +53,24 @@ class Data:
 
         data = deepcopy(json)
 
-        if selector:
-            df_data = data
-            for key in selector.split("."):
-                df_data = df_data[key]
-            df = DataFrame(df_data)
+        if (selector is not None):
+            selectors = selector.split(".")
+            if selectors[0] in data.keys():
+                df_data = data
+                for key in selector.split("."):
+                    df_data = df_data[key]
+                df = DataFrame(df_data)
 
-            # if timeseries values are present then grab the values and put into dataframe
-            if selector == "values":
-                df.columns = Index([sub["name"] for sub in data["value-columns"]])
+                # if timeseries values are present then grab the values and put into dataframe
+                if selector == "values":
+                    df.columns = Index([sub["name"]
+                                        for sub in data["value-columns"]])
 
-                if "date-time" in df.columns:
-                    df["date-time"] = to_datetime(df["date-time"], unit="ms")
+                    if "date-time" in df.columns:
+                        df["date-time"] = to_datetime(
+                            df["date-time"], unit="ms")
+            else:
+                df = DataFrame(data)
         else:
             df = DataFrame(data)
 
