@@ -16,8 +16,7 @@ def rating_current_effective_date(rating_id: str, office_id: str) -> datetime:
 
     """
     # get all rating effective date information.
-    ratings = get_ratings(rating_id=rating_id,
-                          office_id=office_id, method="LAZY")
+    ratings = get_ratings(rating_id=rating_id, office_id=office_id, method="LAZY")
 
     # find the most recent effective date
     max_effective = pd.to_datetime(ratings.df["effective-date"]).max()
