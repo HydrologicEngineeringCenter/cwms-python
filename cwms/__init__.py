@@ -6,6 +6,8 @@ from .forecast.forecast_spec import *
 from .levels.location_levels import *
 from .levels.specified_levels import *
 from .locations.physical_locations import *
+from .ratings.ratings import *
+from .ratings.ratings_spec import *
 from .timeseries.timeseries import *
 from .timeseries.timeseries_bin import *
 from .timeseries.timeseries_txt import *

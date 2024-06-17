@@ -7,12 +7,11 @@ from datetime import datetime, timedelta
 
 import pytz
 
-import cwms._constants as constants
-from cwms.core import CwmsApiSession
-from cwms.timeseries.timeseries import CwmsTs
+import cwms
 
-session = CwmsApiSession("http://localhost:7001/swt-data/", "apikey testkey")
-ts_api = CwmsTs(session)
+cwms.api.init_session(
+    api_root="http://localhost:7001/swt-data/", api_key="apikey testkey"
+)
 
 
 def run_versioned_ts_examples():
@@ -40,9 +39,9 @@ def run_versioned_ts_examples():
           "office-id": "SWT"
         }
         """
-    headers = {"Content-Type": constants.HEADER_JSON_V2}
+
     print("Storing location TEST")
-    ts_api.get_session().post("locations", params=None, headers=headers, data=location)
+    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
 
     versioned_ts = json.loads(
         """
@@ -77,7 +76,7 @@ def run_versioned_ts_examples():
         """
     )
     print(f"Storing versioned ts {versioned_ts['name']}")
-    ts_api.write_ts(data=versioned_ts)
+    cwms.store_timeseries(data=versioned_ts)
 
     timezone = pytz.timezone("US/Pacific")
     begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
@@ -86,14 +85,14 @@ def run_versioned_ts_examples():
     version_date = timezone.localize(datetime(2021, 6, 20, 8, 0, 0))
     print(version_date)
 
-    versioned_ts_dict = ts_api.retrieve_ts_json(
+    versioned_ts_dict = cwms.get_timeseries(
         tsId=versioned_ts["name"],
         office_id="SWT",
         begin=begin,
         end=end,
         version_date=version_date,
     )
-    print(versioned_ts_dict)
+    print(versioned_ts_dict.df)
 
 
 def run_unversioned_ts_examples():
@@ -121,9 +120,8 @@ def run_unversioned_ts_examples():
           "office-id": "SWT"
         }
         """
-    headers = {"Content-Type": constants.HEADER_JSON_V2}
     print("Storing location TEST")
-    ts_api.get_session().post("locations", params=None, headers=headers, data=location)
+    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
 
     unversioned_ts = json.loads(
         """
@@ -157,16 +155,16 @@ def run_unversioned_ts_examples():
         """
     )
     print(f"Storing unversioned ts {unversioned_ts['name']}")
-    ts_api.write_ts(data=unversioned_ts)
+    cwms.store_timeseries(data=unversioned_ts)
 
     timezone = pytz.timezone("US/Pacific")
     begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
     end = timezone.localize(datetime(2008, 5, 1, 18, 0, 0))
 
-    unversioned_ts_dict = ts_api.retrieve_ts_json(
+    unversioned_ts_dict = cwms.get_timeseries(
         tsId=unversioned_ts["name"], office_id="SWT", begin=begin, end=end
     )
-    print(unversioned_ts_dict)
+    print(unversioned_ts_dict.df)
 
 
 def run_max_agg_ts_examples():
@@ -194,9 +192,9 @@ def run_max_agg_ts_examples():
               "office-id": "SWT"
             }
             """
-    headers = {"Content-Type": constants.HEADER_JSON_V2}
+
     print("Storing location TEST")
-    ts_api.get_session().post("locations", params=None, headers=headers, data=location)
+    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
 
     versioned_ts = json.loads(
         """
@@ -226,7 +224,7 @@ def run_max_agg_ts_examples():
         """
     )
     print(f"Storing versioned ts 1 {versioned_ts['name']}")
-    ts_api.write_ts(data=versioned_ts)
+    cwms.store_timeseries(data=versioned_ts)
 
     versioned_ts2 = json.loads(
         """
@@ -247,16 +245,16 @@ def run_max_agg_ts_examples():
     )
 
     print(f"Storing versioned ts 2 {versioned_ts2['name']}")
-    ts_api.write_ts(data=versioned_ts2)
+    cwms.store_timeseries(data=versioned_ts2)
 
     timezone = pytz.timezone("US/Pacific")
     begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
     end = timezone.localize(datetime(2008, 5, 1, 18, 0, 0))
 
-    max_agg_ts_dict = ts_api.retrieve_ts_json(
+    max_agg_ts_dict = cwms.get_timeseries(
         tsId=versioned_ts["name"], office_id="SWT", begin=begin, end=end
     )
-    print(max_agg_ts_dict)
+    print(max_agg_ts_dict.df)
 
 
 if __name__ == "__main__":

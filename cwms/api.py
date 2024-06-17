@@ -29,7 +29,7 @@ the error.
 import json
 import logging
 from json import JSONDecodeError
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from requests import Response
 from requests_toolbelt import sessions  # type: ignore
@@ -150,10 +150,49 @@ def api_version_text(api_version: int) -> str:
         version = "application/json"
     elif api_version == 2:
         version = "application/json;version=2"
+    elif api_version == 102:
+        version = "application/xml;version=2"
     else:
         raise InvalidVersion(f"API version {api_version} is not supported.")
 
     return version
+
+
+def get_xml(
+    endpoint: str,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> Any:
+    """Make a GET request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record(s).
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The deserialized JSON response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    headers = {"Accept": api_version_text(api_version)}
+    response = SESSION.get(endpoint, params=params, headers=headers)
+
+    if response.status_code != 200:
+        logging.error(f"CDA Error: response={response}")
+        raise ApiError(response)
+
+    try:
+        return response.content.decode("utf-8")
+    except JSONDecodeError as error:
+        logging.error(f"Error decoding CDA response as xml: {error}")
+        return {}
 
 
 def get(
@@ -189,7 +228,7 @@ def get(
     try:
         return cast(JSON, response.json())
     except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response: {error}")
+        logging.error(f"Error decoding CDA response as json: {error}")
         return {}
 
 
