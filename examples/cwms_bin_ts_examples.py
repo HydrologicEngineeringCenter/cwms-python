@@ -7,12 +7,11 @@ from datetime import datetime
 
 import pytz
 
-import cwms._constants as constants
-from cwms.core import CwmsApiSession
-from cwms.timeseries.timeseries_bin import CwmsBinTs
+import cwms
 
-session = CwmsApiSession("http://localhost:7001/spk-data/", "apikey testkey")
-bin_ts_api = CwmsBinTs(session)
+cwms.api.init_session(
+    api_root="http://localhost:7001/swt-data/", api_key="apikey testkey"
+)
 
 
 def run_bin_ts_examples():
@@ -40,11 +39,7 @@ def run_bin_ts_examples():
           "office-id": "SPK"
         }
         """
-    headers = {"Content-Type": constants.HEADER_JSON_V1}
-    print("Storing location TEST")
-    bin_ts_api.get_session().post(
-        "locations", params=None, headers=headers, data=location
-    )
+    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
 
     bin_ts = json.loads(
         """
@@ -81,19 +76,19 @@ def run_bin_ts_examples():
         """
     )
     print(f"Storing text ts {bin_ts['name']}")
-    bin_ts_api.store_bin_ts_json(bin_ts, False)
+    cwms.store_binary_timeseries(bin_ts, False)
 
     timezone = pytz.timezone("UTC")
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2024, 2, 12, 2, 0, 0))
-    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(bin_ts["name"], "SPK", begin, end)
-    print(bin_ts_dict)
+    bin_ts_dict = cwms.get_binary_timeseries(bin_ts["name"], "SPK", begin, end)
+    print(bin_ts_dict.json)
 
     print(f"Deleting text ts {bin_ts['name']}")
-    bin_ts_api.delete_bin_ts(bin_ts["name"], "SPK", begin, end)
-    bin_ts_dict = bin_ts_api.retrieve_bin_ts_json(bin_ts["name"], "SPK", begin, end)
+    cwms.delete_binary_timeseries(bin_ts["name"], "SPK", begin, end)
+    bin_ts_dict = cwms.get_binary_timeseries(bin_ts["name"], "SPK", begin, end)
     print(f"Confirming delete of text ts {bin_ts['name']}")
-    print(bin_ts_dict)
+    print(bin_ts_dict.json)
 
 
 if __name__ == "__main__":

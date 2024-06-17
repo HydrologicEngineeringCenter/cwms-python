@@ -150,6 +150,8 @@ def api_version_text(api_version: int) -> str:
         version = "application/json"
     elif api_version == 2:
         version = "application/json;version=2"
+    elif api_version == 102:
+        version = "application/xml;version=2"
     else:
         raise InvalidVersion(f"API version {api_version} is not supported.")
 
@@ -161,7 +163,7 @@ def get(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+):
     """Make a GET request to the CWMS Data API.
 
     Args:
@@ -186,11 +188,18 @@ def get(
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
 
-    try:
-        return cast(JSON, response.json())
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response: {error}")
-        return {}
+    if api_version == 102:
+        try:
+            return response.content.decode("utf-8")
+        except JSONDecodeError as error:
+            logging.error(f"Error decoding CDA response as xml: {error}")
+            return {}
+    else:
+        try:
+            return cast(JSON, response.json())
+        except JSONDecodeError as error:
+            logging.error(f"Error decoding CDA response as json: {error}")
+            return {}
 
 
 def post(

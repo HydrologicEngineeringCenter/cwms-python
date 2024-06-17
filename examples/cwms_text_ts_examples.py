@@ -7,13 +7,11 @@ from datetime import datetime
 
 import pytz
 
-import cwms._constants as constants
-from cwms.core import CwmsApiSession
-from cwms.exceptions import NoDataFoundError
-from cwms.timeseries.timeseries_txt import CwmsTextTs, DeleteMethod
+import cwms
 
-session = CwmsApiSession("http://localhost:7001/spk-data/", "apikey testkey")
-text_ts_api = CwmsTextTs(session)
+cwms.api.init_session(
+    api_root="http://localhost:7001/swt-data/", api_key="apikey testkey"
+)
 
 
 def run_text_ts_examples():
@@ -41,11 +39,9 @@ def run_text_ts_examples():
           "office-id": "SPK"
         }
         """
-    headers = {"Content-Type": constants.HEADER_JSON_V1}
+
     print("Storing location TEST")
-    text_ts_api.get_session().post(
-        "locations", params=None, headers=headers, data=location
-    )
+    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
 
     text_ts = json.loads(
         """
@@ -75,19 +71,19 @@ def run_text_ts_examples():
         """
     )
     print(f"Storing text ts {text_ts['name']}")
-    text_ts_api.store_text_ts_json(text_ts, False)
+    cwms.store_text_timeseries(text_ts, False)
 
     timezone = pytz.timezone("UTC")
     begin = timezone.localize(datetime(2024, 2, 12, 0, 0, 0))
     end = timezone.localize(datetime(2024, 2, 12, 2, 0, 0))
-    text_ts_dict = text_ts_api.retrieve_text_ts_json(text_ts["name"], "SPK", begin, end)
-    print(text_ts_dict)
+    text_ts_dict = cwms.get_text_timeseries(text_ts["name"], "SPK", begin, end)
+    print(text_ts_dict.json)
 
     print(f"Deleting text ts {text_ts['name']}")
-    text_ts_api.delete_text_ts(text_ts["name"], "SPK", begin, end)
-    text_ts_dict = text_ts_api.retrieve_text_ts_json(text_ts["name"], "SPK", begin, end)
+    cwms.delete_text_timeseries(text_ts["name"], "SPK", begin, end)
+    text_ts_dict = cwms.get_text_timeseries(text_ts["name"], "SPK", begin, end)
     print(f"Confirming delete of text ts {text_ts['name']}")
-    print(text_ts_dict)
+    print(text_ts_dict.json)
 
 
 def run_std_text_examples():
@@ -105,14 +101,14 @@ def run_std_text_examples():
     office_id = text_ts.get("id").get("office-id")
     text_id = text_ts.get("id").get("id")
     print(f"Storing standard text id: {text_id}")
-    text_ts_api.store_std_txt_json(text_ts)
+    cwms.store_standard_text(text_ts)
     print(f"Retrieving standard text id: {text_id}")
-    print(text_ts_api.retrieve_std_txt_json(text_id, office_id))
+    print(cwms.get_standard_text(text_id, office_id).json)
     print(f"Deleting standard text id: {text_id}")
-    text_ts_api.delete_std_txt(text_id, DeleteMethod.DELETE_ALL, office_id)
+    cwms.delete_standard_text(text_id, cwms.DeleteMethod.DELETE_ALL, office_id)
     try:
-        text_ts_api.retrieve_std_txt_json(text_id, office_id)
-    except NoDataFoundError:
+        cwms.get_standard_text(text_id, office_id)
+    except ValueError:
         print(f"Confirmed standard text was deleted: {text_id}")
 
 

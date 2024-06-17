@@ -5,12 +5,11 @@
 import json
 from datetime import datetime
 
-import cwms._constants as constants
-from cwms.core import CwmsApiSession
-from cwms.levels.location_levels import CwmsLevel
+import cwms
 
-session = CwmsApiSession("http://localhost:7000/cwms-data/", "apikey testkey")
-level_api = CwmsLevel(session)
+cwms.api.init_session(
+    api_root="http://localhost:7001/swt-data/", api_key="apikey testkey"
+)
 
 
 def run_spec_level_examples():
@@ -25,23 +24,21 @@ def run_spec_level_examples():
         """
     )
     print(f"Storing a specified level {specified_level['id']}")
-    level_api.store_specified_level_json(specified_level, False)
+    cwms.store_specified_level(specified_level, False)
 
-    spec_level_dict = level_api.retrieve_specified_levels_json(
-        "Top of Surcharge", "SPK"
-    )[0]
-    print(spec_level_dict)
+    spec_level_dict = cwms.get_specified_levels("Top of Surcharge", "SPK")
+    print(spec_level_dict.json)
 
     new_id = "Top of Surcharge2"
     print(f"Changing the name of specified level {specified_level['id']} to {new_id}")
-    level_api.update_specified_level("Top of Surcharge", new_id, "SPK")
-    spec_level_dict = level_api.retrieve_specified_levels_json(new_id, "SPK")[0]
+    cwms.update_specified_level("Top of Surcharge", new_id, "SPK")
+    spec_level_dict = cwms.get_specified_levels(new_id, "SPK").json
     print(spec_level_dict["id"])
     print(f"Deleting specified level id {new_id}")
-    level_api.delete_specified_level("Top of Surcharge2", "SPK")
-    spec_levels = level_api.retrieve_specified_levels_json("Top of Surcharge*", "SPK")
+    cwms.delete_specified_level("Top of Surcharge2", "SPK")
+    spec_levels = cwms.get_specified_levels("Top of Surcharge*", "SPK")
     print(f"Confirming delete of spec id")
-    print(spec_levels)
+    print(spec_levels.json)
 
 
 def run_loc_level_examples():
@@ -68,11 +65,9 @@ def run_loc_level_examples():
           "office-id": "SPK"
         }
         """
-    headers = {"Content-Type": constants.HEADER_JSON_V1}
+
     print("Storing location TEST")
-    level_api.get_session().post(
-        "locations", params=None, headers=headers, data=location
-    )
+    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
     level_dict = json.loads(
         """
         {
@@ -89,20 +84,20 @@ def run_loc_level_examples():
         """
     )
     print(f"Storing location level {level_dict['location-level-id']}")
-    level_api.store_location_level_json(level_dict)
+    cwms.store_location_level(level_dict)
     date_string = "1900-01-01T06:00:00"
     office_id = "SPK"
     effective_date = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
     level_id = level_dict["location-level-id"]
-    level = level_api.retrieve_location_level_json(level_id, office_id, effective_date)
+    level = cwms.get_location_level(level_id, office_id, effective_date)
     print(level)
     print(f"Retrieving level {level_id} as an hourly timeseries for the past day")
-    time_series = level_api.retrieve_level_as_timeseries_json(
+    time_series = cwms.get_level_as_timeseries(
         level_id, office_id, "m", interval="1Hour"
     )
     print(time_series)
     print(f"Deleting level {level_id}")
-    level_api.delete_location_level(level_id, office_id, effective_date)
+    cwms.delete_location_level(level_id, office_id, effective_date)
 
 
 if __name__ == "__main__":

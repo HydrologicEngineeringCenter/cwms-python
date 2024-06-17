@@ -8,7 +8,10 @@ from cwms.types import JSON, Data
 
 
 def get_current_rating(
-    rating_id: str, office_id: str, rating_table_in_df: Optional[bool] = True
+    rating_id: str,
+    office_id: str,
+    rating_table_in_df: Optional[bool] = True,
+    xml: Optional[bool] = False,
 ):
     """Retrives the rating table for the current active rating.  i.e. the rating table with the latest
     effective date for the rating specification
@@ -40,6 +43,7 @@ def get_current_rating(
         end=max_effective,
         method="EAGER",
         rating_table_in_df=rating_table_in_df,
+        xml=xml,
     )
 
     return rating
@@ -53,7 +57,8 @@ def get_ratings(
     timezone: Optional[str] = None,
     method: Optional[str] = "EAGER",
     rating_table_in_df: Optional[bool] = False,
-) -> Data:
+    xml: Optional[bool] = False,
+):
     """Retrives ratings for a specific rating-id
 
     Parameters
@@ -91,12 +96,14 @@ def get_ratings(
         "timezone": timezone,
         "method": method,
     }
-
-    response = api.get(endpoint, params)
-    if rating_table_in_df and method == "EAGER":
-        data = Data(response, selector="simple-rating.rating-points")
-    elif method == "REFERENCE":
-        data = Data(response)
+    if xml:
+        data = api.get(endpoint, params, api_version=102)
     else:
-        data = Data(response, selector="simple-rating")
+        response = api.get(endpoint, params)
+        if rating_table_in_df and method == "EAGER":
+            data = Data(response, selector="simple-rating.rating-points")
+        elif method == "REFERENCE":
+            data = Data(response)
+        else:
+            data = Data(response, selector="simple-rating")
     return data
