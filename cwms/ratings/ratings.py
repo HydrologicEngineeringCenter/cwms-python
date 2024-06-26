@@ -4,22 +4,27 @@ from typing import Any, Optional
 import pandas as pd
 
 import cwms.api as api
+from cwms.ratings.ratings_spec import get_rating_specs
 from cwms.types import JSON, Data
 
 
-def rating_current_effective_date(rating_id: str, office_id: str) -> datetime:
+def rating_current_effective_date(rating_id: str, office_id: str) -> Any:
     """Retrieve the most recent effective date for a specific rating id.
 
     Returns
         datatime
-            the datetime of the most recent effective date for a rating id
+            the datetime of the most recent effective date for a rating id. If max effective date is
+            not present for rating_id then None will be returned
 
     """
     # get all rating effective date information.
-    ratings = get_ratings(rating_id=rating_id, office_id=office_id, method="LAZY")
-
+    rating_specs = get_rating_specs(office_id=office_id, rating_id_mask=rating_id)
     # find the most recent effective date
-    max_effective = pd.to_datetime(ratings.df["effective-date"]).max()
+    df = rating_specs.df
+    if "effective-dates" in df.columns:
+        max_effective = pd.to_datetime(df["effective-dates"].iloc[0]).max()
+    else:
+        max_effective = None
     return max_effective
 
 

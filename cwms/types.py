@@ -56,7 +56,8 @@ class Data:
         if selector:
             df_data = data
             for key in selector.split("."):
-                df_data = df_data[key]
+                if key in df_data.keys():
+                    df_data = df_data[key]
 
             # if the dataframe is for a rating table
             if "rating-points" in selector:
