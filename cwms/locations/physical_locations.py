@@ -4,7 +4,34 @@ import pandas as pd
 from pandas import DataFrame
 
 import cwms.api as api
+import cwms.catalog.catalog as ct
 from cwms.types import Data
+
+
+def get_locations_catalog(page: Optional[str] = None,
+                          page_size: Optional[int] = 5000,
+                          unit_system: Optional[str] = None,
+                          office: Optional[str] = None,
+                          like: Optional[str] = None,
+                          timeseries_category_like: Optional[str] = None,
+                          timeseries_group_like: Optional[str] = None,
+                          location_category_like: Optional[str] = None,
+                          location_group_like: Optional[str] = None,
+                          bounding_office_like: Optional[str] = None,
+                          ) -> Data:
+    params = {
+        "page": page,
+        "page-size": page_size,
+        "unit-system": unit_system,
+        "office": office,
+        "like": like,
+        "timeseries-category-like": timeseries_category_like,
+        "timeseries-group-like": timeseries_group_like,
+        "location-category-like": location_category_like,
+        "location-group-like": location_group_like,
+        "bounding-office-like": bounding_office_like
+    }
+    return ct.get_catalog("LOCATIONS", params)
 
 
 def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> Data:
@@ -16,10 +43,10 @@ def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> D
 
 
 def get_locations(
-    office_id: Optional[str] = None,
-    loc_ids: Optional[str] = None,
-    units: Optional[str] = None,
-    datum: Optional[str] = None,
+        office_id: Optional[str] = None,
+        loc_ids: Optional[str] = None,
+        units: Optional[str] = None,
+        datum: Optional[str] = None,
 ) -> Data:
     endpoint = "locations"
     params = {
