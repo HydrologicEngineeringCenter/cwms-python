@@ -1,4 +1,5 @@
 from datetime import datetime
+from json import loads
 from typing import Any, Optional
 
 import pandas as pd
@@ -211,3 +212,116 @@ def get_ratings(
     else:
         data = Data(response, selector="simple-rating")
     return data
+
+
+def rating_simple_df_to_json(
+    data: pd.DataFrame,
+    rating_id: str,
+    office_id: str,
+    units: str,
+    effective_date: datetime,
+    transition_start_date: Optional[datetime] = None,
+    description: Optional[str] = None,
+) -> JSON:
+    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_ratings function. Can
+    only be used for simple ratings with a indenpendant and 1 dependant variable.
+
+    Parameters
+    ----------
+        data: pd.Dataframe
+            Rating Table to be stored to an exiting rating specification and template.  Can only have 2 columns ind and dep. ind
+            contained the indenpendant variable and dep contains the dependent variable.
+                        ind	dep
+                    0	9.62	0.01
+                    1	9.63	0.01
+                    2	9.64	0.02
+                    3	9.65	0.02
+                    4	9.66	0.03
+                        ...	...	...
+                    2834	37.96	16204.85
+                    2835	37.97	16228.6
+                    2836	37.98	16252.37
+                    2837	37.99	16276.17
+                    2838	38.0	16300.0
+        rating_id: str
+            specify the rating id to post the new rating curve to
+        office_id: str
+            the owning office of the rating
+        units: str
+            units for both the independant and dependent variable seperated by ; i.e. ft;cfs or ft;ft.
+        effective_date: datetime,
+            The effective date of the rating curve to be stored.
+        transition_start_date: datetime Optional = None
+            The transitional start date of the rating curve to be stored
+        description: str Optional = None
+            a description to be added to the rating curve
+
+    Returns:
+        JSON
+    """
+
+    if not (data.columns.shape[0] == 2):
+        raise TypeError(
+            f"dataframe has {data.columns.shape[0]} columns. dataframe can only have 2 columns one called ind and the other called dep."
+        )
+    if not (data.columns == ["ind", "dep"]).all():
+        raise TypeError(
+            "dataframe column names need to be ['ind','dep'] and in that order."
+        )
+    if len(units.split(";")) != 2:
+        raise TypeError(
+            "units needs to contain the units for ind and dep columns in dataframe divided by ;. i.e. ft;cfs"
+        )
+
+    rating_header = get_ratings(
+        rating_id=rating_id, office_id=office_id, method="REFERENCE"
+    )
+
+    points_json = loads(data.to_json(orient="records"))
+
+    simple_rating = {
+        "simple_rating": {
+            "office-id": office_id,
+            "rating-spec-id": rating_id,
+            "units-id": units,
+            "effective-date": effective_date.isoformat(),
+            "transition-start-date": transition_start_date.isoformat()
+            if transition_start_date
+            else None,
+            "active": True,
+            "description": description,
+            "rating-points": {"point": points_json},
+        }
+    }
+    rating_json = rating_header.json
+    rating_json.update(simple_rating)
+
+    return rating_json
+
+
+def update_ratings(
+    data: Any, rating_id: str, store_template: Optional[bool] = True
+) -> None:
+    """Will store a new rating curve to an existing rating specification can be JSON or XML
+
+    Parameters
+    ----------
+        data: JSON dictionary or XML
+            rating data to be stored.
+        store_template: Boolean Default = True
+            Store updates to the rating template.  Default = True
+
+    Returns
+    -------
+    response
+    """
+
+    endpoint = f"ratings/{rating_id}"
+    params = {"store-template": store_template}
+
+    if not isinstance(data, dict) and "<?xml" not in data:
+        raise ValueError(
+            "Cannot store a timeseries without a JSON data dictionaryor in XML"
+        )
+
+    return api.patch(endpoint, data, params)
