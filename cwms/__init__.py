@@ -1,7 +1,6 @@
 from importlib.metadata import PackageNotFoundError, version
 
 from .api import *
-from .catalog.catalog import *
 from .forecast.forecast_instance import *
 from .forecast.forecast_spec import *
 from .levels.location_levels import *
