@@ -277,20 +277,19 @@ def rating_simple_df_to_json(
 
     points_json = loads(data.to_json(orient="records"))
 
-    simple_rating = {
-        "simple-rating": {
-            "office-id": office_id,
-            "rating-spec-id": rating_id,
-            "units-id": units,
-            "effective-date": effective_date.isoformat(),
-            "transition-start-date": transition_start_date.isoformat()
-            if transition_start_date
-            else None,
-            "active": True,
-            "description": description,
-            "rating-points": {"point": points_json},
-        }
-    }
+    simple_rating = {"simple-rating": {
+        "office-id": office_id,
+        "rating-spec-id": rating_id,
+        "units-id": units,
+        "effective-date": effective_date.isoformat(),
+        "transition-start-date": transition_start_date.isoformat()
+        if transition_start_date
+        else None,
+        "active": True,
+        "description": description,
+        "rating-points": {"point": points_json},
+    }}
+
     rating_json = rating_header.json
     rating_json.update(simple_rating)
 
