@@ -31,8 +31,7 @@ def test_get_rating_spec_default(requests_mock):
     rating_id = "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST?office=MVP"
     office_id = "MVP"
 
-    spec = ratings_spec.get_rating_spec(
-        rating_id=rating_id, office_id=office_id)
+    spec = ratings_spec.get_rating_spec(rating_id=rating_id, office_id=office_id)
 
     assert spec.json == _RAT_SPEC_JSON
     assert type(spec.df) is pd.DataFrame
@@ -40,8 +39,7 @@ def test_get_rating_spec_default(requests_mock):
 
 def test_get_rating_specs_default(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}"
-        "/ratings/spec?office=MVP",
+        f"{_MOCK_ROOT}" "/ratings/spec?office=MVP",
         json=_RAT_SPECS_JSON,
     )
 

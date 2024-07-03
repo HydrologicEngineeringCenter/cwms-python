@@ -23,8 +23,7 @@ def init_session():
 
 def test_get_rating_template_default(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}"
-        "/ratings/template/Stage;Flow.USGS-EXSA-TEST?office=MVP",
+        f"{_MOCK_ROOT}" "/ratings/template/Stage;Flow.USGS-EXSA-TEST?office=MVP",
         json=_RAT_TEMP_JSON,
     )
 
@@ -32,7 +31,8 @@ def test_get_rating_template_default(requests_mock):
     office_id = "MVP"
 
     template = ratings_template.get_rating_template(
-        template_id=rating_temp, office_id=office_id)
+        template_id=rating_temp, office_id=office_id
+    )
 
     assert template.json == _RAT_TEMP_JSON
     assert type(template.df) is pd.DataFrame
@@ -40,8 +40,7 @@ def test_get_rating_template_default(requests_mock):
 
 def test_get_rating_templates_default(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}"
-        "/ratings/template?office=MVP",
+        f"{_MOCK_ROOT}" "/ratings/template?office=MVP",
         json=_RAT_TEMPS_JSON,
     )
 

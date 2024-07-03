@@ -67,7 +67,9 @@ def get_rating_templates(
     return Data(response, selector="templates")
 
 
-def delete_rating_template(template_id: str, office_id: str, delete_method: str) -> None:
+def delete_rating_template(
+    template_id: str, office_id: str, delete_method: str
+) -> None:
     """
     Deletes rating spec for the given ID and office ID.
 
@@ -94,7 +96,8 @@ def delete_rating_template(template_id: str, office_id: str, delete_method: str)
         raise ValueError("Deleting standard timeseries requires an office")
     if delete_method not in delete_methods:
         raise ValueError(
-            "Deleting standard timeseries requires a delete method of DELETE_ALL, DELETE_KEY, or DELETE_DATA")
+            "Deleting standard timeseries requires a delete method of DELETE_ALL, DELETE_KEY, or DELETE_DATA"
+        )
 
     endpoint = f"ratings/template/{template_id}"
     params = {"office": office_id, "method": delete_method}
