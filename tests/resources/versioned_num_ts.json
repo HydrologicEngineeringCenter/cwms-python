@@ -1,8 +1,14 @@
 {
+  "date-version-type": "SINGLE_VERSION",
   "office-id": "SWT",
   "name": "TEST.Flow.Inst.1Hour.0.MockTest",
   "units": "CFS",
   "version-date": "2021-06-20T08:00:00-0000[UTC]",
+  "value-columns": [{"name": "date-time",
+  "ordinal": 1,
+  "datatype": "java.sql.Timestamp"},
+ {"name": "value", "ordinal": 2, "datatype": "java.lang.Double"},
+ {"name": "quality-code", "ordinal": 3, "datatype": "int"}],
   "values": [
     [
       1209654000000,

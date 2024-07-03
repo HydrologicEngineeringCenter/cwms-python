@@ -5,7 +5,7 @@ from typing import Any, Optional
 import pandas as pd
 
 import cwms.api as api
-from cwms.ratings.ratings_spec import get_rating_specs
+from cwms.ratings.ratings_spec import get_rating_spec
 from cwms.types import JSON, Data
 
 
@@ -19,7 +19,7 @@ def rating_current_effective_date(rating_id: str, office_id: str) -> Any:
 
     """
     # get all rating effective date information.
-    rating_specs = get_rating_specs(office_id=office_id, rating_id_mask=rating_id)
+    rating_specs = get_rating_spec(office_id=office_id, rating_id=rating_id)
     # find the most recent effective date
     df = rating_specs.df
     if "effective-dates" in df.columns:
@@ -32,8 +32,6 @@ def rating_current_effective_date(rating_id: str, office_id: str) -> Any:
 def get_current_rating(
     rating_id: str,
     office_id: str,
-    rating_table_in_df: Optional[bool] = True,
-    xml: Optional[bool] = False,
 ) -> Data:
     """Retrives the rating table for the current active rating.  i.e. the rating table with the latest
     effective date for the rating specification
@@ -63,8 +61,7 @@ def get_current_rating(
         begin=max_effective,
         end=max_effective,
         method="EAGER",
-        rating_table_in_df=rating_table_in_df,
-        xml=xml,
+        single_rating_df=True,
     )
 
     return rating
@@ -73,7 +70,6 @@ def get_current_rating(
 def get_current_rating_xml(
     rating_id: str,
     office_id: str,
-    rating_table_in_df: Optional[bool] = True,
 ) -> Any:
     """Retrives the rating table for the current active rating.  i.e. the rating table with the latest
     effective date for the rating specification
@@ -163,8 +159,7 @@ def get_ratings(
     end: Optional[datetime] = None,
     timezone: Optional[str] = None,
     method: Optional[str] = "EAGER",
-    rating_table_in_df: Optional[bool] = False,
-    xml: Optional[bool] = False,
+    single_rating_df: Optional[bool] = False,
 ) -> Data:
     """Retrives ratings for a specific rating-id
 
@@ -186,6 +181,9 @@ def get_ratings(
             EAGER: retireves all ratings data include the individual dependenant and independant values
             LAZY: retrieved all rating data excluding the individual dependance and independant values
             REFERENCE: only retrievies reference data about the rating spec.
+        single_rating_df: bool, optional = False
+            Set to True when using eager and a single rating is returned.  Will place the single rating into the .df function
+            used with the get_current_rating or when a only a single rating curve is to be returned.
     Returns
     -------
         Data : Data
@@ -205,7 +203,7 @@ def get_ratings(
     }
 
     response = api.get(endpoint, params)
-    if rating_table_in_df and method == "EAGER":
+    if (method == "EAGER") and single_rating_df:
         data = Data(response, selector="simple-rating.rating-points")
     elif method == "REFERENCE":
         data = Data(response)
@@ -280,7 +278,7 @@ def rating_simple_df_to_json(
     points_json = loads(data.to_json(orient="records"))
 
     simple_rating = {
-        "simple_rating": {
+        "simple-rating": {
             "office-id": office_id,
             "rating-spec-id": rating_id,
             "units-id": units,
@@ -324,4 +322,56 @@ def update_ratings(
             "Cannot store a timeseries without a JSON data dictionaryor in XML"
         )
 
-    return api.patch(endpoint, data, params)
+    if "<?xml" in data:
+        api_version = 102
+    else:
+        api_version = 2
+    return api.patch(endpoint, data, params, api_version=api_version)
+
+
+def delete_ratings(
+    rating_id: str,
+    office_id: str,
+    begin: datetime,
+    end: datetime,
+    timezone: Optional[str] = None,
+) -> None:
+    """Delete ratings for a specific rating-id within the specified time window
+
+    Parameters
+    ----------
+        rating_id: string
+            The rating-id of the effective dates to be retrieved
+        office_id: string
+            The owning office of the rating specifications. If no office is provided information from all offices will
+            be returned
+        begin: datetime
+            the start of the time window for data to be deleted.  This is based on the effective date of the ratings
+        end: datetime
+            the end of the time window for data to be deleted. This is based on the effective date of the ratings
+        timezone:
+            the time zone of the values in the being and end fields if not specified UTC is used
+
+    Returns
+    -------
+    response
+    """
+    if rating_id is None:
+        raise ValueError("Deleting rating requires an id")
+    if office_id is None:
+        raise ValueError("Deleting rating requires an office")
+    if begin is None:
+        raise ValueError("Deleting rating requires a time window")
+    if end is None:
+        raise ValueError("Deleting rating requires a time window")
+
+    endpoint = f"ratings/{rating_id}"
+
+    params = {
+        "office": office_id,
+        "begin": begin.isoformat(),
+        "end": end.isoformat(),
+        "timezone": timezone,
+    }
+
+    return api.delete(endpoint, params)

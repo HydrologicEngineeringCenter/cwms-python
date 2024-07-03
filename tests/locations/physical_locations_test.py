@@ -50,7 +50,7 @@ def test_get_location_group(requests_mock):
     data = locations.get_location_group(group_id, category_id, office_id)
     assert data.json == EXAMPLE_LOCATION_GROUP
 
-    assert type(data.df) == pd.DataFrame
+    assert type(data.df) is pd.DataFrame
     assert data.df.shape == (1, 5)
 
     values = data.df.to_numpy().tolist()
