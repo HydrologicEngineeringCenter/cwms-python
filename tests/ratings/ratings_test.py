@@ -50,7 +50,6 @@ def test_ratings_df_to_json_default(requests_mock):
     )
 
     rating_json = {
-        "noNamespaceSchemaLocation": "http://www.hec.usace.army.mil/xmlSchema/cwms/Ratings.xsd",
         "rating-template": {
             "office-id": "MVP",
             "parameters-id": "Stage;Flow",

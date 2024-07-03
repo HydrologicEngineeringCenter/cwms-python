@@ -1,4 +1,4 @@
-{"noNamespaceSchemaLocation": "http://www.hec.usace.army.mil/xmlSchema/cwms/Ratings.xsd",
+{
  "rating-template": {"office-id": "MVP",
   "parameters-id": "Stage;Flow",
   "version": "USGS-EXSA-TEST",
