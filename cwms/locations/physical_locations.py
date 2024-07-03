@@ -16,10 +16,10 @@ def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> D
 
 
 def get_locations(
-        office_id: Optional[str] = None,
-        loc_ids: Optional[str] = None,
-        units: Optional[str] = None,
-        datum: Optional[str] = None,
+    office_id: Optional[str] = None,
+    loc_ids: Optional[str] = None,
+    units: Optional[str] = None,
+    datum: Optional[str] = None,
 ) -> Data:
     endpoint = "locations"
     params = {
