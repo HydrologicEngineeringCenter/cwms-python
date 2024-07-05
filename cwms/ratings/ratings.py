@@ -283,9 +283,9 @@ def rating_simple_df_to_json(
             "rating-spec-id": rating_id,
             "units-id": units,
             "effective-date": effective_date.isoformat(),
-            "transition-start-date": transition_start_date.isoformat()
-            if transition_start_date
-            else None,
+            "transition-start-date": (
+                transition_start_date.isoformat() if transition_start_date else None
+            ),
             "active": True,
             "description": description,
             "rating-points": {"point": points_json},
