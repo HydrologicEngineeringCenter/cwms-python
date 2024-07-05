@@ -1,0 +1,23 @@
+{
+ "office-id": "MVP",
+ "rating-id": "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST",
+ "template-id": "Stage;Flow.USGS-EXSA-TEST",
+ "location-id": "TestRating",
+ "version": "USGS-NWIS-TEST",
+ "source-agency": "USGS",
+ "in-range-method": "LINEAR",
+ "out-range-low-method": "NEAREST",
+ "out-range-high-method": "NEAREST",
+ "active": true,
+ "auto-update": true,
+ "auto-activate": true,
+ "auto-migrate-extension": true,
+ "independent-rounding-specs": [{"value": "2223456782"}],
+ "dependent-rounding-spec": "2222233332",
+ "description": "TESTing rating spec",
+ "effective-dates": ["2023-07-03T09:03:00Z",
+                     "2024-05-03T09:03:00Z",
+                     "2024-06-03T09:03:00Z",
+                     "2024-07-03T09:03:00Z"]
+                    
+}

@@ -2,7 +2,7 @@ from copy import deepcopy
 from enum import Enum, auto
 from typing import Any, Optional
 
-from pandas import DataFrame, Index, to_datetime
+from pandas import DataFrame, Index, json_normalize, to_datetime
 
 # Describes generic JSON serializable data.
 JSON = dict[str, Any]
@@ -56,25 +56,24 @@ class Data:
         if selector:
             df_data = data
             for key in selector.split("."):
-                df_data = df_data[key]
+                if key in df_data.keys():
+                    df_data = df_data[key]
 
             # if the dataframe is for a rating table
-            if "rating-points" in selector:
-                if "point" in df_data.keys():
-                    df = DataFrame(df_data["point"])
-                else:
-                    df = DataFrame(df_data)
-            else:
+            if ("rating-points" in selector) and ("point" in df_data.keys()):
+                df = DataFrame(df_data["point"])
+
+            elif selector == "values":
                 df = DataFrame(df_data)
-
                 # if timeseries values are present then grab the values and put into dataframe
-                if selector == "values":
-                    df.columns = Index([sub["name"] for sub in data["value-columns"]])
+                df.columns = Index([sub["name"] for sub in data["value-columns"]])
 
-                    if "date-time" in df.columns:
-                        df["date-time"] = to_datetime(df["date-time"], unit="ms")
+                if "date-time" in df.columns:
+                    df["date-time"] = to_datetime(df["date-time"], unit="ms")
+            else:
+                df = json_normalize(df_data)
         else:
-            df = DataFrame(data)
+            df = json_normalize(data)
 
         return df
 
