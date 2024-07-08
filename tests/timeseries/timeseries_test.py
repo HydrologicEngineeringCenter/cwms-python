@@ -5,6 +5,7 @@
 
 from datetime import datetime
 
+import pandas as pd
 import pytest
 import pytz
 
@@ -15,6 +16,7 @@ from tests._test_utils import read_resource_file
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
 _VERS_TS_JSON = read_resource_file("versioned_num_ts.json")
 _UNVERS_TS_JSON = read_resource_file("unversioned_num_ts.json")
+_TS_GROUP = read_resource_file("time_series_group.json")
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +48,39 @@ def test_get_timeseries_unversioned_default(requests_mock):
         tsId=timeseries_id, office_id=office_id, begin=begin, end=end
     )
     assert data.json == _UNVERS_TS_JSON
+    assert type(data.df) is pd.DataFrame
+    assert "date-time" in data.df.columns
+    assert data.df.shape == (4, 3)
+
+
+def test_get_timeseries_group_default(requests_mock):
+    requests_mock.get(
+        f"{_MOCK_ROOT}"
+        "/timeseries/group/USGS%20TS%20Data%20Acquisition?office=CWMS&"
+        "category-id=Data%20Acquisition",
+        json=_TS_GROUP,
+    )
+
+    group_id = "USGS TS Data Acquisition"
+    category_id = "Data Acquisition"
+    office_id = "CWMS"
+
+    data = timeseries.get_timeseries_group(
+        group_id=group_id, category_id=category_id, office_id=office_id
+    )
+
+    assert data.json == _TS_GROUP
+    assert type(data.df) is pd.DataFrame
+    assert "timeseries-id" in data.df.columns
+    assert data.df.shape == (11, 5)
+    values = data.df.to_numpy().tolist()
+    assert values[0] == [
+        "LRL",
+        "Buckhorn-Lake.Stage.Inst.5Minutes.0.USGS-raw",
+        6245109,
+        "59905",
+        0,
+    ]
 
 
 def test_create_timeseries_unversioned_default(requests_mock):
@@ -92,6 +127,9 @@ def test_get_timeseries_versioned_default(requests_mock):
         version_date=version_date,
     )
     assert data.json == _VERS_TS_JSON
+    assert type(data.df) is pd.DataFrame
+    assert "date-time" in data.df.columns
+    assert data.df.shape == (4, 3)
 
 
 def test_create_timeseries_versioned_default(requests_mock):
