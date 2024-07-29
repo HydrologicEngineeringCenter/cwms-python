@@ -5,7 +5,6 @@ from cwms.types import Data
 
 
 def get_locations_catalog(
-    dataset: str,
     page: Optional[str] = None,
     page_size: Optional[int] = 5000,
     unit_system: Optional[str] = None,
@@ -57,10 +56,6 @@ def get_locations_catalog(
     """
 
     # CHECKS
-    if dataset is None:
-        raise ValueError(
-            "Cannot retrieve a time series for a catalog without a dataset"
-        )
     if office_id is None:
         raise ValueError("Retrieve locations catalog requires an office")
 
@@ -72,19 +67,18 @@ def get_locations_catalog(
         "units": unit_system,
         "office": office_id,
         "like": like,
-        "timeseries-category": timeseries_category_like,
-        "timeseries-group": timeseries_group_like,
-        "location-category": location_category_like,
-        "location-group": location_group_like,
-        "bounding-office": bounding_office_like,
+        "timeseries-category-like": timeseries_category_like,
+        "timeseries-group-like": timeseries_group_like,
+        "location-category-like": location_category_like,
+        "location-group-like": location_group_like,
+        "bounding-office-like": bounding_office_like,
     }
 
-    response = api.get(endpoint=endpoint, params=params, api_version=1)
+    response = api.get(endpoint=endpoint, params=params, api_version=2)
     return Data(response, selector="locations-catalog")
 
 
 def get_timeseries_catalog(
-    dataset: str,
     page: Optional[str] = None,
     page_size: Optional[int] = 5000,
     unit_system: Optional[str] = None,
@@ -136,10 +130,6 @@ def get_timeseries_catalog(
     """
 
     # CHECKS
-    if dataset is None:
-        raise ValueError(
-            "Cannot retrieve a time series for a catalog without a dataset"
-        )
     if office_id is None:
         raise ValueError("Retrieve timeseries catalog requires an office")
 
@@ -148,15 +138,15 @@ def get_timeseries_catalog(
     params = {
         "page": page,
         "page-size": page_size,
-        "units": unit_system,
+        "unit-system": unit_system,
         "office": office_id,
         "like": like,
-        "timeseries-category": timeseries_category_like,
-        "timeseries-group": timeseries_group_like,
-        "location-category": location_category_like,
-        "location-group": location_group_like,
-        "bounding-office": bounding_office_like,
+        "timeseries-category-like": timeseries_category_like,
+        "timeseries-group-like": timeseries_group_like,
+        "location-category-like": location_category_like,
+        "location-group-like": location_group_like,
+        "bounding-office-like": bounding_office_like,
     }
 
-    response = api.get(endpoint=endpoint, params=params, api_version=1)
-    return Data(response, selector="time-series-catalog")
+    response = api.get(endpoint=endpoint, params=params, api_version=2)
+    return Data(response, selector="entries")
