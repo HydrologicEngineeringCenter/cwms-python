@@ -17,6 +17,7 @@ from cwms.timeseries.timerseries_identifier import *
 from cwms.timeseries.timeseries import *
 from cwms.timeseries.timeseries_bin import *
 from cwms.timeseries.timeseries_txt import *
+from cwms.projects.projects import *
 
 try:
     __version__ = version("cwms-python")
