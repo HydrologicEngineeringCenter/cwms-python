@@ -7,6 +7,7 @@ from .forecast.forecast_spec import *
 from .levels.location_levels import *
 from .levels.specified_levels import *
 from .locations.physical_locations import *
+from .projects.projects import *
 from .ratings.ratings import *
 from .ratings.ratings_spec import *
 from .ratings.ratings_template import *
