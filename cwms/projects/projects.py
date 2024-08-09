@@ -90,6 +90,48 @@ def get_projects(
     return Data(response)
 
 
+def get_project_locations(
+    office_id: str,
+    project_like: Optional[str] = None,
+    location_id_like: Optional[str] = None,
+) -> Data:
+    """
+    Parameters
+    ----------
+    office_id : str
+        The ID of the project's office.
+    project_like : Optional[str]
+        The project ID regex for projects to return.
+    location_id_like : Optional[str]
+        The location kind ID regex for locations to return.
+
+    Returns
+    -------
+    response : dict
+        the JSON response from CWMS Data API.
+
+    Raises
+    ------
+    ValueError
+        If any of name or office_id is None.
+    ClientError
+        If a 400 range error code response is returned from the server.
+    NoDataFoundError
+        If a 404 range error code response is returned from the server.
+    ServerError
+        If a 500 range error code response is returned from the server.
+    """
+
+    endpoint = "projects/locations"
+    params = {
+        "office": office_id,
+        "project-like": project_like,
+        "location-kind-like": location_id_like,
+    }
+    response = api.get(endpoint, params)
+    return Data(response)
+
+
 def delete_project(office_id: str, name: str, delete_method: DeleteMethod) -> None:
     """
     Parameters
