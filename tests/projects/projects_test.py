@@ -12,6 +12,7 @@ _MOCK_ROOT = "https://mockwebserver.cwms.gov"
 
 # constants for json payloads, replace with your actual json payloads
 _PROJECT_JSON = read_resource_file("project.json")
+_PROJECT_LOCATIONS_JSON = read_resource_file("project.json")
 _PROJECTS_JSON = read_resource_file("projects.json")
 
 
@@ -30,6 +31,16 @@ def test_get_projects(requests_mock):
         json=_PROJECTS_JSON,
     )
     data = projects.get_projects("SPK", "B*", "abc", 50)
+    assert data.json == _PROJECTS_JSON
+
+
+def test_get_project_locations(requests_mock):
+    requests_mock.get(
+        f"{_MOCK_ROOT}/projects/locations?office=SPK&"
+        f"project-like=p.%2A&location-kind-like=O.%2A",
+        json=_PROJECTS_JSON,
+    )
+    data = projects.get_project_locations("SPK", "p.*", "O.*")
     assert data.json == _PROJECTS_JSON
 
 
