@@ -1,0 +1,48 @@
+[
+  {
+    "project": {
+      "office-id": "SPK",
+      "name": "projLoc240742"
+    },
+    "locations-by-kind": [
+      {
+        "kind": "OUTLET",
+        "locations": [
+          {
+            "office-id": "SPK",
+            "name": "projLoc240742-nonCompOut626018"
+          },
+          {
+            "office-id": "SPK",
+            "name": "projLoc240742-outlet1477276"
+          },
+          {
+            "office-id": "SPK",
+            "name": "projLoc240742-outlet2955830"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "project": {
+      "office-id": "SPK",
+      "name": "projLoc356013"
+    },
+    "locations-by-kind": [
+      {
+        "kind": "OUTLET",
+        "locations": [
+          {
+            "office-id": "SPK",
+            "name": "outlet2207264"
+          },
+          {
+            "office-id": "SPK",
+            "name": "projLoc356013-outlet1364214"
+          }
+        ]
+      }
+    ]
+  }
+]
