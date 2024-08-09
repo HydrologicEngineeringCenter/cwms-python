@@ -2,6 +2,7 @@
 #  United States Army Corps of Engineers - Hydrologic Engineering Center (USACE/HEC)
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
+from datetime import datetime
 from typing import Optional
 
 import cwms.api as api
@@ -243,3 +244,66 @@ def store_project(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     endpoint = "projects"
     params = {"fail-if-exists": fail_if_exists}
     api.post(endpoint, data, params)
+
+
+def status_update(
+    office_id: str,
+    project_id: str,
+    application_id: str,
+    source_id: Optional[str] = None,
+    timeseries_id: Optional[str] = None,
+    begin: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+) -> None:
+    """
+    Parameters
+    ----------
+    office_id : str
+        The office generating the message (and owning the project).
+    project_id : str
+        The location identifier of the project that has been updated
+    application_id : str, optional
+        A text string identifying the application for which the update applies.
+    source_id : str, optional
+        An application-defined string of the instance
+        and/or component that generated the message.
+    timeseries_id : str, optional
+        A time series identifier of the time series associated with the update.
+    begin : str, optional
+        The start time of the updates to the time series.
+    end : str, optional
+        The end time of the updates to the time series.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If any of office_id, project_id, or application_id is None.
+    ClientError
+        If a 400 range error code response is returned from the server.
+    NoDataFoundError
+        If a 404 range error code response is returned from the server.
+    ServerError
+        If a 500 range error code response is returned from the server.
+    """
+
+    if office_id is None:
+        raise ValueError("Post project status update requires an office")
+    if project_id is None:
+        raise ValueError("Post project status update requires a project")
+    if application_id is None:
+        raise ValueError("Post project status update requires an application")
+
+    endpoint = f"projects/status-update/{project_id}"
+    params = {
+        "office": office_id,
+        "application-id": application_id,
+        "source-id": source_id,
+        "timeseries-id": timeseries_id,
+        "begin": (begin.isoformat() if begin else None),
+        "end": (end.isoformat() if end else None),
+    }
+    api.post(endpoint, None, params)
