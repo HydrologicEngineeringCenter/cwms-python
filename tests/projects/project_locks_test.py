@@ -4,12 +4,7 @@
 #  Source may not be released without written approval from HEC
 # constant for mock root url
 
-from datetime import datetime
-
-import pytz
-
 import cwms.projects.project_locks as project_locks
-from cwms.types import DeleteMethod
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
@@ -50,7 +45,7 @@ def test_revoke_project_lock(requests_mock):
 
 def test_request_project_lock(requests_mock):
     requests_mock.post(
-        f"{_MOCK_ROOT}/project-locks?revoke-existing=True" f"&revoke-timeout=20",
+        f"{_MOCK_ROOT}/project-locks?revoke-existing=True&revoke-timeout=20",
         status_code=200,
         json=_PROJECT_LOCK_JSON,
     )
