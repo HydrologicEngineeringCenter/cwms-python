@@ -35,7 +35,7 @@ def test_get_project_locks(requests_mock):
 
 def test_revoke_project_lock(requests_mock):
     requests_mock.delete(
-        f"{_MOCK_ROOT}/project-locks/TEST?office=SPK" f"&revoke-timeout=20",
+        f"{_MOCK_ROOT}/project-locks/TEST?office=SPK&revoke-timeout=20",
         json=_PROJECTS_LOCKS_JSON,
     )
     project_locks.revoke_project_lock("SPK", "TEST", 20)
