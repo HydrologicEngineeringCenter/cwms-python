@@ -7,6 +7,85 @@ import cwms.api as api
 from cwms.types import JSON, Data
 
 
+def update_timeseries_groups(group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False) -> None:
+    """
+    Updates the timeseries groups with the provided group ID and office ID.
+
+    Parameters
+    ----------
+    group_id : str
+        The new specified timeseries ID that will replace the old ID.
+    office_id : str
+        The ID of the office associated with the specified level.
+    replace_assigned_ts : bool, optional
+        Specifies whether to unassign all existing time series before assigning new time series specified in the content body. Default is False.
+
+    Returns
+    -------
+    None
+    """
+    if not group_id:
+        raise ValueError("Cannot update a specified level without an id")
+    if not office_id:
+        raise ValueError("Cannot update a specified level without an office id")
+
+    endpoint = f"timeseries/group/{group_id}"
+    params = {
+        "replace-assigned-ts": replace_assigned_ts,
+        "office": office_id,
+    }
+
+    # Assuming api.patch is a valid function available in your environment
+    api.patch(endpoint=endpoint, params=params)
+
+
+def timeseries_group_df_to_json(data: pd.DataFrame, group_id: str, office_id:str,) -> JSON:
+    """
+    Converts a dataframe to a json dictionary in the correct format.
+
+    Parameters
+    ----------
+    data: pd.DataFrame
+        Dataframe containing timeseries information.
+    group_id: str
+        The group ID for the timeseries.
+
+    Returns
+    -------
+    json
+        JSON dictionary of the timeseries data.
+    """
+    required_columns = ["office-id", "ts-id", "alias", "ts-code", "attribute"]
+    for column in required_columns:
+        if column not in data.columns:
+            raise TypeError(f"{column} is a required column in data when posting as a dataframe")
+
+    if data.isnull().values.any():
+        raise ValueError("Null/NaN data must be removed from the dataframe")
+
+    json_dict = {
+        "office-id": office_id,
+        "id": group_id,
+        "time-series-category": {
+            "office-id": office_id,
+            "id": "Data Acquisition"
+        },
+        "time-series": []
+    }
+
+    for _, row in data.iterrows():
+        ts_dict = {
+            "office-id": row["office-id"],
+            "id": row["ts-id"],
+            "alias": row["alias"],
+            "ts-code": row["ts-code"],
+            "attribute": row["attribute"]
+        }
+        json_dict["time-series"].append(ts_dict)
+
+    return json_dict
+
+
 def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Data:
     """Retreives time series stored in the requested time series group as a dictionary
 
