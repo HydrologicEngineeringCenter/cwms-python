@@ -69,7 +69,7 @@ class Data:
                 df.columns = Index([sub["name"] for sub in data["value-columns"]])
 
                 if "date-time" in df.columns:
-                    df["date-time"] = to_datetime(df["date-time"], unit="ms")
+                    df["date-time"] = to_datetime(df["date-time"], unit="ms", utc=True)
             else:
                 df = json_normalize(df_data)
         else:

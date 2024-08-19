@@ -39,7 +39,7 @@ def run_bin_ts_examples():
           "office-id": "SPK"
         }
         """
-    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
+    cwms.store_location(data=location)
 
     bin_ts = json.loads(
         """
