@@ -41,7 +41,7 @@ def run_text_ts_examples():
         """
 
     print("Storing location TEST")
-    cwms.api.post(endpoint="locations", data=location, params=None, api_version=2)
+    cwms.store_location(data=location)
 
     text_ts = json.loads(
         """

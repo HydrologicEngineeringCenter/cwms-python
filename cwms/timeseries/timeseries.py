@@ -21,8 +21,7 @@ def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Dat
 
         Returns
         -------
-        response : dict
-            The JSON response containing the time series group information.
+            cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
     endpoint = f"timeseries/group/{group_id}"
@@ -79,8 +78,7 @@ def get_timeseries(
             the timeseries is versioned, the query will return the max aggregate for the time period.
     Returns
     -------
-    response : dict
-        The JSON response containing the time series information.  Values are always in UTC.
+        cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
 
     # creates the dataframe from the timeseries data
@@ -205,3 +203,71 @@ def store_timeseries(
         raise ValueError("Cannot store a timeseries without a JSON data dictionary")
 
     return api.post(endpoint, data, params)
+
+
+def delete_timeseries(
+    tsId: str,
+    office_id: str,
+    begin: datetime,
+    end: datetime,
+    version_date: Optional[datetime] = None,
+) -> None:
+    """
+    Deletes binary timeseries data with the given ID,
+    office ID and time range.
+
+    Parameters
+    ----------
+    timeseries_id : str
+        The ID of the binary time series data to be deleted.
+    office_id : str
+        The ID of the office that the binary time series belongs to.
+    begin : datetime
+        The start date and time of the time range.
+        If the datetime has a timezone it will be used,
+        otherwise it is assumed to be in UTC.
+    end : datetime
+        The end date and time of the time range.
+        If the datetime has a timezone it will be used,
+        otherwise it is assumed to be in UTC.
+    version_date : Optional[datetime]
+        The time series date version to retrieve. If not supplied,
+        the maximum date version for each time step in the retrieval
+        window will be deleted.
+
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If any of timeseries_id, office_id, begin, or end is None.
+    ClientError
+        If a 400 range error code response is returned from the server.
+    NoDataFoundError
+        If a 404 range error code response is returned from the server.
+    ServerError
+        If a 500 range error code response is returned from the server.
+    """
+
+    if tsId is None:
+        raise ValueError("Deleting binary timeseries requires an id")
+    if office_id is None:
+        raise ValueError("Deleting binary timeseries requires an office")
+    if begin is None:
+        raise ValueError("Deleting binary timeseries requires a time window")
+    if end is None:
+        raise ValueError("Deleting binary timeseries requires a time window")
+
+    endpoint = f"timeseries/{tsId}"
+    version_date_str = version_date.isoformat() if version_date else None
+    params = {
+        "office": office_id,
+        "begin": begin.isoformat(),
+        "end": end.isoformat(),
+        "version-date": version_date_str,
+    }
+
+    return api.delete(endpoint, params=params)
