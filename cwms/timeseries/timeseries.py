@@ -8,7 +8,7 @@ from cwms.types import JSON, Data
 
 
 def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Data:
-    """Retreives time series stored in the requested time series group as a dictionary
+    """Retreives time series stored in the requested time series group
 
     Parameters
         ----------
@@ -32,7 +32,7 @@ def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Dat
 
 
 def get_timeseries(
-    tsId: str,
+    ts_id: str,
     office_id: str,
     unit: str = "EN",
     datum: Optional[str] = None,
@@ -41,12 +41,12 @@ def get_timeseries(
     page_size: int = 500000,
     version_date: Optional[datetime] = None,
 ) -> Data:
-    """Retrieves time series data from a specified time series and time window.  Value date-times
+    """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
 
     Parameters
     ----------
-        tsId: string
+        ts_id: string
             Name(s) of the time series whose data is to be included in the response.
         office_id: string
             The owning office of the time series(s).
@@ -85,7 +85,7 @@ def get_timeseries(
     endpoint = "timeseries"
     params = {
         "office": office_id,
-        "name": tsId,
+        "name": ts_id,
         "unit": unit,
         "datum": datum,
         "begin": begin.isoformat() if begin else None,
@@ -100,7 +100,7 @@ def get_timeseries(
 
 def timeseries_df_to_json(
     data: pd.DataFrame,
-    tsId: str,
+    ts_id: str,
     units: str,
     office_id: str,
     version_date: Optional[datetime] = None,
@@ -111,7 +111,7 @@ def timeseries_df_to_json(
     ----------
         data: pd.Dataframe
             Time Series data to be stored.  If dataframe data must be provided in the following format
-                df.tsId = timeseried id:specified name of the time series to be posted to
+                df.ts_id = timeseried id:specified name of the time series to be posted to
                 df.office = the owning office of the time series
                 df.units = units of values to be stored (ie. ft, in, m, cfs....)
                 dataframe should have three columns date-time, value, quality-code. date-time values
@@ -122,7 +122,7 @@ def timeseries_df_to_json(
                 1   2023-12-20T15:00:00.000-05:00  99.8           0
                 2   2023-12-20T15:15:00.000-05:00  98.5           0
                 3   2023-12-20T15:30:00.000-05:00  98.5           0
-        tsId: str
+        ts_id: str
             timeseried id:specified name of the time series to be posted to
         office_id: str
             the owning office of the time series
@@ -153,7 +153,7 @@ def timeseries_df_to_json(
         raise ValueError("Null/NaN data must be removed from the dataframe")
 
     ts_dict = {
-        "name": tsId,
+        "name": ts_id,
         "office-id": office_id,
         "units": units,
         "values": data.values.tolist(),
@@ -206,7 +206,7 @@ def store_timeseries(
 
 
 def delete_timeseries(
-    tsId: str,
+    ts_id: str,
     office_id: str,
     begin: datetime,
     end: datetime,
@@ -252,7 +252,7 @@ def delete_timeseries(
         If a 500 range error code response is returned from the server.
     """
 
-    if tsId is None:
+    if ts_id is None:
         raise ValueError("Deleting binary timeseries requires an id")
     if office_id is None:
         raise ValueError("Deleting binary timeseries requires an office")
@@ -261,7 +261,7 @@ def delete_timeseries(
     if end is None:
         raise ValueError("Deleting binary timeseries requires a time window")
 
-    endpoint = f"timeseries/{tsId}"
+    endpoint = f"timeseries/{ts_id}"
     version_date_str = version_date.isoformat() if version_date else None
     params = {
         "office": office_id,

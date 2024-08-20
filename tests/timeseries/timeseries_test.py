@@ -45,7 +45,7 @@ def test_get_timeseries_unversioned_default(requests_mock):
     end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
 
     data = timeseries.get_timeseries(
-        tsId=timeseries_id, office_id=office_id, begin=begin, end=end
+        ts_id=timeseries_id, office_id=office_id, begin=begin, end=end
     )
     assert data.json == _UNVERS_TS_JSON
     assert type(data.df) is pd.DataFrame
@@ -120,7 +120,7 @@ def test_get_timeseries_versioned_default(requests_mock):
     version_date = timezone.localize(datetime(2021, 6, 20, 8, 0, 0))
 
     data = timeseries.get_timeseries(
-        tsId=timeseries_id,
+        ts_id=timeseries_id,
         office_id=office_id,
         begin=begin,
         end=end,
