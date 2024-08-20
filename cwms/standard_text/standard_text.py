@@ -9,6 +9,38 @@ import cwms.api as api
 from cwms.types import JSON, Data, DeleteMethod
 
 
+def standard_text_to_json(text_id: str, standard_text: str, office_id: str) -> JSON:
+    """
+    Created the re  required JSON dictionary to store a standard text.
+
+    Parameters
+    ----------
+    text_id : str
+        The id to store the standard text under
+    office_id : str
+        the office that the standard text id belongs to
+    standard_text: str
+        The standard text to store in under the text_id
+
+    Returns
+    -------
+    JSON dictionary that can be stored using store_standard_text
+    """
+
+    if text_id is None:
+        raise ValueError("Cannot store a standard text without a text id")
+    if standard_text is None:
+        raise ValueError("Cannot store a standard text without a standard_text message")
+    if office_id is None:
+        raise ValueError("Cannot store a standard text without an office_id")
+
+    st_dict = {
+        "id": {"office-id": f"{office_id}", "id": f"{text_id}"},
+        "standard-text": f"{standard_text}",
+    }
+    return st_dict
+
+
 def get_standard_text_catalog(
     text_id_mask: Optional[str] = None, office_id_mask: Optional[str] = None
 ) -> Data:

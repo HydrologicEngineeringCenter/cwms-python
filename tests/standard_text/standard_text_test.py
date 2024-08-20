@@ -63,6 +63,17 @@ def test_create_standard_text(requests_mock):
     assert requests_mock.call_count == 1
 
 
+def test_create_standard_text_json():
+    text_id = "HW"
+    office_id = "SPK"
+    sd_text = "Hello, World"
+
+    st_json = standard_text.standard_text_to_json(
+        text_id=text_id, standard_text=sd_text, office_id=office_id
+    )
+    assert st_json == _STD_TEXT_JSON
+
+
 def test_delete_standard_text(requests_mock):
     requests_mock.delete(
         f"{_MOCK_ROOT}" "/standard-text-id/HW?office=SPK&method=DELETE_ALL"
