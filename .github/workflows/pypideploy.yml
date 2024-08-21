@@ -36,6 +36,17 @@ jobs:
       # again here to make sure that we do not deploy a broken distribution.
       - name: Run Tests
         run: poetry run pytest tests/
+        
+      # Once the tests have passsed we can build the distribution and store it, so it can
+      # be accessed in the jobs below.
+      - name: Build Distribution
+        run: poetry build
+
+      - name: Store Distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-dist
+          path: dist/
 
   deploy-release:
     name: Publish Release Distribution
