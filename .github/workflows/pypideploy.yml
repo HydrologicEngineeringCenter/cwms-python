@@ -1,0 +1,105 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "*"
+  # Allow the workflow to be manually triggered from the Actions tab.
+  workflow_dispatch:
+  
+jobs:
+  tests:
+    name: Test Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+
+      - name: Cache Virtual Environment
+        uses: actions/cache@v4
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install Dependencies
+        run: poetry install
+
+      # The tests should have already been run in the testing workflow, but we run them
+      # again here to make sure that we do not deploy a broken distribution.
+      - name: Run Tests
+        run: poetry run pytest tests/
+
+  deploy-release:
+    name: Publish Release Distribution
+    runs-on: ubuntu-latest
+
+
+    # The distribution will only be published if the tests have passed.
+    needs: [tests] # require tests to pass before deploy runs
+
+    # Set up the environment for trusted publishing on PyPI.
+    environment:
+      name: release
+      url: https://pypi.org/p/cwms-python
+
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download Distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: package-dist
+          path: dist/
+
+      - name: Publish Distribution To PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  # Upload a GitHub release whenever a release distribution is published.
+  github-release:
+    name: Create Signed GitHub Release
+    runs-on: ubuntu-latest
+
+    # GitHub releases are only uploaded for release (tagged) distributions.
+    needs: [deploy-release]
+
+    permissions:
+      contents: write # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write # IMPORTANT: mandatory for sigstore
+
+    steps:
+      - name: Download Distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: package-dist
+          path: dist/
+
+      - name: Sign Distribution
+        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: |
+            ./dist/*.tar.gz
+            ./dist/*.whl
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh release create '${{ github.ref_name }}' \
+            --repo '${{ github.repository }}' \
+            --notes ""
+
+      - name: Upload GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |-
+          gh release upload '${{ github.ref_name }}' dist/** \
+            --repo '${{ github.repository }}'
