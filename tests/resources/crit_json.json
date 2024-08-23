@@ -1,0 +1,24 @@
+{
+    "office-id": "CWMS",
+    "id": "Data Acquisition",
+    "time-series-category": {
+        "office-id": "CWMS",
+        "id": "Data Acquisition"
+    },
+    "time-series": [
+        {
+            "office-id": "CWMS",
+            "id": "TSID1",
+            "alias": "Alias1 Alias2",
+            "ts-code": "none",
+            "attribute": 0
+        },
+        {
+            "office-id": "CWMS",
+            "id": "TSID2",
+            "alias": "Alias2 Alias3",
+            "ts-code": "none",
+            "attribute": 0
+        }
+    ]
+}
