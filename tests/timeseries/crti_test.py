@@ -1,7 +1,9 @@
-import pytest
-import pandas as pd
 import json
 from unittest.mock import patch
+
+import pandas as pd
+import pytest
+
 from cwms.timeseries import critscript as cs
 
 
@@ -19,7 +21,7 @@ def expected_df():
         "ts-id": ["TSID1", "TSID2"],
         "alias": ["Alias1 Alias2", "Alias2 Alias3"],
         "ts-code": ["none", "none"],
-        "attribute": [0, 0]
+        "attribute": [0, 0],
     }
     return pd.DataFrame(data)
 
@@ -29,14 +31,23 @@ def expected_json_dict():
     return {
         "office-id": "CWMS",
         "id": "Data Acquisition",
-        "time-series-category": {
-            "office-id": "CWMS",
-            "id": "Data Acquisition"
-        },
+        "time-series-category": {"office-id": "CWMS", "id": "Data Acquisition"},
         "time-series": [
-            {"office-id": "CWMS", "id": "TSID1", "alias": "Alias1 Alias2", "ts-code": "none", "attribute": 0},
-            {"office-id": "CWMS", "id": "TSID2", "alias": "Alias2 Alias3", "ts-code": "none", "attribute": 0}
-        ]
+            {
+                "office-id": "CWMS",
+                "id": "TSID1",
+                "alias": "Alias1 Alias2",
+                "ts-code": "none",
+                "attribute": 0,
+            },
+            {
+                "office-id": "CWMS",
+                "id": "TSID2",
+                "alias": "Alias2 Alias3",
+                "ts-code": "none",
+                "attribute": 0,
+            },
+        ],
     }
 
 
@@ -45,24 +56,29 @@ def incorrect_json_dict():
     return {
         "office-id": "CWMS",
         "id": "Data Acquisition",
-        "time-series-category": {
-            "office-id": "CWMS",
-            "id": "Data Acquisition"
-        },
+        "time-series-category": {"office-id": "CWMS", "id": "Data Acquisition"},
         "time-series": [
-            {"office-id": "CWMS", "id": "TSID1", "alias": "Alias1 Alias2", "ts-code": "none", "attribute": 0}
-        ]
+            {
+                "office-id": "CWMS",
+                "id": "TSID1",
+                "alias": "Alias1 Alias2",
+                "ts-code": "none",
+                "attribute": 0,
+            }
+        ],
     }
 
 
-@patch('module.api.patch')  # Mock the `api.patch` call
-def test_crit_script_pass(mock_patch, mock_crit_file_content, expected_df, expected_json_dict):
-    file_path = 'test.crit'
-    office_id = 'CWMS'
-    group_id = 'Data Acquisition'
+@patch("module.api.patch")  # Mock the `api.patch` call
+def test_crit_script_pass(
+    mock_patch, mock_crit_file_content, expected_df, expected_json_dict
+):
+    file_path = "test.crit"
+    office_id = "CWMS"
+    group_id = "Data Acquisition"
 
     # Mock the file reading
-    with open(file_path, 'w') as file:
+    with open(file_path, "w") as file:
         file.write(mock_crit_file_content)
 
     # Mock the API call
@@ -74,23 +90,27 @@ def test_crit_script_pass(mock_patch, mock_crit_file_content, expected_df, expec
     # Check if the API patch was called with the correct arguments
     assert mock_patch.call_count == 1
     call_args = mock_patch.call_args[1]
-    assert call_args['endpoint'] == f"timeseries/group/{group_id}"
-    assert call_args['params']['replace-assigned-ts'] == False
-    assert call_args['params']['office'] == office_id
+    assert call_args["endpoint"] == f"timeseries/group/{group_id}"
+    assert call_args["params"]["replace-assigned-ts"] == False
+    assert call_args["params"]["office"] == office_id
 
     # Validate the JSON dictionary used in the patch
-    json_data = json.loads(mock_patch.call_args[0][1])  # Get the body of the PATCH request
+    json_data = json.loads(
+        mock_patch.call_args[0][1]
+    )  # Get the body of the PATCH request
     assert json_data == expected_json_dict
 
 
-@patch('module.api.patch')  # Mock the `api.patch` call
-def test_crit_script_fail(mock_patch, mock_crit_file_content, expected_df, incorrect_json_dict):
-    file_path = 'test.crit'
-    office_id = 'CWMS'
-    group_id = 'Data Acquisition'
+@patch("module.api.patch")  # Mock the `api.patch` call
+def test_crit_script_fail(
+    mock_patch, mock_crit_file_content, expected_df, incorrect_json_dict
+):
+    file_path = "test.crit"
+    office_id = "CWMS"
+    group_id = "Data Acquisition"
 
     # Mock the file reading
-    with open(file_path, 'w') as file:
+    with open(file_path, "w") as file:
         file.write(mock_crit_file_content)
 
     # Mock the API call
@@ -102,10 +122,12 @@ def test_crit_script_fail(mock_patch, mock_crit_file_content, expected_df, incor
     # Check if the API patch was called with the incorrect arguments
     assert mock_patch.call_count == 1
     call_args = mock_patch.call_args[1]
-    assert call_args['endpoint'] == f"timeseries/group/{group_id}"
-    assert call_args['params']['replace-assigned-ts'] == False
-    assert call_args['params']['office'] == office_id
+    assert call_args["endpoint"] == f"timeseries/group/{group_id}"
+    assert call_args["params"]["replace-assigned-ts"] == False
+    assert call_args["params"]["office"] == office_id
 
     # Validate the JSON dictionary used in the patch
-    json_data = json.loads(mock_patch.call_args[0][1])  # Get the body of the PATCH request
+    json_data = json.loads(
+        mock_patch.call_args[0][1]
+    )  # Get the body of the PATCH request
     assert json_data != incorrect_json_dict  # This assertion is expected to fail

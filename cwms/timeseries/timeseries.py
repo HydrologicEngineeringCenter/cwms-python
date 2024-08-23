@@ -7,7 +7,9 @@ import cwms.api as api
 from cwms.types import JSON, Data
 
 
-def update_timeseries_groups(group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False) -> None:
+def update_timeseries_groups(
+    group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False
+) -> None:
     """
     Updates the timeseries groups with the provided group ID and office ID.
 
@@ -39,7 +41,11 @@ def update_timeseries_groups(group_id: str, office_id: str, replace_assigned_ts:
     api.patch(endpoint=endpoint, params=params)
 
 
-def timeseries_group_df_to_json(data: pd.DataFrame, group_id: str, office_id:str,) -> JSON:
+def timeseries_group_df_to_json(
+    data: pd.DataFrame,
+    group_id: str,
+    office_id: str,
+) -> JSON:
     """
     Converts a dataframe to a json dictionary in the correct format.
 
@@ -58,7 +64,9 @@ def timeseries_group_df_to_json(data: pd.DataFrame, group_id: str, office_id:str
     required_columns = ["office-id", "ts-id", "alias", "ts-code", "attribute"]
     for column in required_columns:
         if column not in data.columns:
-            raise TypeError(f"{column} is a required column in data when posting as a dataframe")
+            raise TypeError(
+                f"{column} is a required column in data when posting as a dataframe"
+            )
 
     if data.isnull().values.any():
         raise ValueError("Null/NaN data must be removed from the dataframe")
@@ -66,11 +74,8 @@ def timeseries_group_df_to_json(data: pd.DataFrame, group_id: str, office_id:str
     json_dict = {
         "office-id": office_id,
         "id": group_id,
-        "time-series-category": {
-            "office-id": office_id,
-            "id": "Data Acquisition"
-        },
-        "time-series": []
+        "time-series-category": {"office-id": office_id, "id": "Data Acquisition"},
+        "time-series": [],
     }
 
     for _, row in data.iterrows():
@@ -79,7 +84,7 @@ def timeseries_group_df_to_json(data: pd.DataFrame, group_id: str, office_id:str
             "id": row["ts-id"],
             "alias": row["alias"],
             "ts-code": row["ts-code"],
-            "attribute": row["attribute"]
+            "attribute": row["attribute"],
         }
         json_dict["time-series"].append(ts_dict)
 

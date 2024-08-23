@@ -1,11 +1,14 @@
 import json
 import re
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
 
 
 def crit_script(file_path, office_id, group_id):
-    def update_timeseries_groups(group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False) -> None:
+    def update_timeseries_groups(
+        group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False
+    ) -> None:
         """
         Updates the timeseries groups with the provided group ID and office ID.
 
@@ -55,7 +58,9 @@ def crit_script(file_path, office_id, group_id):
         required_columns = ["office-id", "ts-id", "alias", "ts-code", "attribute"]
         for column in required_columns:
             if column not in data.columns:
-                raise TypeError(f"{column} is a required column in data when posting as a dataframe")
+                raise TypeError(
+                    f"{column} is a required column in data when posting as a dataframe"
+                )
 
         if data.isnull().values.any():
             raise ValueError("Null/NaN data must be removed from the dataframe")
@@ -63,11 +68,8 @@ def crit_script(file_path, office_id, group_id):
         json_dict = {
             "office-id": office_id,
             "id": group_id,
-            "time-series-category": {
-                "office-id": office_id,
-                "id": "Data Acquisition"
-            },
-            "time-series": []
+            "time-series-category": {"office-id": office_id, "id": "Data Acquisition"},
+            "time-series": [],
         }
 
         for _, row in data.iterrows():
@@ -76,7 +78,7 @@ def crit_script(file_path, office_id, group_id):
                 "id": row["ts-id"],
                 "alias": row["alias"],
                 "ts-code": row["ts-code"],
-                "attribute": row["attribute"]
+                "attribute": row["attribute"],
             }
             json_dict["time-series"].append(ts_dict)
 
@@ -90,42 +92,44 @@ def crit_script(file_path, office_id, group_id):
         :return: A dictionary containing the parsed key-value pairs
         """
         parsed_data = []
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             for line in file:
                 # Ignore comment lines and empty lines
-                if line.startswith('#') or not line.strip():
+                if line.startswith("#") or not line.strip():
                     continue
 
                 # Extract alias, timeseries ID, and TZ
-                match = re.match(r'([^=]+)=([^;]+);(.+)', line.strip())
+                match = re.match(r"([^=]+)=([^;]+);(.+)", line.strip())
                 if match:
                     alias = match.group(1).strip()
                     timeseries_id = match.group(2).strip()
                     alias2 = match.group(3).strip()
 
-                    parsed_data.append({
-                        'Alias': alias + " " + alias2,
-                        'Timeseries ID': timeseries_id,
-                    })
+                    parsed_data.append(
+                        {
+                            "Alias": alias + " " + alias2,
+                            "Timeseries ID": timeseries_id,
+                        }
+                    )
 
         return parsed_data
 
     def append_df(df: pd.DataFrame, office_id: str, tsId: str, alias: str):
         """
-              Appends a row to the DataFrame
+        Appends a row to the DataFrame
 
-              :param df: The DataFrame to append to
-              :param office_id: The office ID
-              :param tsId: The timeseries ID
-              :param alias: The alias
-              :return: The updated DataFrame
-              """
+        :param df: The DataFrame to append to
+        :param office_id: The office ID
+        :param tsId: The timeseries ID
+        :param alias: The alias
+        :return: The updated DataFrame
+        """
         data = {
             "office-id": [office_id],
             "ts-id": [tsId],
             "alias": [alias],
             "ts-code": ["none"],  # Default value for ts-code
-            "attribute": [0]  # Default value for attribute
+            "attribute": [0],  # Default value for attribute
         }
         df = pd.concat([df, pd.DataFrame(data)])
         return df
@@ -137,7 +141,7 @@ def crit_script(file_path, office_id, group_id):
 
     for data in parsed_data:
         # Create DataFrame for the current row
-        df = append_df(df, office_id, data['Timeseries ID'], data['Alias'])
+        df = append_df(df, office_id, data["Timeseries ID"], data["Alias"])
 
     # Generate JSON dictionary
     json_dict = timeseries_group_df_to_json(df, group_id)
