@@ -7,6 +7,8 @@ import pytest
 from cwms.timeseries import critscript as cs
 
 
+# FIX TESTS AND MOVE TO TIMESERIES
+
 @pytest.fixture
 def mock_crit_file_content():
     return """Alias1=TSID1;Alias2

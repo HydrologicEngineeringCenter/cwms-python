@@ -1,12 +1,10 @@
 from datetime import datetime
 from typing import Optional
-
 import pandas as pd
-
 import cwms.api as api
 from cwms.types import JSON, Data
 
-
+# Add JSON parameter
 def update_timeseries_groups(
     group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False
 ) -> None:
@@ -40,7 +38,7 @@ def update_timeseries_groups(
     # Assuming api.patch is a valid function available in your environment
     api.patch(endpoint=endpoint, params=params)
 
-
+# Add category_id and replace data acquisition
 def timeseries_group_df_to_json(
     data: pd.DataFrame,
     group_id: str,
@@ -61,6 +59,7 @@ def timeseries_group_df_to_json(
     json
         JSON dictionary of the timeseries data.
     """
+    # ts-id and office-id should be the only required columns
     required_columns = ["office-id", "ts-id", "alias", "ts-code", "attribute"]
     for column in required_columns:
         if column not in data.columns:
@@ -78,6 +77,7 @@ def timeseries_group_df_to_json(
         "time-series": [],
     }
 
+    # No need to loop here
     for _, row in data.iterrows():
         ts_dict = {
             "office-id": row["office-id"],
