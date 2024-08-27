@@ -1,12 +1,13 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 import pandas as pd
 import cwms.api as api
 from cwms.types import JSON, Data
 
 # Add JSON parameter
 def update_timeseries_groups(
-    group_id: str, office_id: str, replace_assigned_ts: Optional[bool] = False
+    group_id: str, office_id: str, replace_assigned_ts: Optional[bool],
+        # JSON: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Updates the timeseries groups with the provided group ID and office ID.
@@ -19,7 +20,8 @@ def update_timeseries_groups(
         The ID of the office associated with the specified level.
     replace_assigned_ts : bool, optional
         Specifies whether to unassign all existing time series before assigning new time series specified in the content body. Default is False.
-
+    JSON : dict, optional
+        A JSON that updates the timeseries group. Default is None.
     Returns
     -------
     None
@@ -38,11 +40,11 @@ def update_timeseries_groups(
     # Assuming api.patch is a valid function available in your environment
     api.patch(endpoint=endpoint, params=params)
 
-# Add category_id and replace data acquisition
 def timeseries_group_df_to_json(
     data: pd.DataFrame,
     group_id: str,
     office_id: str,
+    category_id: str,
 ) -> JSON:
     """
     Converts a dataframe to a json dictionary in the correct format.
@@ -59,8 +61,12 @@ def timeseries_group_df_to_json(
     json
         JSON dictionary of the timeseries data.
     """
-    # ts-id and office-id should be the only required columns
-    required_columns = ["office-id", "ts-id", "alias", "ts-code", "attribute"]
+
+    # for your purpose you will also be passing in alias, but that isn't required in this function.
+    # you should check if it is present in the dataframe and if not create a column and set it to None.
+    # if attribute is not present set it to 0 and is ts-code is not present just don't include it in the json output.
+    # it isn't needed.
+    required_columns = ["office-id", "ts-id"]
     for column in required_columns:
         if column not in data.columns:
             raise TypeError(
@@ -73,7 +79,7 @@ def timeseries_group_df_to_json(
     json_dict = {
         "office-id": office_id,
         "id": group_id,
-        "time-series-category": {"office-id": office_id, "id": "Data Acquisition"},
+        "time-series-category": {"office-id": office_id, "id": category_id},
         "time-series": [],
     }
 
