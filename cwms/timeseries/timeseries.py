@@ -110,8 +110,8 @@ def timeseries_df_to_json(
     Parameters
     ----------
         data: pd.Dataframe
-            Time Series data to be stored.  If dataframe data must be provided in the following format
-                df.ts_id = timeseried id:specified name of the time series to be posted to
+            Time Series data to be stored.  The dataframe data must be provided in the following format
+                df.ts_id = timeseries id:specified name of the time series to be posted to
                 df.office = the owning office of the time series
                 df.units = units of values to be stored (ie. ft, in, m, cfs....)
                 dataframe should have three columns date-time, value, quality-code. date-time values
