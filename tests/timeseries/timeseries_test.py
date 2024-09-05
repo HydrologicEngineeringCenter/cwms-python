@@ -168,7 +168,10 @@ def test_timeseries_group_df_to_json_and_update_timeseries_groups(sample_datafra
 
     # Convert DataFrame to JSON
     json_output = timeseries.timeseries_group_df_to_json(
-        data=sample_dataframe, group_id=group_id, office_id=office_id, category_id=category_id
+        data=sample_dataframe,
+        group_id=group_id,
+        office_id=office_id,
+        category_id=category_id,
     )
 
     # Check that the JSON output has the correct structure
@@ -176,17 +179,20 @@ def test_timeseries_group_df_to_json_and_update_timeseries_groups(sample_datafra
     assert json_output["id"] == group_id
     assert json_output["time-series-category"]["id"] == category_id
     assert len(json_output["time-series"]) == len(sample_dataframe)
-    assert json_output["time-series"][0]["office-id"] == sample_dataframe.iloc[0]["office-id"]
+    assert (
+        json_output["time-series"][0]["office-id"]
+        == sample_dataframe.iloc[0]["office-id"]
+    )
     assert json_output["time-series"][0]["id"] == sample_dataframe.iloc[0]["ts-id"]
 
     # Mock cwms.api.patch to test update_timeseries_groups
     # FIX ME
-    with patch.object(api, 'patch') as mock_patch:
+    with patch.object(api, "patch") as mock_patch:
         timeseries.update_timeseries_groups(
             group_id=group_id,
             office_id=office_id,
             replace_assigned_ts=False,
-            JSON=json_output
+            JSON=json_output,
         )
 
         # Assert that the patch method was called with the correct endpoint and parameters
@@ -202,15 +208,17 @@ def test_timeseries_group_df_to_json_and_update_timeseries_groups(sample_datafra
 
 def test_timeseries_group_df_to_json_missing_column():
     # Create a DataFrame missing the 'ts-id' column
-    data = pd.DataFrame({
-        "office-id": ["LRL", "SWT"],
-        "some-other-column": ["value1", "value2"]
-    })
+    data = pd.DataFrame(
+        {"office-id": ["LRL", "SWT"], "some-other-column": ["value1", "value2"]}
+    )
 
     group_id = "group1"
     office_id = "office1"
     category_id = "category1"
 
     # Expect a TypeError to be raised due to the missing 'ts-id' column
-    with pytest.raises(TypeError, match="ts-id is a required column in data when posting as a dataframe"):
+    with pytest.raises(
+        TypeError,
+        match="ts-id is a required column in data when posting as a dataframe",
+    ):
         cwms.timeseries_group_df_to_json(data, group_id, office_id, category_id)

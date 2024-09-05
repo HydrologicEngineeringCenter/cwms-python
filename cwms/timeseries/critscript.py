@@ -1,7 +1,8 @@
-
 import re
-import cwms
+
 import pandas as pd
+
+import cwms
 
 
 def crit_script(file_path, office_id, group_id):
@@ -75,4 +76,4 @@ def crit_script(file_path, office_id, group_id):
     cwms.update_timeseries_groups(group_id, office_id, json_dict)
 
 
-json_dict = crit_script("CEMVP_GOES.crit", "CWMS", "Data Acquisition")
+crit_script("CEMVP_GOES.crit", "CWMS", "Data Acquisition")

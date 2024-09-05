@@ -1,12 +1,17 @@
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import pandas as pd
+
 import cwms.api as api
 from cwms.types import JSON, Data
 
 
 def update_timeseries_groups(
-        group_id: str, office_id: str, replace_assigned_ts: Optional[bool], JSON: [Dict[str, Any]] = None
+    group_id: str,
+    office_id: str,
+    replace_assigned_ts: Optional[bool],
+    JSON: [Dict[str, Any]] = None,
 ) -> None:
     """
     Updates the timeseries groups with the provided group ID and office ID.
@@ -42,10 +47,10 @@ def update_timeseries_groups(
 
 
 def timeseries_group_df_to_json(
-        data: pd.DataFrame,
-        group_id: str,
-        office_id: str,
-        category_id: str,
+    data: pd.DataFrame,
+    group_id: str,
+    office_id: str,
+    category_id: str,
 ) -> JSON:
     """
     Converts a dataframe to a json dictionary in the correct format.
@@ -93,17 +98,23 @@ def timeseries_group_df_to_json(
         "time-series": [],
     }
 
-    # FIX THIS LOOP AND FIX TS_CODE
-    for _, row in data.iterrows():
-        ts_dict = {
-            "office-id": row["office-id"],
-            "id": row["ts-id"],
-            "alias": row["alias"],
-            "ts-code": row["ts-code"],
-            "attribute": row["attribute"],
-        }
-        json_dict["time-series"].append(ts_dict)
+    # Convert DataFrame to a list of dictionaries with each row becoming a dict
+    entries = data.to_dict(orient="entry")
 
+    # Iterate through each record and add it to the JSON dictionary
+    for entry in entries:
+        ts_dict = {
+            "office-id": entry["office-id"],
+            "id": entry["ts-id"],
+            "alias": entry["alias"],
+            "attribute": entry["attribute"],
+        }
+
+        # Only include 'ts-code' if it exists and is not NaN
+        if "ts-code" in entry and pd.notna(entry["ts-code"]):
+            ts_dict["ts-code"] = entry["ts-code"]
+
+        json_dict["time-series"].append(ts_dict)
 
     return json_dict
 
@@ -134,14 +145,14 @@ def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Dat
 
 
 def get_timeseries(
-        tsId: str,
-        office_id: str,
-        unit: str = "EN",
-        datum: Optional[str] = None,
-        begin: Optional[datetime] = None,
-        end: Optional[datetime] = None,
-        page_size: int = 500000,
-        version_date: Optional[datetime] = None,
+    tsId: str,
+    office_id: str,
+    unit: str = "EN",
+    datum: Optional[str] = None,
+    begin: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    page_size: int = 500000,
+    version_date: Optional[datetime] = None,
 ) -> Data:
     """Retrieves time series data from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -202,11 +213,11 @@ def get_timeseries(
 
 
 def timeseries_df_to_json(
-        data: pd.DataFrame,
-        tsId: str,
-        units: str,
-        office_id: str,
-        version_date: Optional[datetime] = None,
+    data: pd.DataFrame,
+    tsId: str,
+    units: str,
+    office_id: str,
+    version_date: Optional[datetime] = None,
 ) -> JSON:
     """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries fucntion.
 
@@ -267,10 +278,10 @@ def timeseries_df_to_json(
 
 
 def store_timeseries(
-        data: JSON,
-        create_as_ltrs: Optional[bool] = False,
-        store_rule: Optional[str] = None,
-        override_protection: Optional[bool] = False,
+    data: JSON,
+    create_as_ltrs: Optional[bool] = False,
+    store_rule: Optional[str] = None,
+    override_protection: Optional[bool] = False,
 ) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
