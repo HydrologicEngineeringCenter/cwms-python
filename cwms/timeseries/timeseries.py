@@ -1,10 +1,127 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
 import cwms.api as api
 from cwms.types import JSON, Data
+
+# SAVE DATA TO TIMESERIES GROUP
+# TO SEE IF WORK, REFERENCE EXAMPLE
+# df = cwms.get_timeseries_group(group_id="USGS CHEF Data Acquisition",category_id="Data Acquisition",office_id="CWMS").df
+
+
+def update_timeseries_groups(
+    group_id: str,
+    office_id: str,
+    replace_assigned_ts: Optional[bool],
+    JSON: [Dict[str, Any]] = None,
+) -> None:
+    """
+    Updates the timeseries groups with the provided group ID and office ID.
+
+    Parameters
+    ----------
+    group_id : str
+        The new specified timeseries ID that will replace the old ID.
+    office_id : str
+        The ID of the office associated with the specified timeseries.
+    replace_assigned_ts : bool, optional
+        Specifies whether to unassign all existing time series before assigning new time series specified in the content body. Default is False.
+    JSON : dict, optional
+        A JSON that updates the timeseries group.
+    Returns
+    -------
+    None
+    """
+    if not group_id:
+        raise ValueError("Cannot update a specified level without an id")
+    if not office_id:
+        raise ValueError("Cannot update a specified level without an office id")
+
+    # MOVE JSON OUT OF PARAMS, follow the output to determine
+    endpoint = f"timeseries/group/{group_id}"
+    params = {
+        "replace-assigned-ts": replace_assigned_ts,
+        "office": office_id,
+        "body": JSON,
+    }
+
+    # Assuming api.patch is a valid function available in your environment
+    api.patch(endpoint=endpoint, params=params)
+
+
+def timeseries_group_df_to_json(
+    data: pd.DataFrame,
+    group_id: str,
+    office_id: str,
+    category_id: str,
+) -> JSON:
+    """
+    Converts a dataframe to a json dictionary in the correct format.
+
+    Parameters
+    ----------
+    data: pd.DataFrame
+        Dataframe containing timeseries information.
+    group_id: str
+        The group ID for the timeseries.
+    office_id: str
+         The ID of the office associated with the specified timeseries.
+    category_id: str
+        The ID of the category associated with the group
+
+
+    Returns
+    -------
+    JSON
+        JSON dictionary of the timeseries data.
+    """
+
+    required_columns = ["office-id", "ts-id"]
+    for column in required_columns:
+        if column not in data.columns:
+            raise TypeError(
+                f"{column} is a required column in data when posting as a dataframe"
+            )
+
+    if data.isnull().values.any():
+        raise ValueError("Null/NaN data must be removed from the dataframe")
+
+    # Check if 'alias' column exists, if not create it and set to None
+    if "alias" not in data.columns:
+        data["alias"] = None
+
+    # Check if 'attribute' column exists, if not create it and set to 0
+    if "attribute" not in data.columns:
+        data["attribute"] = 0
+
+    json_dict = {
+        "office-id": office_id,
+        "id": group_id,
+        "time-series-category": {"office-id": office_id, "id": category_id},
+        "time-series": [],
+    }
+
+    # Convert DataFrame to a list of dictionaries with each row becoming a dict
+    entries = data.to_dict(orient="entry")
+
+    # Iterate through each record and add it to the JSON dictionary
+    for entry in entries:
+        ts_dict = {
+            "office-id": entry["office-id"],
+            "id": entry["ts-id"],
+            "alias": entry["alias"],
+            "attribute": entry["attribute"],
+        }
+
+        # Only include 'ts-code' if it exists and is not NaN
+        if "ts-code" in entry and pd.notna(entry["ts-code"]):
+            ts_dict["ts-code"] = entry["ts-code"]
+
+        json_dict["time-series"].append(ts_dict)
+
+    return json_dict
 
 
 def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Data:
