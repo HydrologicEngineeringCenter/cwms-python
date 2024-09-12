@@ -6,6 +6,10 @@ import pandas as pd
 import cwms.api as api
 from cwms.types import JSON, Data
 
+# SAVE DATA TO TIMESERIES GROUP
+# TO SEE IF WORK, REFERENCE EXAMPLE
+# df = cwms.get_timeseries_group(group_id="USGS CHEF Data Acquisition",category_id="Data Acquisition",office_id="CWMS").df
+
 
 def update_timeseries_groups(
     group_id: str,
@@ -35,6 +39,7 @@ def update_timeseries_groups(
     if not office_id:
         raise ValueError("Cannot update a specified level without an office id")
 
+    # MOVE JSON OUT OF PARAMS, follow the output to determine
     endpoint = f"timeseries/group/{group_id}"
     params = {
         "replace-assigned-ts": replace_assigned_ts,

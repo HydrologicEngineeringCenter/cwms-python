@@ -5,6 +5,7 @@ import pandas as pd
 import cwms
 
 
+#
 def crit_script(file_path, office_id, group_id):
     def parse_crit_file(file_path):
         """
@@ -66,7 +67,9 @@ def crit_script(file_path, office_id, group_id):
         df = append_df(df, office_id, data["Timeseries ID"], data["Alias"])
 
     # Generate JSON dictionary
-    json_dict = cwms.timeseries_group_df_to_json(df, group_id)
+    json_dict = cwms.timeseries_group_df_to_json(
+        df, "USGS CHEF Data Acquisition", "CWMS", "Data Acquisition"
+    )
 
     # Print DataFrame for verification
     pd.set_option("display.max_columns", None)

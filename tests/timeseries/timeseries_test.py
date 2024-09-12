@@ -4,6 +4,7 @@
 #  Source may not be released without written approval from HEC
 
 from datetime import datetime
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -160,7 +161,7 @@ def sample_dataframe():
     return df
 
 
-def test_timeseries_group_df_to_json_and_update_timeseries_groups(sample_dataframe):
+def test_timeseries_group_df_to_json(sample_dataframe):
     # Mock group_id, office_id, and category_id
     group_id = "SampleGroup"
     office_id = "SampleOffice"
@@ -185,9 +186,15 @@ def test_timeseries_group_df_to_json_and_update_timeseries_groups(sample_datafra
     )
     assert json_output["time-series"][0]["id"] == sample_dataframe.iloc[0]["ts-id"]
 
+    return json_output  # Returning JSON to be used in other tests if needed
+
+
+def test_update_timeseries_groups(json_output):
+    group_id = "SampleGroup"
+    office_id = "SampleOffice"
+
     # Mock cwms.api.patch to test update_timeseries_groups
-    # FIX ME
-    with patch.object(api, "patch") as mock_patch:
+    with patch("cwms.api.patch") as mock_patch:
         timeseries.update_timeseries_groups(
             group_id=group_id,
             office_id=office_id,
@@ -201,8 +208,8 @@ def test_timeseries_group_df_to_json_and_update_timeseries_groups(sample_datafra
             params={
                 "replace-assigned-ts": False,
                 "office": office_id,
-                "body": json_output,
             },
+            body=json_output,
         )
 
 
