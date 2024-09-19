@@ -218,4 +218,4 @@ def get_level_as_timeseries(
         "unit": unit,
     }
     response = api.get(endpoint, params)
-    return Data(response)
+    return Data(response, selector="values")
