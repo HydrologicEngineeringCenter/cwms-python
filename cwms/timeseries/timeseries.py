@@ -4,7 +4,7 @@ from typing import Optional
 import pandas as pd
 
 import cwms.api as api
-from cwms.types import JSON, Data
+from cwms.cwms_types import JSON, Data
 
 
 def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Data:
@@ -40,6 +40,7 @@ def get_timeseries(
     end: Optional[datetime] = None,
     page_size: int = 500000,
     version_date: Optional[datetime] = None,
+    trim: Optional[bool] = True,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -76,6 +77,8 @@ def get_timeseries(
         version_date: datetime, optional, default is None
             Version date of time series values being requested. If this field is not specified and
             the timeseries is versioned, the query will return the max aggregate for the time period.
+        trim: boolean, optional, default is True
+            Specifies whether to trim missing values from the beginning and end of the retrieved values.
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
@@ -110,12 +113,9 @@ def timeseries_df_to_json(
     Parameters
     ----------
         data: pd.Dataframe
-            Time Series data to be stored.  If dataframe data must be provided in the following format
-                df.ts_id = timeseried id:specified name of the time series to be posted to
-                df.office = the owning office of the time series
-                df.units = units of values to be stored (ie. ft, in, m, cfs....)
+            Time Series data to be stored.  Data must be provided in the following format
                 dataframe should have three columns date-time, value, quality-code. date-time values
-                can be a string in ISO8601 formate or a datetime field. if quality-code column is not
+                can be a string in ISO8601 format or a datetime field. if quality-code column is not
                 present is will be set to 0.
                                         date-time value  quality-code
                 0   2023-12-20T14:45:00.000-05:00  93.1           0
@@ -123,7 +123,7 @@ def timeseries_df_to_json(
                 2   2023-12-20T15:15:00.000-05:00  98.5           0
                 3   2023-12-20T15:30:00.000-05:00  98.5           0
         ts_id: str
-            timeseried id:specified name of the time series to be posted to
+            timeseried id:specified name of the timeseries to be posted to
         office_id: str
             the owning office of the time series
         units: str

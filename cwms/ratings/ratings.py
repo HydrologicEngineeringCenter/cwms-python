@@ -5,8 +5,8 @@ from typing import Any, Optional
 import pandas as pd
 
 import cwms.api as api
+from cwms.cwms_types import JSON, Data
 from cwms.ratings.ratings_spec import get_rating_spec
-from cwms.types import JSON, Data
 
 
 def rating_current_effective_date(rating_id: str, office_id: str) -> Any:

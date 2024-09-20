@@ -35,7 +35,7 @@ from requests import Response
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 
-from cwms.types import JSON, RequestParams
+from cwms.cwms_types import JSON, RequestParams
 
 # Specify the default API root URL and version.
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"

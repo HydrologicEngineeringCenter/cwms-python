@@ -9,7 +9,7 @@ from typing import Optional
 import pandas as pd
 
 import cwms.api as api
-from cwms.types import JSON, Data
+from cwms.cwms_types import JSON, Data
 
 
 def get_location_levels(
@@ -218,4 +218,4 @@ def get_level_as_timeseries(
         "unit": unit,
     }
     response = api.get(endpoint, params)
-    return Data(response)
+    return Data(response, selector="values")

@@ -6,7 +6,7 @@
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON, Data, DeleteMethod
+from cwms.cwms_types import JSON, Data, DeleteMethod
 
 
 def standard_text_to_json(text_id: str, standard_text: str, office_id: str) -> JSON:

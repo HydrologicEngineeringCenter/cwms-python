@@ -4,7 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 
 import cwms.api as api
-from cwms.types import JSON, Data
+from cwms.cwms_types import JSON, Data
 
 
 def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> Data:

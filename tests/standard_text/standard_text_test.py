@@ -10,7 +10,7 @@ import pytz
 
 import cwms.api
 import cwms.standard_text.standard_text as standard_text
-from cwms.types import DeleteMethod
+from cwms.cwms_types import DeleteMethod
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
