@@ -81,7 +81,7 @@ class Data:
     def df(self) -> DataFrame:
         """Return the data frame."""
 
-        if type(self._df) != DataFrame:
+        if not isinstance(self._df, DataFrame):
             self._df = Data.to_df(self.json, self.selector)
 
         return self._df
