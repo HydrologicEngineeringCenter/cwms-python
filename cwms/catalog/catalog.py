@@ -1,7 +1,7 @@
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import Data
+from cwms.cwms_types import Data
 
 
 def get_locations_catalog(

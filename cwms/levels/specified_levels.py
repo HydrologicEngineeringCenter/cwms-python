@@ -5,7 +5,7 @@
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON, Data
+from cwms.cwms_types import JSON, Data
 
 
 def get_specified_levels(

@@ -1,7 +1,7 @@
 import pytest
 from pandas import DataFrame
 
-from cwms.types import Data
+from cwms.cwms_types import Data
 
 
 @pytest.fixture
