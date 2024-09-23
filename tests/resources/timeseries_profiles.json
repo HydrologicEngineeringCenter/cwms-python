@@ -1,0 +1,34 @@
+[
+  {
+    "description": "Description",
+    "parameter-list": [
+      "Temp-Water",
+      "Depth"
+    ],
+    "location-id": {
+      "office-id": "SWT",
+      "name": "SWAN"
+    },
+    "reference-ts-id": {
+      "office-id": "SWT",
+      "name": "SWAN.Elev.Inst.1Hour.0.DSS-Obs"
+    },
+    "key-parameter": "Depth"
+  },
+  {
+    "description": "Description 2",
+    "parameter-list": [
+      "Temp",
+      "Length"
+    ],
+    "location-id": {
+      "office-id": "SWT",
+      "name": "SWAN2"
+    },
+    "reference-ts-id": {
+      "office-id": "SWT",
+      "name": "SWAN2.Elev.Inst.1Hour.0.DSS-Obs"
+    },
+    "key-parameter": "Length"
+  }
+]
