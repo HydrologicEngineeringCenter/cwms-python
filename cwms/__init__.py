@@ -14,6 +14,9 @@ from cwms.standard_text.standard_text import *
 from cwms.timeseries.timerseries_identifier import *
 from cwms.timeseries.timeseries import *
 from cwms.timeseries.timeseries_bin import *
+from cwms.timeseries.timeseries_profile import *
+from cwms.timeseries.timeseries_profile_instance import *
+from cwms.timeseries.timeseries_profile_parser import *
 from cwms.timeseries.timeseries_txt import *
 
 try:
