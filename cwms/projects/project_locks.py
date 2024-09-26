@@ -5,7 +5,7 @@
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON, Data, DeleteMethod
+from cwms.cwms_types import JSON, Data, DeleteMethod
 
 
 def get_project_lock(office_id: str, name: str, application_id: str) -> Data:

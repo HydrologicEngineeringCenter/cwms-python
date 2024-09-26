@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 import cwms.api as api
-from cwms.types import JSON, Data, DeleteMethod
+from cwms.cwms_types import JSON, Data, DeleteMethod
 
 
 def get_project(office_id: str, name: str) -> Data:

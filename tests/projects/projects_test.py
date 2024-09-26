@@ -9,7 +9,7 @@ from datetime import datetime
 import pytz
 
 import cwms.projects.projects as projects
-from cwms.types import DeleteMethod
+from cwms.cwms_types import DeleteMethod
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
