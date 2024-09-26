@@ -5,7 +5,7 @@
 # constant for mock root url
 
 import cwms.outlets.outlets as outlets
-from cwms.types import DeleteMethod
+from cwms.cwms_types import DeleteMethod
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
