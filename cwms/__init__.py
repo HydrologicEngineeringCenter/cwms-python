@@ -6,6 +6,7 @@ from cwms.forecast.forecast_instance import *
 from cwms.forecast.forecast_spec import *
 from cwms.levels.location_levels import *
 from cwms.levels.specified_levels import *
+from cwms.locations.gate_changes import *
 from cwms.locations.physical_locations import *
 from cwms.ratings.ratings import *
 from cwms.ratings.ratings_spec import *
