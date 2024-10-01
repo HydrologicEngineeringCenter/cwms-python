@@ -9,6 +9,9 @@ from cwms.levels.specified_levels import *
 from cwms.locations.physical_locations import *
 from cwms.outlets.outlets import *
 from cwms.outlets.virtual_outlets import *
+from cwms.projects.project_lock_rights import *
+from cwms.projects.project_locks import *
+from cwms.projects.projects import *
 from cwms.ratings.ratings import *
 from cwms.ratings.ratings_spec import *
 from cwms.ratings.ratings_template import *
