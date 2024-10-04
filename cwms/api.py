@@ -31,7 +31,7 @@ import logging
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
-from requests import Response
+from requests import Response, adapters
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 
@@ -41,8 +41,10 @@ from cwms.cwms_types import JSON, RequestParams
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
 
-# Initialize a non-authenticated session with the default root URL.
+# Initialize a non-authenticated session with the default root URL and set default pool connections.
 SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
+adapter = adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+SESSION.mount("https://", adapter)
 
 
 class InvalidVersion(Exception):
@@ -91,7 +93,10 @@ class ApiError(Exception):
 
 
 def init_session(
-    *, api_root: Optional[str] = None, api_key: Optional[str] = None
+    *,
+    api_root: Optional[str] = None,
+    api_key: Optional[str] = None,
+    pool_connections: Optional[int] = None,
 ) -> BaseUrlSession:
     """Specify a root URL and authentication key for the CWMS Data API.
 
@@ -116,6 +121,12 @@ def init_session(
     if api_key:
         logging.debug(f"Setting authorization key: api_key={api_key}")
         SESSION.headers.update({"Authorization": api_key})
+
+    if pool_connections:
+        adapter = adapters.HTTPAdapter(
+            pool_connections=pool_connections, pool_maxsize=pool_connections
+        )
+        SESSION.mount("https://", adapter)
 
     return SESSION
 
@@ -220,7 +231,6 @@ def get(
 
     headers = {"Accept": api_version_text(api_version)}
     response = SESSION.get(endpoint, params=params, headers=headers)
-
     if response.status_code < 200 or response.status_code >= 300:
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
@@ -230,6 +240,46 @@ def get(
     except JSONDecodeError as error:
         logging.error(f"Error decoding CDA response as json: {error}")
         return {}
+
+
+def get_with_paging(
+    selector: str,
+    endpoint: str,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> JSON:
+    """Make a GET request to the CWMS Data API with paging.
+
+    Args:
+        endpoint: The CDA endpoint for the record(s).
+        selector: The json key that will be merged though each page call
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The deserialized JSON response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    first_pass = True
+    while (params["page"] is not None) or first_pass:
+        temp = get(endpoint, params, api_version=api_version)
+        if first_pass:
+            response = temp
+        else:
+            response[selector] = response[selector] + temp[selector]
+        if "next-page" in temp.keys():
+            params["page"] = temp["next-page"]
+        else:
+            params["page"] = None
+        first_pass = False
+    return response
 
 
 def post(

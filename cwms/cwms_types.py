@@ -61,17 +61,22 @@ class Data:
 
             # if the dataframe is for a rating table
             if ("rating-points" in selector) and ("point" in df_data.keys()):
-                df = DataFrame(df_data["point"])
+                df = DataFrame(df_data["point"]) if df_data["point"] else DataFrame()
 
             elif selector == "values":
-                df = DataFrame(df_data)
-                # if timeseries values are present then grab the values and put into dataframe
-                df.columns = Index([sub["name"] for sub in data["value-columns"]])
+                # if timeseries values are present then grab the values and put into
+                # dataframe else create empty dataframe
+                columns = Index([sub["name"] for sub in data["value-columns"]])
+                if df_data:
+                    df = DataFrame(df_data)
+                    df.columns = columns
+                else:
+                    df = DataFrame(columns=columns)
 
                 if "date-time" in df.columns:
                     df["date-time"] = to_datetime(df["date-time"], unit="ms", utc=True)
             else:
-                df = json_normalize(df_data)
+                df = json_normalize(df_data) if df_data else DataFrame()
         else:
             df = json_normalize(data)
 

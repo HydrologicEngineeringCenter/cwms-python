@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime
 from typing import Optional
 
@@ -31,14 +32,63 @@ def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Dat
     return Data(response, selector="assigned-time-series")
 
 
+def get_multi_timeseries_df(
+    ts_ids: list,
+    office_id: str,
+    unit: Optional[str] = "EN",
+    begin: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    melted: Optional[bool] = False,
+) -> Data:
+    def get_ts_ids(result_dict, ts_id, office_id, begin, end, unit, version):
+        data = get_timeseries(
+            ts_id=ts_id,
+            office_id=office_id,
+            unit=unit,
+            begin=begin,
+            end=end,
+            version_date=version,
+        )
+        result_dict.append(
+            {"ts_id": ts_id, "unit": data.json["units"], "values": data.df}
+        )
+
+    result_dict = []
+    threads = []
+    for ts_id in ts_ids:
+        if ":" in ts_id:
+            ts_id, version = ts_id.split(":")
+        else:
+            version = None
+        t = threading.Thread(
+            target=get_ts_ids,
+            args=(result_dict, ts_id, office_id, begin, end, unit, version),
+        )
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    data = pd.DataFrame()
+    for row in result_dict:
+        temp_df = row["values"]
+        temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+        temp_df.dropna(how="all", axis=1, inplace=True)
+        data = pd.concat([data, temp_df], ignore_index=True)
+
+    if not melted:
+        data.pivot(index="date-time", columns=["ts_id", "units"], values="value")
+
+
 def get_timeseries(
     ts_id: str,
     office_id: str,
-    unit: str = "EN",
+    unit: Optional[str] = "EN",
     datum: Optional[str] = None,
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
-    page_size: int = 500000,
+    page_size: Optional[int] = 500000,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
 ) -> Data:
@@ -94,11 +144,14 @@ def get_timeseries(
         "begin": begin.isoformat() if begin else None,
         "end": end.isoformat() if end else None,
         "page-size": page_size,
+        "page": None,
         "version-date": version_date.isoformat() if version_date else None,
+        "trim": trim,
     }
+    selector = "values"
 
-    response = api.get(endpoint, params)
-    return Data(response, selector="values")
+    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=params)
+    return Data(response, selector=selector)
 
 
 def timeseries_df_to_json(
