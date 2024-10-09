@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-
+from pandas import DataFrame
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
 
@@ -39,30 +39,66 @@ def get_multi_timeseries_df(
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
     melted: Optional[bool] = False,
-) -> Data:
-    def get_ts_ids(result_dict, ts_id, office_id, begin, end, unit, version):
+) -> DataFrame:
+    """gets multiple timeseries and stores into a single dataframe
+
+    Parameters
+    ----------
+        ts_ids: linst
+            a list of timeseries to get.  If the timeseries is a verioned timeseries then serpeate the ts_id from the
+            version_date using a :.  Example "OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT:2024-04-22 07:00:00-05:00".  Make
+            sure that the version date include the timezone offset if not in UTC.
+        office_id: string
+            The owning office of the time series(s).
+        unit: string, optional, default is EN
+            The unit or unit system of the response. Defaults to EN. Valid values
+            for the unit field are:
+                1. EN. English unit system.
+                2. SI. SI unit system.
+                3. Other.
+        begin: datetime, optional, default is None
+            Start of the time window for data to be included in the response. If this field is
+            not specified, any required time window begins 24 hours prior to the specified
+            or default end time. Any timezone information should be passed within the datetime
+            object. If no timezone information is given, default will be UTC.
+        end: datetime, optional, default is None
+            End of the time window for data to be included in the response. If this field is
+            not specified, any required time window ends at the current time. Any timezone
+            information should be passed within the datetime object. If no timezone information
+            is given, default will be UTC.
+        melted: Boolean, optional, default is false
+            if set to True a melted dataframe will be provided. By default a multi-index column dataframe will be
+            returned.
+
+
+        Returns
+        -------
+            dataframe
+    """
+    def get_ts_ids(result_dict, ts_id, office_id, begin, end, unit, version_date):
         data = get_timeseries(
             ts_id=ts_id,
             office_id=office_id,
             unit=unit,
             begin=begin,
             end=end,
-            version_date=version,
+            version_date=version_date,
         )
         result_dict.append(
-            {"ts_id": ts_id, "unit": data.json["units"], "values": data.df}
+            {"ts_id": ts_id, "unit": data.json["units"], "version_date": version_date, "values": data.df}
         )
 
     result_dict = []
     threads = []
     for ts_id in ts_ids:
         if ":" in ts_id:
-            ts_id, version = ts_id.split(":")
+            ts_id, version_date = ts_id.split(":",1)
+            version_date = pd.to_datetime(version_date)
         else:
-            version = None
+            version_date = None
         t = threading.Thread(
             target=get_ts_ids,
-            args=(result_dict, ts_id, office_id, begin, end, unit, version),
+            args=(result_dict, ts_id, office_id, begin, end, unit, version_date),
         )
         threads.append(t)
         t.start()
@@ -74,12 +110,21 @@ def get_multi_timeseries_df(
     for row in result_dict:
         temp_df = row["values"]
         temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+        if "version_date" in row.keys():
+            temp_df = temp_df.assign(version_date=row['version_date'])
         temp_df.dropna(how="all", axis=1, inplace=True)
         data = pd.concat([data, temp_df], ignore_index=True)
 
     if not melted:
-        data.pivot(index="date-time", columns=["ts_id", "units"], values="value")
-
+        cols = ["ts_id", "units"]
+        if 'version_date' in data.columns: 
+            cols.append('version_date')
+            data['version_date'] = data['version_date'].dt.strftime('%Y-%m-%d %H:%M:%S%z')
+            data['version_date'] = data['version_date'].str[:-2] + ":" + data['version_date'].str[-2:]
+            data['version_date'].fillna('', inplace=True)
+        data = data.pivot(index="date-time", columns=cols, values="value")
+    
+    return data
 
 def get_timeseries(
     ts_id: str,
@@ -98,9 +143,9 @@ def get_timeseries(
     Parameters
     ----------
         ts_id: string
-            Name(s) of the time series whose data is to be included in the response.
+            Name of the time series whose data is to be included in the response.
         office_id: string
-            The owning office of the time series(s).
+            The owning office of the time series.
         unit: string, optional, default is EN
             The unit or unit system of the response. Defaults to EN. Valid values
             for the unit field are:
@@ -136,6 +181,12 @@ def get_timeseries(
 
     # creates the dataframe from the timeseries data
     endpoint = "timeseries"
+    if begin and not isinstance(begin,datetime):
+        raise ValueError("begin needs to be in datetime")
+    if end and not isinstance(end,datetime):
+        raise ValueError("end needs to be in datetime")
+    if version_date and not isinstance(version_date,datetime):
+        raise ValueError("version_date needs to be in datetime")
     params = {
         "office": office_id,
         "name": ts_id,
