@@ -170,6 +170,48 @@ def test_get_timeseries_group_default(requests_mock):
     ]
 
 
+def test_get_multi_timeseries_default(requests_mock):
+    requests_mock.get(
+        f"{_MOCK_ROOT}"
+        "/timeseries?office=SWT&"
+        "name=TEST.Text.Inst.1Hour.0.MockTest&"
+        "unit=EN&"
+        "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
+        "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
+        "page-size=500000&"
+        "version-date=2021-06-20T08%3A00%3A00%2B00%3A00",
+        json=_VERS_TS_JSON,
+    )
+
+    requests_mock.get(
+        f"{_MOCK_ROOT}"
+        "/timeseries?office=SWT&"
+        "name=TEST.Text.Inst.1Hour.0.MockTest&"
+        "unit=EN&"
+        "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
+        "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
+        "page-size=500000",
+        json=_UNVERS_TS_JSON,
+    )
+
+    ts_ids = [
+        "TEST.Text.Inst.1Hour.0.MockTest",
+        "TEST.Text.Inst.1Hour.0.MockTest:2021-06-20 08:00:00-00:00",
+    ]
+    office_id = "SWT"
+
+    # explicitly format begin and end dates with default timezone as an example
+    timezone = pytz.timezone("UTC")
+    begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
+    end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
+    data = cwms.get_multi_timeseries_df(
+        ts_ids=ts_ids, office_id=office_id, begin=begin, end=end, melted=False
+    )
+
+    assert type(data) is pd.DataFrame
+    assert data.shape == (4, 2)
+
+
 def test_create_timeseries_unversioned_default(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}/timeseries?"

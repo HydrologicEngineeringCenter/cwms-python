@@ -140,7 +140,7 @@ def get_multi_timeseries_df(
             data["version_date"] = (
                 data["version_date"].str[:-2] + ":" + data["version_date"].str[-2:]
             )
-            data["version_date"].fillna("", inplace=True)
+            data.fillna({"version_date": ""}, inplace=True)
         data = data.pivot(index="date-time", columns=cols, values="value")
 
     return data
