@@ -81,10 +81,10 @@ def get_multi_timeseries_df(
         result_dict: list[Dict[str, Any]],
         ts_id: str,
         office_id: str,
+        begin: datetime,
+        end: datetime,
         unit: str,
-        begin: Optional[datetime] = None,
-        end: Optional[datetime] = None,
-        version_date: Optional[datetime] = None,
+        version_date: datetime,
     ) -> None:
         data = get_timeseries(
             ts_id=ts_id,
