@@ -44,7 +44,7 @@ API_VERSION = 2
 # Initialize a non-authenticated session with the default root URL and set default pool connections.
 SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
 adapter = adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
-SESSION = SESSION.mount("https://", adapter)
+SESSION.mount("https://", adapter)
 
 
 class InvalidVersion(Exception):
@@ -96,7 +96,7 @@ def init_session(
     *,
     api_root: Optional[str] = None,
     api_key: Optional[str] = None,
-    pool_connections: Optional[int] = 100,
+    pool_connections: int = 100,
 ) -> BaseUrlSession:
     """Specify a root URL and authentication key for the CWMS Data API.
 
@@ -118,7 +118,7 @@ def init_session(
         logging.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
         adapter = adapters.HTTPAdapter(
-        pool_connections=pool_connections, pool_maxsize=pool_connections
+            pool_connections=pool_connections, pool_maxsize=pool_connections
         )
         SESSION.mount("https://", adapter)
     if api_key:
@@ -242,7 +242,7 @@ def get(
 def get_with_paging(
     selector: str,
     endpoint: str,
-    params: Optional[RequestParams] = None,
+    params: RequestParams,
     *,
     api_version: int = API_VERSION,
 ) -> JSON:

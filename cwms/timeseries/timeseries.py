@@ -1,9 +1,10 @@
 import threading
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 from pandas import DataFrame
+
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
 
@@ -33,7 +34,7 @@ def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Dat
 
 
 def get_multi_timeseries_df(
-    ts_ids: list,
+    ts_ids: list[str],
     office_id: str,
     unit: Optional[str] = "EN",
     begin: Optional[datetime] = None,
@@ -75,7 +76,16 @@ def get_multi_timeseries_df(
         -------
             dataframe
     """
-    def get_ts_ids(result_dict, ts_id, office_id, begin, end, unit, version_date):
+
+    def get_ts_ids(
+        result_dict: list[Dict[str, Any]],
+        ts_id: str,
+        office_id: str,
+        unit: str,
+        begin: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+        version_date: Optional[datetime] = None,
+    ) -> None:
         data = get_timeseries(
             ts_id=ts_id,
             office_id=office_id,
@@ -85,20 +95,25 @@ def get_multi_timeseries_df(
             version_date=version_date,
         )
         result_dict.append(
-            {"ts_id": ts_id, "unit": data.json["units"], "version_date": version_date, "values": data.df}
+            {
+                "ts_id": ts_id,
+                "unit": data.json["units"],
+                "version_date": version_date,
+                "values": data.df,
+            }
         )
 
-    result_dict = []
+    result_dict = []  # type: list[Dict[str,Any]]
     threads = []
     for ts_id in ts_ids:
         if ":" in ts_id:
-            ts_id, version_date = ts_id.split(":",1)
-            version_date = pd.to_datetime(version_date)
+            ts_id, version_date = ts_id.split(":", 1)
+            version_date_dt = pd.to_datetime(version_date)
         else:
-            version_date = None
+            version_date_dt = None
         t = threading.Thread(
             target=get_ts_ids,
-            args=(result_dict, ts_id, office_id, begin, end, unit, version_date),
+            args=(result_dict, ts_id, office_id, begin, end, unit, version_date_dt),
         )
         threads.append(t)
         t.start()
@@ -111,20 +126,25 @@ def get_multi_timeseries_df(
         temp_df = row["values"]
         temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
         if "version_date" in row.keys():
-            temp_df = temp_df.assign(version_date=row['version_date'])
+            temp_df = temp_df.assign(version_date=row["version_date"])
         temp_df.dropna(how="all", axis=1, inplace=True)
         data = pd.concat([data, temp_df], ignore_index=True)
 
     if not melted:
         cols = ["ts_id", "units"]
-        if 'version_date' in data.columns: 
-            cols.append('version_date')
-            data['version_date'] = data['version_date'].dt.strftime('%Y-%m-%d %H:%M:%S%z')
-            data['version_date'] = data['version_date'].str[:-2] + ":" + data['version_date'].str[-2:]
-            data['version_date'].fillna('', inplace=True)
+        if "version_date" in data.columns:
+            cols.append("version_date")
+            data["version_date"] = data["version_date"].dt.strftime(
+                "%Y-%m-%d %H:%M:%S%z"
+            )
+            data["version_date"] = (
+                data["version_date"].str[:-2] + ":" + data["version_date"].str[-2:]
+            )
+            data["version_date"].fillna("", inplace=True)
         data = data.pivot(index="date-time", columns=cols, values="value")
-    
+
     return data
+
 
 def get_timeseries(
     ts_id: str,
@@ -181,11 +201,11 @@ def get_timeseries(
 
     # creates the dataframe from the timeseries data
     endpoint = "timeseries"
-    if begin and not isinstance(begin,datetime):
+    if begin and not isinstance(begin, datetime):
         raise ValueError("begin needs to be in datetime")
-    if end and not isinstance(end,datetime):
+    if end and not isinstance(end, datetime):
         raise ValueError("end needs to be in datetime")
-    if version_date and not isinstance(version_date,datetime):
+    if version_date and not isinstance(version_date, datetime):
         raise ValueError("version_date needs to be in datetime")
     params = {
         "office": office_id,
