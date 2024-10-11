@@ -29,6 +29,41 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
+def test_timeseries_df_to_json():
+    test_json = {
+        "name": "TestLoc.Stage.Inst.1Hour.0.Testing",
+        "office-id": "MVP",
+        "units": "ft",
+        "values": [
+            ["2024-08-18T00:00:00-04:00", 1, 0],
+            ["2024-08-18T01:00:00-04:00", 1, 0],
+            ["2024-08-18T02:00:00-04:00", 1, 0],
+            ["2024-08-18T03:00:00-04:00", 1, 0],
+            ["2024-08-18T04:00:00-04:00", 1, 0],
+        ],
+        "version-date": None,
+    }
+
+    data = pd.DataFrame(
+        {
+            "date-time": pd.date_range(
+                start="2024-08-18", end="2024-08-18 04:00", freq="1h"
+            ),
+            "value": 1,
+        }
+    )
+    data["date-time"] = data["date-time"].dt.tz_localize("US/Eastern")
+    office_id = "MVP"
+    ts_id = "TestLoc.Stage.Inst.1Hour.0.Testing"
+    data2 = data.copy()
+    ts_json = cwms.timeseries_df_to_json(
+        data=data, ts_id=ts_id, office_id=office_id, units="ft"
+    )
+
+    assert ts_json == test_json
+    assert all(data == data2)
+
+
 def test_get_timeseries_unversioned_default(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"

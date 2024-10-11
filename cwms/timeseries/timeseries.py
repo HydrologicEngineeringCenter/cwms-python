@@ -258,29 +258,32 @@ def timeseries_df_to_json(
     Returns:
         JSON
     """
+
+    # make a copy so original dataframe does not get updated.
+    df = data.copy()
     # check dataframe columns
-    if "quality-code" not in data:
-        data["quality-code"] = 0
-    if "date-time" not in data:
+    if "quality-code" not in df:
+        df["quality-code"] = 0
+    if "date-time" not in df:
         raise TypeError(
             "date-time is a required column in data when posting as a dateframe"
         )
-    if "value" not in data:
+    if "value" not in df:
         raise TypeError(
             "value is a required column when posting data when posting as a dataframe"
         )
 
     # make sure that dataTime column is in iso8601 formate.
-    data["date-time"] = pd.to_datetime(data["date-time"]).apply(pd.Timestamp.isoformat)
-    data = data.reindex(columns=["date-time", "value", "quality-code"])
-    if data.isnull().values.any():
+    df["date-time"] = pd.to_datetime(df["date-time"]).apply(pd.Timestamp.isoformat)
+    df = df.reindex(columns=["date-time", "value", "quality-code"])
+    if df.isnull().values.any():
         raise ValueError("Null/NaN data must be removed from the dataframe")
 
     ts_dict = {
         "name": ts_id,
         "office-id": office_id,
         "units": units,
-        "values": data.values.tolist(),
+        "values": df.values.tolist(),
         "version-date": version_date,
     }
 
