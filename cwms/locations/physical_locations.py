@@ -46,20 +46,44 @@ def get_location(location_id: str, office_id: str, unit: str = "EN") -> Data:
 
 def get_locations(
     office_id: Optional[str] = None,
-    loc_ids: Optional[str] = None,
-    units: Optional[str] = None,
+    location_ids: Optional[str] = None,
+    units: Optional[str] = "EN",
     datum: Optional[str] = None,
 ) -> Data:
+    """
+    Get location data for a single location
+
+    Parameters
+    ----------
+        location_id: str
+            Specifies the name(s) of the location(s) whose data is to be included in the response. This parameter is a Posix regular expression matching against the id
+        office_id : str
+            The ID of the office that the locations belongs to.
+        unit: string, optional, default is EN
+            The unit or unit system of the response. Defaults to EN. Valid values
+            for the unit field are:
+                1. EN. English unit system.
+                2. SI. SI unit system.
+                3. Other.
+        Datum: string, optional, default is None
+            Specifies the elevation datum of the response. This field affects only vertical datum. Valid values for this field are:
+                1.) NAVD88 The elevation values will in the specified or default units above the NAVD-88 datum.
+                2.) NGVD29 The elevation values will be in the specified or default units above the NGVD-29 datum.
+    Returns
+    -------
+        cwms data type.  data.json will return the JSON output and data.df will return a dataframe
+
+    """
     endpoint = "locations"
     params = {
         "office": office_id,
-        "names": loc_ids,
+        "names": location_ids,
         "units": units,
         "datum": datum,
     }
 
     response = api.get(endpoint, params)
-    return Data(response, selector="locations.locations")
+    return Data(response)
 
 
 def ExpandLocations(df: DataFrame) -> DataFrame:
