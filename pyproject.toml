@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cwms-python"
-version = "0.5.0"
+version = "0.5.1"
 packages = [
     { include = "cwms" },
 ]
@@ -13,7 +13,6 @@ authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 pandas = "^2.1.3"
-numpy = "^1.26.4"
 requests-toolbelt = "^1.0.0"
 requests = "^2.31.0"
 
