@@ -15,7 +15,7 @@ def get_all_gate_changes(
     project_id: str,
     begin: datetime,
     end: datetime,
-    start_time_inclusive: Optional[bool] = False,
+    start_time_inclusive: Optional[bool] = True,
     end_time_inclusive: Optional[bool] = False,
     unit_system: Optional[str] = "EN",
     page_size: Optional[int] = 500,
@@ -34,14 +34,14 @@ def get_all_gate_changes(
     end: datetime
         The end of the time range
     start_time_inclusive: boolean, optional
-        Whether the returned gate changes should include data from the specified start timestamp. Default is `False`.
+        Whether the returned gate changes should include data from the specified start timestamp. Default is `True`.
     end_time_inclusive: boolean, optional
         Whether the returned gate changes should include data from the specified end timestamp. Default is `False`.
     unit_system: string, optional
         The unit system to use for the gate changes. Can be SI (International Scientific) or EN (Imperial.)
         Default is `EN`.
     page_size: integer, optional
-        The number of gate changes to return per page. Default is `500`.
+        The maximum number of gate changes to return per page. Default is `500`.
 
     Returns
     -------
@@ -74,6 +74,7 @@ def store_gate_change(
 
         Example:
         {
+          "type": "gate-change",
           "project-id": {
             "office-id": "SPK",
             "name": "BIGH"
