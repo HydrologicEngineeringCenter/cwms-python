@@ -41,7 +41,12 @@ def get_all_gate_changes(
         The unit system to use for the gate changes. Can be SI (International Scientific) or EN (Imperial.)
         Default is `EN`.
     page_size: integer, optional
-        The maximum number of gate changes to return per page. Default is `500`.
+        The maximum number of gate changes to retrieve, regardless of time window. A positive integer is
+        interpreted as the maximum number of changes from the beginning of the time window.
+        A negative integer is interpreted as the maximum number from the end of the time window.
+        Default 500. A page cursor will not be returned by this DTO. Instead, the next page can be
+        determined by querying the next set of changes using the last returned change date
+        and using start-time-inclusive=False.
 
     Returns
     -------
@@ -70,10 +75,11 @@ def store_gate_change(
     Parameters
     ----------
     gate_change_data: JSON
-        The gate change data to insert into the database. The data must be in JSON format.
+        The gate change data to insert into the database.
+        The data must be in JSON format as an array.
 
         Example:
-        {
+        [{
           "type": "gate-change",
           "project-id": {
             "office-id": "SPK",
@@ -124,7 +130,7 @@ def store_gate_change(
               "opening-units": "ft"
             }
           ]
-        }
+        }]
 
     fail_if_exists: boolean, optional
         Whether to fail if the gate change already exists. Default is `True`.
