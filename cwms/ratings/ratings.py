@@ -377,6 +377,7 @@ def delete_ratings(
 
     return api.delete(endpoint, params)
 
+
 def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
     """Will create a new ratingset including template/spec and rating
 

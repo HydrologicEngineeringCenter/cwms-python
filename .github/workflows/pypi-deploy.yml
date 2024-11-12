@@ -6,7 +6,6 @@ on:
       - "*"
   # Allow the workflow to be manually triggered from the Actions tab.
   workflow_dispatch:
-  
 jobs:
   tests:
     name: Test Release
@@ -36,7 +35,7 @@ jobs:
       # again here to make sure that we do not deploy a broken distribution.
       - name: Run Tests
         run: poetry run pytest tests/
-        
+
       # Once the tests have passsed we can build the distribution and store it, so it can
       # be accessed in the jobs below.
       - name: Build Distribution
@@ -51,7 +50,6 @@ jobs:
   deploy-release:
     name: Publish Release Distribution
     runs-on: ubuntu-latest
-
 
     # The distribution will only be published if the tests have passed.
     needs: [tests] # require tests to pass before deploy runs

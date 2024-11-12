@@ -256,7 +256,7 @@ def timeseries_df_to_json(
             Version date of time series values to be posted.
 
     Returns:
-        JSON.  Dates in JSON will be in UTC to be stored in 
+        JSON.  Dates in JSON will be in UTC to be stored in
     """
 
     # make a copy so original dataframe does not get updated.
@@ -274,7 +274,9 @@ def timeseries_df_to_json(
         )
 
     # make sure that dataTime column is in iso8601 formate.
-    df["date-time"] = pd.to_datetime(df["date-time"],utc=True).apply(pd.Timestamp.isoformat)
+    df["date-time"] = pd.to_datetime(df["date-time"], utc=True).apply(
+        pd.Timestamp.isoformat
+    )
     df = df.reindex(columns=["date-time", "value", "quality-code"])
     if df.isnull().values.any():
         raise ValueError("Null/NaN data must be removed from the dataframe")
