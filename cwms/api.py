@@ -191,6 +191,7 @@ def get_xml(
 
     headers = {"Accept": api_version_text(api_version)}
     response = SESSION.get(endpoint, params=params, headers=headers)
+    response.close()
 
     if response.status_code < 200 or response.status_code >= 300:
         logging.error(f"CDA Error: response={response}")
@@ -228,6 +229,7 @@ def get(
 
     headers = {"Accept": api_version_text(api_version)}
     response = SESSION.get(endpoint, params=params, headers=headers)
+    response.close()
     if response.status_code < 200 or response.status_code >= 300:
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
@@ -311,6 +313,7 @@ def post(
         data = json.dumps(data)
 
     response = SESSION.post(endpoint, params=params, headers=headers, data=data)
+    response.close()
 
     if response.status_code < 200 or response.status_code >= 300:
         logging.error(f"CDA Error: response={response}")
@@ -349,7 +352,7 @@ def patch(
         if isinstance(data, dict):
             data = json.dumps(data)
         response = SESSION.patch(endpoint, params=params, headers=headers, data=data)
-
+    response.close()
     if response.status_code < 200 or response.status_code >= 300:
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
@@ -377,7 +380,7 @@ def delete(
 
     headers = {"Accept": api_version_text(api_version)}
     response = SESSION.delete(endpoint, params=params, headers=headers)
-
+    response.close()
     if response.status_code < 200 or response.status_code >= 300:
         logging.error(f"CDA Error: response={response}")
         raise ApiError(response)
