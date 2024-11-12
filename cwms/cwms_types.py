@@ -2,7 +2,7 @@ from copy import deepcopy
 from enum import Enum, auto
 from typing import Any, Optional
 
-from pandas import DataFrame, Index, json_normalize, to_datetime
+from pandas import DataFrame, Index, json_normalize, to_datetime, to_numeric
 
 # Describes generic JSON serializable data.
 JSON = dict[str, Any]
@@ -62,6 +62,7 @@ class Data:
         def rating_type(data: JSON) -> DataFrame:
             # grab the correct point values for a rating table
             df = DataFrame(data["point"]) if data["point"] else DataFrame()
+            df = df.apply(to_numeric)
             return df
 
         def timeseries_type(orig_json: JSON, value_json: JSON) -> DataFrame:

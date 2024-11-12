@@ -376,3 +376,32 @@ def delete_ratings(
     }
 
     return api.delete(endpoint, params)
+
+def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
+    """Will create a new ratingset including template/spec and rating
+
+    Parameters
+    ----------
+        data: JSON dictionary or XML
+            rating data to be stored.
+        store_template: Boolean Default = True
+            Store updates to the rating template.  Default = True
+
+    Returns
+    -------
+    response
+    """
+
+    endpoint = f"ratings"
+    params = {"store-template": store_template}
+
+    if not isinstance(data, dict) and "<?xml" not in data:
+        raise ValueError(
+            "Cannot store a timeseries without a JSON data dictionaryor in XML"
+        )
+
+    if "<?xml" in data:
+        api_version = 102
+    else:
+        api_version = 2
+    return api.post(endpoint, data, params, api_version=api_version)
