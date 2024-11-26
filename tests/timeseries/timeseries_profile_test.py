@@ -21,15 +21,13 @@ def init_session():
 
 def test_get_timeseries_profile(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}"
-        "/timeseries/profile/Depth?office=SWT&"
-        "location-id=SWT.TEST.Text.Inst.1Hour.0.MockTest",
+        f"{_MOCK_ROOT}" "/timeseries/profile/SWAN/Depth?office=SWT",
         json=_TSP_JSON,
     )
 
     parameter_id = "Depth"
     office_id = "SWT"
-    location_id = "SWT.TEST.Text.Inst.1Hour.0.MockTest"
+    location_id = "SWAN"
 
     data = timeseries.get_timeseries_profile(office_id, location_id, parameter_id)
     assert data.json == _TSP_JSON
@@ -58,12 +56,11 @@ def test_get_all_timeseries_profile(requests_mock):
 
 def test_delete_timeseries_profile(requests_mock):
     requests_mock.delete(
-        f"{_MOCK_ROOT}"
-        "/timeseries/profile/Depth?location-id=TEST.Text.Inst.1Hour.0.MockTest&office=SWT",
+        f"{_MOCK_ROOT}" "/timeseries/profile/SWAN/Depth?office=SWT",
         json=_TSP_JSON,
     )
 
-    location_id = "TEST.Text.Inst.1Hour.0.MockTest"
+    location_id = "SWAN"
     parameter_id = "Depth"
     office_id = "SWT"
 

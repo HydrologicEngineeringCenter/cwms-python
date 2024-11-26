@@ -21,13 +21,11 @@ def init_session():
 
 def test_get_timeseries_profile_parser(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}"
-        "/timeseries/parser/Temp?office=SWT&"
-        "location-id=SWT.TEST.Text.Inst.1Hour.0.MockTest",
+        f"{_MOCK_ROOT}" "/timeseries/profile-parser/SWAN/Temp?office=SWT",
         json=_TSP_PARSER_JSON,
     )
 
-    location_id = "SWT.TEST.Text.Inst.1Hour.0.MockTest"
+    location_id = "SWAN"
     office_id = "SWT"
     parameter_id = "Temp"
 
@@ -39,7 +37,7 @@ def test_get_timeseries_profile_parser(requests_mock):
 
 
 def test_store_timeseries_profile_parser(requests_mock):
-    requests_mock.post(f"{_MOCK_ROOT}/timeseries/parser?" "fail-if-exists=False")
+    requests_mock.post(f"{_MOCK_ROOT}/timeseries/profile-parser?fail-if-exists=False")
 
     data = _TSP_PARSER_JSON
     timeseries.store_timeseries_profile_parser(data, False)
@@ -50,13 +48,12 @@ def test_store_timeseries_profile_parser(requests_mock):
 
 def test_delete_timeseries_profile_parser(requests_mock):
     requests_mock.delete(
-        f"{_MOCK_ROOT}"
-        "/timeseries/parser/Length?location-id=TEST.Text.Inst.1Hour.0.MockTest&office=SWT",
+        f"{_MOCK_ROOT}" "/timeseries/profile-parser/SWAN/Length?office=SWT",
         json=_TSP_PARSER_JSON,
     )
 
     parameter_id = "Length"
-    location_id = "TEST.Text.Inst.1Hour.0.MockTest"
+    location_id = "SWAN"
     office_id = "SWT"
 
     timeseries.delete_timeseries_profile_parser(office_id, location_id, parameter_id)
@@ -67,7 +64,7 @@ def test_delete_timeseries_profile_parser(requests_mock):
 
 def test_get_all_timeseries_profile_parser(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}" "/timeseries/parser",
+        f"{_MOCK_ROOT}" "/timeseries/profile-parser",
         json=_TSP_PARSER_ARRAY_JSON,
     )
 

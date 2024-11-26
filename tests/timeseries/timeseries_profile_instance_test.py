@@ -33,14 +33,12 @@ def init_session():
 def test_get_timeseries_profile_instance(requests_mock):
     requests_mock.get(
         f"{_MOCK_ROOT}"
-        "/timeseries/instance/TEST.Text.Inst.1Hour.0.MockTest?office=SWT&"
-        "parameter-id=Temp-Water&"
-        "version=Raw&"
+        "/timeseries/profile-instance/SWAN/Temp-Water/Raw?office=SWT&"
         "unit=C",
         json=_TSP_INST_JSON,
     )
 
-    timeseries_id = "TEST.Text.Inst.1Hour.0.MockTest"
+    location_id = "SWAN"
     parameter_id = "Temp-Water"
     version = "Raw"
     unit = "C"
@@ -52,7 +50,7 @@ def test_get_timeseries_profile_instance(requests_mock):
 
     data = timeseries.get_timeseries_profile_instance(
         office_id,
-        timeseries_id,
+        location_id,
         parameter_id,
         version,
         timezone,
@@ -68,7 +66,7 @@ def test_get_timeseries_profile_instance(requests_mock):
 def test_store_timeseries_profile_instance(requests_mock):
     data = urllib.parse.quote_plus(_TSP_PROFILE_DATA)
     requests_mock.post(
-        f"{_MOCK_ROOT}/timeseries/instance"
+        f"{_MOCK_ROOT}/timeseries/profile-instance"
         f"?profile-data={data}&"
         "version=Raw&override-protection=False"
         "&version-date=2020-01-01T13%3A30%3A00%2B00%3A00"
@@ -87,13 +85,11 @@ def test_store_timeseries_profile_instance(requests_mock):
 
 def test_delete_timeseries_profile_instance(requests_mock):
     requests_mock.delete(
-        f"{_MOCK_ROOT}"
-        "/timeseries/instance/TEST.Text.Inst.1Hour.0.MockTest?office=SWT&"
-        "parameter-id=Length",
+        f"{_MOCK_ROOT}" "/timeseries/profile-instance/SWAN/Length/Raw?office=SWT",
         json=_TSP_INST_JSON,
     )
 
-    timeseries_id = "TEST.Text.Inst.1Hour.0.MockTest"
+    location_id = "SWAN"
     office_id = "SWT"
     parameter_id = "Length"
     version = "Raw"
@@ -102,7 +98,7 @@ def test_delete_timeseries_profile_instance(requests_mock):
     date = tz.localize(datetime(2010, 6, 4, 14, 0, 0))
 
     timeseries.delete_timeseries_profile_instance(
-        office_id, timeseries_id, parameter_id, version, timezone, version_date, date
+        office_id, location_id, parameter_id, version, version_date, date, timezone
     )
 
     assert requests_mock.called
@@ -111,7 +107,7 @@ def test_delete_timeseries_profile_instance(requests_mock):
 
 def test_get_all_timeseries_profile_instance(requests_mock):
     requests_mock.get(
-        f"{_MOCK_ROOT}" "/timeseries/instance",
+        f"{_MOCK_ROOT}/timeseries/profile-instance",
         json=_TSP_INST_ARRAY_JSON,
     )
 

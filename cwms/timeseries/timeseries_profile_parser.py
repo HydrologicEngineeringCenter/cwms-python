@@ -3,7 +3,6 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 
-from datetime import datetime
 from typing import Optional
 
 import cwms.api as api
@@ -30,10 +29,9 @@ def get_timeseries_profile_parser(
         cwms data type
     """
 
-    endpoint = f"timeseries/parser/{parameter_id}"
+    endpoint = f"timeseries/profile-parser/{location_id}/{parameter_id}"
     params = {
         "office": office_id,
-        "location-id": location_id,
     }
 
     response = api.get(endpoint, params)
@@ -65,7 +63,7 @@ def get_timeseries_profile_parsers(
         cwms data type
     """
 
-    endpoint = "timeseries/parser"
+    endpoint = "timeseries/profile-parser"
     params = {
         "office-mask": office_mask,
         "location-mask": location_mask,
@@ -96,8 +94,8 @@ def delete_timeseries_profile_parser(
         None
     """
 
-    endpoint = f"timeseries/parser/{parameter_id}"
-    params = {"office": office_id, "location-id": location_id}
+    endpoint = f"timeseries/profile-parser/{location_id}/{parameter_id}"
+    params = {"office": office_id}
 
     return api.delete(endpoint, params)
 
@@ -184,7 +182,7 @@ def store_timeseries_profile_parser(
         None
     """
 
-    endpoint = "timeseries/parser"
+    endpoint = "timeseries/profile-parser"
     params = {
         "fail-if-exists": fail_if_exists,
     }

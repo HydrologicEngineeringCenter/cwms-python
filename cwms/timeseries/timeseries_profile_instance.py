@@ -12,7 +12,7 @@ from cwms.cwms_types import Data
 
 def get_timeseries_profile_instance(
     office_id: str,
-    timeseries_id: str,
+    location_id: str,
     parameter_id: str,
     version: str,
     timezone: Optional[str],
@@ -21,7 +21,7 @@ def get_timeseries_profile_instance(
     start: Optional[datetime],
     end: Optional[datetime],
     page: Optional[str] = None,
-    page_size: Optional[int] = 1000,
+    page_size: Optional[int] = 500,
     start_inclusive: Optional[bool] = True,
     end_inclusive: Optional[bool] = True,
     previous: Optional[bool] = False,
@@ -35,8 +35,8 @@ def get_timeseries_profile_instance(
     ----------
         office_id: string
             The owning office of the timeseries profile instance
-        timeseries_id: string
-            The name identifier associated with the timeseries profile instance
+        location_id: string
+            The location associated with the timeseries profile instance
         parameter_id: string
             The name of the key parameter associated with the timeseries profile instance
         version: str
@@ -74,16 +74,14 @@ def get_timeseries_profile_instance(
         cwms data type
     """
 
-    endpoint = f"timeseries/instance/{timeseries_id}"
+    endpoint = f"timeseries/profile-instance/{location_id}/{parameter_id}/{version}"
     params = {
         "office": office_id,
-        "parameter-id": parameter_id,
-        "version": version,
         "timezone": timezone,
         "version-date": version_date.isoformat() if version_date else None,
         "unit": unit,
-        "start-inclusive": start_inclusive,
-        "end-inclusive": end_inclusive,
+        "start-time-inclusive": start_inclusive,
+        "end-time-inclusive": end_inclusive,
         "previous": previous,
         "next": next,
         "max-version": max_version,
@@ -126,7 +124,7 @@ def get_timeseries_profile_instances(
         cwms data type
     """
 
-    endpoint = "timeseries/instance"
+    endpoint = "timeseries/profile-instance"
     params = {
         "office-mask": office_mask,
         "location-mask": location_mask,
@@ -140,12 +138,12 @@ def get_timeseries_profile_instances(
 
 def delete_timeseries_profile_instance(
     office_id: str,
-    timeseries_id: str,
+    location_id: str,
     parameter_id: str,
     version: str,
+    version_date: datetime,
+    first_date: datetime,
     timezone: Optional[str],
-    version_date: Optional[datetime],
-    date: Optional[datetime],
     override_protection: Optional[bool] = True,
 ) -> None:
     """
@@ -155,18 +153,18 @@ def delete_timeseries_profile_instance(
     ----------
         office_id: string
             The owning office of the timeseries profile instance
-        timeseries_id: string
+        location_id: string
             The name identifier for the timeseries profile instance to delete
         parameter_id: string
             The name of the key parameter associated with the timeseries profile instance
         version: string
             The version of the timeseries profile instance
-        timezone: string
+        version_date: datetime
+            The timestamp of the timeseries profile instance version
+        first_date: datetime
+            The first date of the timeseries profile instance
+        timezone: string, optional
             The timezone used for the timestamps associated with the timeseries profile instance
-        version_date: datetime, optional
-            The timestamp of the timeseries profile instance version. Default is current date and time.
-        date: datetime, optional
-            The first date of the timeseries profile instance. Default is current date and time
         override_protection: boolean, optional
             Whether to enable override protection for the timeseries profile instance. Default is `True`.
 
@@ -175,14 +173,12 @@ def delete_timeseries_profile_instance(
         None
     """
 
-    endpoint = f"timeseries/instance/{timeseries_id}"
+    endpoint = f"timeseries/profile-instance/{location_id}/{parameter_id}/{version}"
     params = {
         "office": office_id,
-        "parameter-id": parameter_id,
-        "version": version,
         "timezone": timezone,
         "version-date": version_date.isoformat() if version_date else None,
-        "date": date.isoformat() if date else None,
+        "date": first_date.isoformat() if first_date else None,
         "override-protection": override_protection,
     }
 
@@ -192,7 +188,7 @@ def delete_timeseries_profile_instance(
 def store_timeseries_profile_instance(
     profile_data: str,
     version: str,
-    version_date: Optional[datetime] = None,
+    version_date: datetime,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
 ) -> None:
@@ -207,8 +203,8 @@ def store_timeseries_profile_instance(
             The method of storing the timeseries profile instance. Default is `REPLACE_ALL`.
         version: string
             The version of the timeseries profile instance.
-        version_date: datetime, optional
-            The version date of the timeseries profile instance. Default is the current date and time.
+        version_date: datetime
+            The version date of the timeseries profile instance.
         override_protection: boolean, optional
             Whether to enable override protection for the timeseries profile instance. Default is `False`.
 
@@ -217,7 +213,7 @@ def store_timeseries_profile_instance(
         None
     """
 
-    endpoint = "timeseries/instance"
+    endpoint = "timeseries/profile-instance"
     params = {
         "profile-data": profile_data,
         "method": store_rule,

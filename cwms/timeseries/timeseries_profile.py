@@ -3,10 +3,7 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 
-from datetime import datetime
 from typing import Optional
-
-import pandas as pd
 
 import cwms.api as api
 from cwms.cwms_types import Data
@@ -30,10 +27,9 @@ def get_timeseries_profile(office_id: str, location_id: str, parameter_id: str) 
         cwms data type
     """
 
-    endpoint = f"timeseries/profile/{parameter_id}"
+    endpoint = f"timeseries/profile/{location_id}/{parameter_id}"
     params = {
         "office": office_id,
-        "location-id": location_id,
     }
 
     response = api.get(endpoint, params)
@@ -100,10 +96,9 @@ def delete_timeseries_profile(
         None
     """
 
-    endpoint = f"timeseries/profile/{parameter_id}"
+    endpoint = f"timeseries/profile/{location_id}/{parameter_id}"
     params = {
         "office": office_id,
-        "location-id": location_id,
     }
 
     return api.delete(endpoint, params)
