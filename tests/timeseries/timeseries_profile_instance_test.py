@@ -91,12 +91,11 @@ def test_delete_timeseries_profile_instance(requests_mock):
     office_id = "SWT"
     parameter_id = "Length"
     version = "Raw"
-    timezone = "UTC"
     version_date = tz.localize(datetime(2010, 6, 4, 12, 0, 0))
     date = tz.localize(datetime(2010, 6, 4, 14, 0, 0))
 
     timeseries.delete_timeseries_profile_instance(
-        office_id, location_id, parameter_id, version, version_date, date, timezone
+        office_id, location_id, parameter_id, version, version_date, date
     )
 
     assert requests_mock.called

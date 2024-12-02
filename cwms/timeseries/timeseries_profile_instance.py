@@ -139,7 +139,6 @@ def delete_timeseries_profile_instance(
     version: str,
     version_date: datetime,
     first_date: datetime,
-    timezone: Optional[str],
     override_protection: Optional[bool] = True,
 ) -> None:
     """
@@ -159,8 +158,6 @@ def delete_timeseries_profile_instance(
             The timestamp of the timeseries profile instance version
         first_date: datetime
             The first date of the timeseries profile instance
-        timezone: string, optional
-            The timezone used for the timestamps associated with the timeseries profile instance
         override_protection: boolean, optional
             Whether to enable override protection for the timeseries profile instance. Default is `True`.
 
@@ -172,7 +169,6 @@ def delete_timeseries_profile_instance(
     endpoint = f"timeseries/profile-instance/{location_id}/{parameter_id}/{version}"
     params = {
         "office": office_id,
-        "timezone": timezone,
         "version-date": version_date.isoformat() if version_date else None,
         "date": first_date.isoformat() if first_date else None,
         "override-protection": override_protection,
