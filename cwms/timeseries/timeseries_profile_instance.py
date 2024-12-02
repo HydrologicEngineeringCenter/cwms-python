@@ -15,7 +15,6 @@ def get_timeseries_profile_instance(
     location_id: str,
     parameter_id: str,
     version: str,
-    timezone: Optional[str],
     unit: str,
     version_date: Optional[datetime],
     start: Optional[datetime],
@@ -41,8 +40,6 @@ def get_timeseries_profile_instance(
             The name of the key parameter associated with the timeseries profile instance
         version: str
             The version of the timeseries profile instance
-        timezone: str
-            The timezone of the timeseries profile instance. The default value is `UTC`.
         unit: str
             The requested units to use for the key parameter values of the timeseries profile instance
         version_date: datetime, optional
@@ -77,7 +74,6 @@ def get_timeseries_profile_instance(
     endpoint = f"timeseries/profile-instance/{location_id}/{parameter_id}/{version}"
     params = {
         "office": office_id,
-        "timezone": timezone,
         "version-date": version_date.isoformat() if version_date else None,
         "unit": unit,
         "start-time-inclusive": start_inclusive,

@@ -43,7 +43,6 @@ def test_get_timeseries_profile_instance(requests_mock):
     version = "Raw"
     unit = "C"
     office_id = "SWT"
-    timezone = "UTC"
     version_date = tz.localize(datetime(2014, 8, 16, 4, 55, 0))
     start = tz.localize(datetime(2015, 3, 3, 6, 45, 0))
     end = tz.localize(datetime(2015, 3, 3, 7, 15, 0))
@@ -53,7 +52,6 @@ def test_get_timeseries_profile_instance(requests_mock):
         location_id,
         parameter_id,
         version,
-        timezone,
         unit,
         version_date,
         start,
