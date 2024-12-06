@@ -94,30 +94,29 @@ def timeseries_group_df_to_json(
     if "attribute" not in data.columns:
         data["attribute"] = 0
 
-    json_dict = {
-        "office-id": office_id,
-        "id": group_id,
-        "time-series-category": {"office-id": office_id, "id": category_id},
-        "assigned-time-series": [],
-    }
-
-    # Convert DataFrame to a list of dictionaries with each row becoming a dict
-    entries = data.to_dict(orient="records")
-
-    # Iterate through each record and add it to the JSON dictionary
-    for entry in entries:
-        ts_dict = {
+    # Build the list of time-series entries
+    assigned_time_series = data.apply(
+        lambda entry: {
             "office-id": entry["officeId"],
             "timeseries-id": entry["timeseriesId"],
             "alias-id": entry["aliasId"],
             "attribute": entry["attribute"],
-        }
+            **(
+                {"tsCode": entry["tsCode"]}
+                if "tsCode" in entry and pd.notna(entry["tsCode"])
+                else {}
+            ),
+        },
+        axis=1,
+    ).tolist()
 
-        # Only include 'ts-code' if it exists and is not NaN
-        if entry.get("tsCode") and pd.notna(entry["tsCode"]):
-            ts_dict["tsCode"] = entry["tsCode"]
-
-        json_dict["assigned-time-series"].append(ts_dict)
+    # Construct the final JSON dictionary
+    json_dict = {
+        "office-id": office_id,
+        "id": group_id,
+        "time-series-category": {"office-id": office_id, "id": category_id},
+        "assigned-time-series": assigned_time_series,
+    }
 
     return json_dict
 
