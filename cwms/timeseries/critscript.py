@@ -1,4 +1,5 @@
 import re
+from typing import Dict, List
 
 import pandas as pd
 
@@ -6,13 +7,34 @@ import cwms
 
 
 def crit_script(
-    file_path,
-    office_id,
-    group_id="SHEF Data Acquisition",
-    category_id="Data Aquisition",
-    group_office_id="CWMS",
-):
-    def parse_crit_file(file_path):
+    file_path: str,
+    office_id: str,
+    group_id: str = "SHEF Data Acquisition",
+    category_id: str = "Data Aquisition",
+    group_office_id: str = "CWMS",
+) -> None:
+    """
+    Processes a .crit file, updates the timeseries groups, and generates a JSON dictionary.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the .crit file.
+    office_id : str
+        The ID of the office associated with the specified timeseries.
+    group_id : str, optional
+        The specified group associated with the timeseries data. Defaults to "SHEF Data Acquisition".
+    category_id : str, optional
+        The category ID that contains the timeseries group. Defaults to "Data Acquisition".
+    group_office_id : str, optional
+        The specified office group associated with the timeseries data. Defaults to "CWMS".
+
+    Returns
+    -------
+    None
+    """
+
+    def parse_crit_file(file_path: str) -> List[Dict[str, str]]:
         """
         Parses a .crit file into a dictionary containing timeseries ID and Alias.
 
@@ -20,18 +42,11 @@ def crit_script(
         ----------
             file_path : str
                    Path to the .crit file.
-            office_id : str
-                The ID of the office associated with the specified timeseries.
-            group_id : str
-                The specified group associated with the timeseries data. Defaults to "SHEF Data Acquisition".
-            category_id: string
-                The category id that contains the timeseries group. Defaults to "Data Acquisition".
-            group_office_id : str
-                The specified office group associated with the timeseries data. Defaults to "CWMS".
+
         Returns
         -------
-        list of dict
-            A list of dictionaries containing the parsed key-value pairs, each with Alias and Timeseries ID.
+        List[Dict[str, str]]
+            A list of dictionaries with "Alias" and "Timeseries ID" as keys.
         """
         parsed_data = []
         with open(file_path, "r") as file:
@@ -56,7 +71,9 @@ def crit_script(
 
         return parsed_data
 
-    def append_df(df: pd.DataFrame, office_id: str, tsId: str, alias: str):
+    def append_df(
+        df: pd.DataFrame, office_id: str, tsId: str, alias: str
+    ) -> pd.DataFrame:
         """
         Appends a row to the DataFrame.
 

@@ -113,11 +113,11 @@ def timeseries_group_df_to_json(
             "attribute": entry["attribute"],
         }
 
-    # Only include 'ts-code' if it exists and is not NaN
-    if entry.get("tsCode") and pd.notna(entry["tsCode"]):
-        ts_dict["tsCode"] = entry["tsCode"]
+        # Only include 'ts-code' if it exists and is not NaN
+        if entry.get("tsCode") and pd.notna(entry["tsCode"]):
+            ts_dict["tsCode"] = entry["tsCode"]
 
-    json_dict["assigned-time-series"].append(ts_dict)
+        json_dict["assigned-time-series"].append(ts_dict)
 
     return json_dict
 
