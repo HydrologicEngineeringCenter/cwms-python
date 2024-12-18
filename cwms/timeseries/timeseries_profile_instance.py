@@ -30,6 +30,11 @@ def get_timeseries_profile_instance(
     """
     Returns a timeseries profile instance with associated timeseries values.
 
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
+
     Parameters
     ----------
         office_id: string
@@ -100,6 +105,11 @@ def get_timeseries_profile_instances(
     """
     Retrieves a list of timeseries profile instances that match the specified masks. Does not return timeseries values.
 
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
+
     Parameters
     ----------
         office_mask: string
@@ -144,6 +154,11 @@ def delete_timeseries_profile_instance(
     """
     Deletes a timeseries profile instance.
 
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
+
     Parameters
     ----------
         office_id: string
@@ -186,6 +201,11 @@ def store_timeseries_profile_instance(
 ) -> None:
     """
     Stores a new timeseries profile instance. Requires timeseries profile and parser to already be stored.
+
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
 
     Parameters
     ----------

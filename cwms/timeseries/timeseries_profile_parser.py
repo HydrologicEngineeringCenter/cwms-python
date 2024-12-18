@@ -15,6 +15,11 @@ def get_timeseries_profile_parser(
     """
     Returns a timeseries profile parser used to interpret timeseries data input.
 
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
+
     Parameters
     ----------
         office_id: string
@@ -45,6 +50,11 @@ def get_timeseries_profile_parsers(
 ) -> Data:
     """
     Returns a list of timeseries profile parsers.
+
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
 
     Parameters
     ----------
@@ -80,6 +90,11 @@ def delete_timeseries_profile_parser(
     """
     Deletes a specified timeseries profile parser
 
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
+
     Parameters
     ----------
         office_id: string
@@ -105,6 +120,11 @@ def store_timeseries_profile_parser(
 ) -> None:
     """
     Stores a new timeseries profile parser.
+
+    Compatibility Warning:
+    Currently, the TimeSeries Profile API may not be fully supported
+    until a new version of cwms-data-access is released with the updated
+    endpoint implementation. A new version is expected January 2025.
 
     Parameters
     ----------
