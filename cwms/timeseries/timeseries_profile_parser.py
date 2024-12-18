@@ -18,7 +18,7 @@ def get_timeseries_profile_parser(
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ def get_timeseries_profile_parsers(
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def delete_timeseries_profile_parser(
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
@@ -124,7 +124,7 @@ def store_timeseries_profile_parser(
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------

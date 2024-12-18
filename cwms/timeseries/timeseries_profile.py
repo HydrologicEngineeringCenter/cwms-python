@@ -16,7 +16,7 @@ def get_timeseries_profile(office_id: str, location_id: str, parameter_id: str) 
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ def get_timeseries_profiles(
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
@@ -95,7 +95,7 @@ def delete_timeseries_profile(
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
@@ -126,7 +126,7 @@ def store_timeseries_profile(data: str, fail_if_exists: Optional[bool] = True) -
     Compatibility Warning:
     Currently, the TimeSeries Profile API may not be fully supported
     until a new version of cwms-data-access is released with the updated
-    endpoint implementation. A new version is expected January 2025.
+    endpoint implementation.
 
     Parameters
     ----------
