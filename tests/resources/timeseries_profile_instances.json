@@ -1,0 +1,38 @@
+[
+  {
+    "time-series-profile": {
+      "location-id": {
+        "office-id": "SWT",
+        "name": "SWAN"
+      },
+      "description": "Description",
+      "parameter-list": [],
+      "key-parameter": "Depth",
+      "reference-ts-id": {
+        "office-id": "SWT",
+        "name": "SWAN.Elev.Inst.1Hour.0.DSS-Obs"
+      }
+    },
+    "time-series-list": [],
+    "first-date": 1594296000000,
+    "last-date": 1752062400000
+  },
+  {
+    "time-series-profile": {
+      "location-id": {
+        "office-id": "SWT",
+        "name": "SWAN2"
+      },
+      "description": "Description",
+      "parameter-list": [],
+      "key-parameter": "Depth",
+      "reference-ts-id": {
+        "office-id": "SWT",
+        "name": "SWAN2.Elev.Inst.1Hour.0.DSS-Obs"
+      }
+    },
+    "time-series-list": [],
+    "first-date": 1594296000000,
+    "last-date": 1752062400000
+  }
+]

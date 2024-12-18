@@ -71,3 +71,9 @@ print(json)
   ['2024-04-23T10:00:00', 86.57999999999997, 3]],
  'version-date': None}
 ```
+
+## TimeSeries Profile API Compatibility Warning
+
+Currently, the TimeSeries Profile API may not be fully supported
+until a new version of cwms-data-access is released with the updated 
+endpoint implementation.
