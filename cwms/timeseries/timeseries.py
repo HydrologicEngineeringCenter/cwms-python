@@ -12,29 +12,26 @@ from cwms.cwms_types import JSON, Data
 def update_timeseries_groups(
     group_id: str,
     office_id: str,
-    category_id: str,
     replace_assigned_ts: Optional[bool],
     data: JSON,
 ) -> None:
     """
-    Updates the timeseries groups with the provided group ID and office ID.
+        Updates the timeseries groups with the provided group ID and office ID.
 
-    Parameters
-    ----------
-        group_id : str
-            The new specified timeseries ID that will replace the old ID.
-        office_id : str
-            The ID of the office associated with the specified timeseries.
-        category_id: string
-            The category id that contains the timeseries group.
-        replace_assigned_ts : bool, optional
-            Specifies whether to unassign all existing time series before assigning new time series specified in the content body. Default is False.
-        data: JSON dictionary
-            Time Series data to be stored.
-
-    Returns
-    -------
-    None
+        Parameters
+        ----------
+            group_id : str
+                The new specified timeseries ID that will replace the old ID.
+            office_id : str
+                The ID of the office associated with the specified timeseries.
+            replace_assigned_ts : bool, optional
+                Specifies whether to unassign all existing time series before assigning new time series specified in the content body. Default is False.
+            data: JSON dictionary
+                Time Series data to be stored.
+    ````````````````````````````````````````
+        Returns
+        -------
+        None
     """
     if not group_id:
         raise ValueError("Cannot update a specified level without an id")
@@ -45,7 +42,6 @@ def update_timeseries_groups(
     params = {
         "replace-assigned-ts": replace_assigned_ts,
         "office": office_id,
-        "category-id": category_id,
     }
 
     api.patch(endpoint=endpoint, data=data, params=params)
@@ -77,22 +73,28 @@ def timeseries_group_df_to_json(
         JSON dictionary of the timeseries data.
     """
     required_columns = ["officeId", "timeseriesId"]
+    optional_columns = ["aliasId", "attribute", "tsCode"]
     for column in required_columns:
         if column not in data.columns:
             raise TypeError(
                 f"{column} is a required column in data when posting as a dataframe"
             )
 
-    if data.isnull().values.any():
-        raise ValueError("Null/NaN data must be removed from the dataframe")
+    if data[required_columns].isnull().any().any():
+        raise ValueError(
+            f"Null/NaN values found in required columns: {required_columns}. "
+        )
 
-    # Check if 'alias' column exists, if not create it and set to None
+    # Fill optional columns with default values if missing
     if "aliasId" not in data.columns:
         data["aliasId"] = None
-
-    # Check if 'attribute' column exists, if not create it and set to 0
     if "attribute" not in data.columns:
         data["attribute"] = 0
+
+    # Replace NaN with None for optional columns
+    for column in optional_columns:
+        if column in data.columns:
+            data[column] = data[column].where(pd.notnull(data[column]), None)
 
     # Build the list of time-series entries
     assigned_time_series = data.apply(

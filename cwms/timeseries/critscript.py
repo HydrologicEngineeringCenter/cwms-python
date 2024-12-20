@@ -122,7 +122,6 @@ def crit_script(
     cwms.update_timeseries_groups(
         group_id=group_id,
         office_id=office_id,
-        category_id=category_id,
         replace_assigned_ts=None,
         data=json_dict,
     )
