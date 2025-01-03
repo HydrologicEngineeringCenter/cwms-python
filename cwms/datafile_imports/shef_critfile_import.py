@@ -80,7 +80,7 @@ def import_critfile_to_ts_group(
         return parsed_data
 
     def append_df(
-        df: pd.DataFrame, office_id: str, tsId: str, alias: str
+        df: pd.DataFrame, office_id: str, ts_id: str, alias: str
     ) -> pd.DataFrame:
         """
         Appends a row to the DataFrame.
@@ -102,7 +102,7 @@ def import_critfile_to_ts_group(
         """
         data = {
             "office-id": [office_id],
-            "timeseries-id": [tsId],
+            "timeseries-id": [ts_id],
             "alias-id": [alias],
         }
         df = pd.concat([df, pd.DataFrame(data)])
