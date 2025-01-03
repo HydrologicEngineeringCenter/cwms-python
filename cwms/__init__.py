@@ -2,6 +2,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 from cwms.api import *
 from cwms.catalog.catalog import *
+from cwms.datafile_imports.shef_critfile_import import *
 from cwms.forecast.forecast_instance import *
 from cwms.forecast.forecast_spec import *
 from cwms.levels.location_levels import *
@@ -17,7 +18,6 @@ from cwms.ratings.ratings import *
 from cwms.ratings.ratings_spec import *
 from cwms.ratings.ratings_template import *
 from cwms.standard_text.standard_text import *
-from cwms.timeseries.critscript import *
 from cwms.timeseries.timerseries_identifier import *
 from cwms.timeseries.timeseries import *
 from cwms.timeseries.timeseries_bin import *

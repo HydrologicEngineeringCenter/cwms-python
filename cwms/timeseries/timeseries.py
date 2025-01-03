@@ -10,10 +10,10 @@ from cwms.cwms_types import JSON, Data
 
 
 def update_timeseries_groups(
+    data: JSON,
     group_id: str,
     office_id: str,
-    replace_assigned_ts: Optional[bool],
-    data: JSON,
+    replace_assigned_ts: Optional[bool] = False,
 ) -> None:
     """
         Updates the timeseries groups with the provided group ID and office ID.
@@ -44,7 +44,7 @@ def update_timeseries_groups(
         "office": office_id,
     }
 
-    api.patch(endpoint=endpoint, data=data, params=params)
+    api.patch(endpoint=endpoint, data=data, params=params, api_version=1)
 
 
 def timeseries_group_df_to_json(
@@ -72,40 +72,41 @@ def timeseries_group_df_to_json(
     JSON
         JSON dictionary of the timeseries data.
     """
-    required_columns = ["officeId", "timeseriesId"]
-    optional_columns = ["aliasId", "attribute", "tsCode"]
+    df = data.copy()
+    required_columns = ["office-id", "timeseries-id"]
+    optional_columns = ["alias-id", "attribute", "ts-code"]
     for column in required_columns:
-        if column not in data.columns:
+        if column not in df.columns:
             raise TypeError(
                 f"{column} is a required column in data when posting as a dataframe"
             )
 
-    if data[required_columns].isnull().any().any():
+    if df[required_columns].isnull().any().any():
         raise ValueError(
             f"Null/NaN values found in required columns: {required_columns}. "
         )
 
     # Fill optional columns with default values if missing
-    if "aliasId" not in data.columns:
-        data["aliasId"] = None
-    if "attribute" not in data.columns:
-        data["attribute"] = 0
+    if "alias-id" not in df.columns:
+        df["alias-id"] = None
+    if "attribute" not in df.columns:
+        df["attribute"] = 0
 
     # Replace NaN with None for optional columns
     for column in optional_columns:
-        if column in data.columns:
-            data[column] = data[column].where(pd.notnull(data[column]), None)
+        if column in df.columns:
+            data[column] = df[column].where(pd.notnull(df[column]), None)
 
     # Build the list of time-series entries
-    assigned_time_series = data.apply(
+    assigned_time_series = df.apply(
         lambda entry: {
-            "office-id": entry["officeId"],
-            "timeseries-id": entry["timeseriesId"],
-            "alias-id": entry["aliasId"],
+            "office-id": entry["office-id"],
+            "timeseries-id": entry["timeseries-id"],
+            "alias-id": entry["alias-id"],
             "attribute": entry["attribute"],
             **(
-                {"tsCode": entry["tsCode"]}
-                if "tsCode" in entry and pd.notna(entry["tsCode"])
+                {"ts-code": entry["ts-code"]}
+                if "ts-code" in entry and pd.notna(entry["ts-code"])
                 else {}
             ),
         },
