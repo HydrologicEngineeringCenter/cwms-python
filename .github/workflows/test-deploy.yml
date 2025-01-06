@@ -27,7 +27,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+        uses: abatilo/actions-poetry@v4
 
       - name: Cache Virtual Environment
         uses: actions/cache@v4
