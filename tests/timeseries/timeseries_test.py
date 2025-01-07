@@ -29,6 +29,77 @@ def init_session():
     cwms.api.init_session(api_root=_MOCK_ROOT)
 
 
+def test_update_timeseries_groups(requests_mock):
+    group_id = "USGS TS Data Acquisition"
+    office_id = "CWMS"
+    replace_assigned_ts = True
+    data = _TS_GROUP
+
+    requests_mock.patch(
+        f"{_MOCK_ROOT}/timeseries/group/USGS%20TS%20Data%20Acquisition?replace-assigned-ts=True&office=CWMS",
+        status_code=200,
+    )
+
+    timeseries.update_timeseries_groups(
+        data=data,
+        group_id=group_id,
+        office_id=office_id,
+        replace_assigned_ts=replace_assigned_ts,
+    )
+
+    assert requests_mock.called
+    assert requests_mock.call_count == 1
+
+
+def test_timeseries_group_df_to_json_valid_data():
+    data = pd.DataFrame(
+        {
+            "office-id": ["office123", "office456"],
+            "timeseries-id": ["ts1", "ts2"],
+            "alias-id": [None, "alias2"],
+            "attribute": [0, 10],
+            "ts-code": ["code1", None],
+        }
+    )
+
+    # Clean DataFrame by removing NaN from required columns and fix optional ones
+    required_columns = ["office-id", "timeseries-id"]
+    data = data.dropna(subset=required_columns)
+    optional_columns = ["alias-id", "ts-code"]
+    for col in optional_columns:
+        if col in data.columns:
+            data[col] = data[col].where(pd.notnull(data[col]), None)
+
+    expected_json = {
+        "office-id": "office123",
+        "id": "group123",
+        "time-series-category": {
+            "office-id": "office123",
+            "id": "cat123",
+        },
+        "assigned-time-series": [
+            {
+                "office-id": "office123",
+                "timeseries-id": "ts1",
+                "alias-id": None,
+                "attribute": 0,
+                "ts-code": "code1",
+            },
+            {
+                "office-id": "office456",
+                "timeseries-id": "ts2",
+                "alias-id": "alias2",
+                "attribute": 10,
+            },
+        ],
+    }
+
+    result = timeseries.timeseries_group_df_to_json(
+        data, "group123", "office123", "cat123"
+    )
+    assert result == expected_json
+
+
 def test_timeseries_df_to_json():
     test_json = {
         "name": "TestLoc.Stage.Inst.1Hour.0.Testing",
