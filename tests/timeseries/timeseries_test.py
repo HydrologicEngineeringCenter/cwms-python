@@ -40,7 +40,12 @@ def test_update_timeseries_groups(requests_mock):
         status_code=200,
     )
 
-    timeseries.update_timeseries_groups(group_id, office_id, replace_assigned_ts, data)
+    timeseries.update_timeseries_groups(
+        data=data,
+        group_id=group_id,
+        office_id=office_id,
+        replace_assigned_ts=replace_assigned_ts,
+    )
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
@@ -49,18 +54,18 @@ def test_update_timeseries_groups(requests_mock):
 def test_timeseries_group_df_to_json_valid_data():
     data = pd.DataFrame(
         {
-            "officeId": ["office123", "office456"],
-            "timeseriesId": ["ts1", "ts2"],
-            "aliasId": [None, "alias2"],
+            "office-id": ["office123", "office456"],
+            "timeseries-id": ["ts1", "ts2"],
+            "alias-id": [None, "alias2"],
             "attribute": [0, 10],
-            "tsCode": ["code1", None],
+            "ts-code": ["code1", None],
         }
     )
 
     # Clean DataFrame by removing NaN from required columns and fix optional ones
-    required_columns = ["officeId", "timeseriesId"]
+    required_columns = ["office-id", "timeseries-id"]
     data = data.dropna(subset=required_columns)
-    optional_columns = ["aliasId", "tsCode"]
+    optional_columns = ["alias-id", "ts-code"]
     for col in optional_columns:
         if col in data.columns:
             data[col] = data[col].where(pd.notnull(data[col]), None)
@@ -78,7 +83,7 @@ def test_timeseries_group_df_to_json_valid_data():
                 "timeseries-id": "ts1",
                 "alias-id": None,
                 "attribute": 0,
-                "tsCode": "code1",
+                "ts-code": "code1",
             },
             {
                 "office-id": "office456",

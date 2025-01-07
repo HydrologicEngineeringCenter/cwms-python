@@ -3,18 +3,22 @@ from typing import Dict, List
 
 import pandas as pd
 
-import cwms
+from cwms.timeseries.timeseries import (
+    timeseries_group_df_to_json,
+    update_timeseries_groups,
+)
 
 
-def crit_script(
+def import_critfile_to_ts_group(
     file_path: str,
     office_id: str,
     group_id: str = "SHEF Data Acquisition",
-    category_id: str = "Data Aquisition",
+    category_id: str = "Data Acquisition",
     group_office_id: str = "CWMS",
+    replace_assigned_ts: bool = False,
 ) -> None:
     """
-    Processes a .crit file, updates the timeseries groups, and generates a JSON dictionary.
+    Processes a .crit file and saves the information to the SHEF Data Acquisition time series group.
 
     Parameters
     ----------
@@ -28,6 +32,8 @@ def crit_script(
         The category ID that contains the timeseries group. Defaults to "Data Acquisition".
     group_office_id : str, optional
         The specified office group associated with the timeseries data. Defaults to "CWMS".
+    replace_assigned_ts : bool, optional
+        Specifies whether to unassign all existing time series before assigning new time series specified in the content body. Default is False.
 
     Returns
     -------
@@ -55,24 +61,25 @@ def crit_script(
                 if line.startswith("#") or not line.strip():
                     continue
 
-            # Extract alias, timeseries ID, and TZ
-            match = re.match(r"([^=]+)=([^;]+);(.+)", line.strip())
-            if match:
-                alias = match.group(1).strip()
-                timeseries_id = match.group(2).strip()
-                alias2 = match.group(3).strip()
+                # Extract alias, timeseries ID, and TZ
+                match = re.match(r"([^=]+)=([^;]+);(.+)", line.strip())
 
-                parsed_data.append(
-                    {
-                        "Alias": alias + ":" + alias2,
-                        "Timeseries ID": timeseries_id,
-                    }
-                )
+                if match:
+                    alias = match.group(1).strip()
+                    timeseries_id = match.group(2).strip()
+                    alias2 = match.group(3).strip()
+
+                    parsed_data.append(
+                        {
+                            "Alias": alias + ":" + alias2,
+                            "Timeseries ID": timeseries_id,
+                        }
+                    )
 
         return parsed_data
 
     def append_df(
-        df: pd.DataFrame, office_id: str, tsId: str, alias: str
+        df: pd.DataFrame, office_id: str, ts_id: str, alias: str
     ) -> pd.DataFrame:
         """
         Appends a row to the DataFrame.
@@ -93,11 +100,9 @@ def crit_script(
             The updated DataFrame.
         """
         data = {
-            "officeId": [office_id],
-            "timeseriesId": [tsId],
-            "aliasId": [alias],
-            "tsCode": ["none"],  # Default value for ts-code
-            "attribute": [0],  # Default value for attribute
+            "office-id": [office_id],
+            "timeseries-id": [ts_id],
+            "alias-id": [alias],
         }
         df = pd.concat([df, pd.DataFrame(data)])
         return df
@@ -106,22 +111,16 @@ def crit_script(
     parsed_data = parse_crit_file(file_path)
 
     df = pd.DataFrame()
-
     for data in parsed_data:
         # Create DataFrame for the current row
         df = append_df(df, office_id, data["Timeseries ID"], data["Alias"])
 
     # Generate JSON dictionary
-    json_dict = cwms.timeseries_group_df_to_json(
-        df, group_id, group_office_id, category_id
-    )
+    json_dict = timeseries_group_df_to_json(df, group_id, group_office_id, category_id)
 
-    # Print DataFrame for verification
-    pd.set_option("display.max_columns", None)
-
-    cwms.update_timeseries_groups(
+    update_timeseries_groups(
         group_id=group_id,
         office_id=office_id,
-        replace_assigned_ts=None,
+        replace_assigned_ts=replace_assigned_ts,
         data=json_dict,
     )
