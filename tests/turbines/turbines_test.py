@@ -7,6 +7,7 @@ from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
 _TURBINES = read_resource_file("turbines.json")
+_TURBINES_OFFICE_NAME = read_resource_file("turbines_office_name.json")
 
 
 @pytest.fixture(autouse=True)
@@ -67,12 +68,26 @@ def test_get_projects_turbines(requests_mock):
 
     assert actual_values == expected_values
 
-def test_post_projects_turbines(requests_mock):
+def test_store_projects_turbines(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}/projects/turbines?fail-if-exists=false"
     )
 
-    turbines.post_projects_turbines(data=_TURBINES, fail_if_exists=False)
+    turbines.store_projects_turbines(data=_TURBINES, fail_if_exists=False)
     assert requests_mock.called
     assert requests_mock.call_count == 1
 
+
+def test_store_projects_turbines_with_office_with_name(requests_mock):
+    requests_mock.post(
+        f"{_MOCK_ROOT}/projects/SWT/KEYS/turbines?override-protection=False"
+    )
+    
+    turbines.store_projects_turbines_with_office_with_name(
+        data=_TURBINES_OFFICE_NAME,
+        office="SWT",
+        name="KEYS",
+        override_protection=False
+    )
+    assert requests_mock.called
+    assert requests_mock.call_count == 1

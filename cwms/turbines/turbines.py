@@ -85,7 +85,7 @@ def get_projects_turbines_with_office_with_name_turbine_changes(
 #                             POST CWMS TURBINES
 #==========================================================================
 
-def post_projects_turbines(
+def store_projects_turbines(
         data: JSON, 
         fail_if_exists: Optional[bool]
 ) -> None:
@@ -115,10 +115,49 @@ def post_projects_turbines(
     """
     if data is None:
         raise ValueError(
-            "Cannot store a text time series without a JSON data dictionary"
+            "Cannot store project turbine changes without a JSON data dictionary"
         )
     endpoint = "projects/turbines"
     params = {
         "fail-if-exists": fail_if_exists,
+    }
+    return api.post(endpoint=endpoint, data=data, params=params)
+
+def store_projects_turbines_with_office_with_name(
+    data: JSON, office: str, name: str, override_protection: Optional[bool]
+) -> None:
+    """
+    Create CWMS Turbine Changes
+    Parameters
+    ----------
+    office (str): Office id for the reservoir project location associated with the turbine changes.
+    name (str): Specifies the name of project of the Turbine changes whose data is to stored.
+    override_protection (bool): A flag ('True'/'False') specifying whether to delete protected data. Default is False
+    
+    Returns
+    -------
+    None - Turbine successfully stored to CWMS.
+    
+
+    Raises
+    ------
+    ValueError
+        If provided data is None
+    Unauthorized
+        401 - Indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource.
+    Forbidden
+        403 - Indicates that the server understands the request but refuses to authorize it.
+    Not Found
+        404 - Indicates that the server cannot find the requested resource.
+    Server Error
+        500 - Indicates that the server encountered an unexpected condition that prevented it from fulfilling the request.
+    """
+    if data is None:
+        raise ValueError(
+            "Cannot store project turbine changes without a JSON data dictionary"
+        )
+    endpoint = f"projects/{office}/{name}/turbines"
+    params = {
+        "override-protection": override_protection
     }
     return api.post(endpoint=endpoint, data=data, params=params)
