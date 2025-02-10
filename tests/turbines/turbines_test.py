@@ -66,3 +66,13 @@ def test_get_projects_turbines(requests_mock):
     actual_values = data.df.to_numpy().tolist()
 
     assert actual_values == expected_values
+
+def test_post_projects_turbines(requests_mock):
+    requests_mock.post(
+        f"{_MOCK_ROOT}/projects/turbines?fail-if-exists=false"
+    )
+
+    turbines.post_projects_turbines(data=_TURBINES, fail_if_exists=False)
+    assert requests_mock.called
+    assert requests_mock.call_count == 1
+
