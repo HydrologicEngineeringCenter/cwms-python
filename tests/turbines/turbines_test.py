@@ -30,23 +30,39 @@ def test_get_projects_turbines(requests_mock):
 
     # Validate columns
     expected_columns = [
-        "office-id",
-        "project-name",
-        "turbine-name",
-        "latitude",
-        "longitude",
-        "active",
-        "elevation",
+        "project-id.office-id",
+        "project-id.name",
+        "location.office-id",
+        "location.name",
+        "location.latitude",
+        "location.longitude",
+        "location.active",
+        "location.public-name",
+        "location.long-name",
+        "location.timezone-name",
+        "location.location-kind",
+        "location.nation",
+        "location.state-initial",
+        "location.county-name",
+        "location.nearest-city",
+        "location.horizontal-datum",
+        "location.published-longitude",
+        "location.published-latitude",
+        "location.vertical-datum",
+        "location.elevation",
+        "location.bounding-office-id",
+        "location.elevation-units"
     ]
     assert list(data.df.columns) == expected_columns
 
-    # Validate DataFrame shape (2 rows, 7 columns)
-    assert data.df.shape == (2, 7)
+    # Validate DataFrame shape (2 rows, 22 columns)
+    assert data.df.shape == (2, 22)
 
     # Validate the first row of data
     expected_values = [
-        ["SWT", "KEYS", "KEYS-Turbine1", 36.1506371, -96.2525088, True, 0],
-        ["SWT", "KEYS", "KEYS-Turbine2", 36.1506371, -96.2525088, True, 0],
+            ["SWT", "KEYS", "SWT", "KEYS-Turbine1", 36.1506371, -96.2525088, True, "Turbine1","Turbine1",  "US/Central", "TURBINE", "US", "OK", "Tulsa", "Sand Springs, OK", "NAD83", 0, 0, "NGVD29", 0, "SWT", "m"],
+            ["SWT", "KEYS", "SWT", "KEYS-Turbine2", 36.1506371, -96.2525088, True, "Turbine2","Turbine2",  "US/Central", "TURBINE", "US", "OK", "Tulsa", "Sand Springs, OK", "NAD83", 0, 0, "NGVD29", 0, "SWT", "m"]
     ]
     actual_values = data.df.to_numpy().tolist()
+
     assert actual_values == expected_values
