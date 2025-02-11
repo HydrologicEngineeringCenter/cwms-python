@@ -9,16 +9,16 @@ from cwms.cwms_types import JSON, Data
 # ==========================================================================
 
 
-def get_projects_turbines(office: str, projectId: str) -> Data:
+def get_projects_turbines(office: str, project_id: str) -> Data:
     """Returns matching CWMS Turbine Data for a Reservoir Project. Get cwmsData projects turbines.
     Args:
         office (str): The office associated with the turbine data.
-        projectId (str): The ID of the project.
+        project_id (str): The ID of the project.
     Returns:
         dict: A dictionary containing the turbine data.
     """
     endpoint = "projects/turbines"
-    params = {"office": office, "project-id": projectId}
+    params = {"office": office, "project-id": project_id}
 
     response = api.get(endpoint=endpoint, params=params)
 

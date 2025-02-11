@@ -26,7 +26,7 @@ def test_get_projects_turbines(requests_mock):
     office = "SWT"
     project_id = "KEYS"
 
-    data = turbines.get_projects_turbines(projectId=project_id, office=office)
+    data = turbines.get_projects_turbines(project_id=project_id, office=office)
 
     assert data.json == _TURBINES
     assert isinstance(data.df, pd.DataFrame)
