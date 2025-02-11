@@ -161,3 +161,80 @@ def store_projects_turbines_with_office_with_name(
         "override-protection": override_protection
     }
     return api.post(endpoint=endpoint, data=data, params=params)
+
+
+#==========================================================================
+#                             DELETE CWMS TURBINES
+#==========================================================================
+
+def delete_projects_turbines_with_name(name: str, office: str, method: Optional[str]) -> None:
+    """
+    Delete CWMS Turbine
+    Parameters
+    ----------
+    name (str): Specifies the name of the turbine to be deleted.
+    office (str): Specifies the owning office of the turbine to be deleted.
+    method (str): Specifies the delete method used. Defaults to "DELETE_KEY". Options are: DELETE_KEY, DELETE_DATA, DELETE_ALL
+    Returns
+    -------
+    None - Turbine successfully deleted from CWMS.
+    
+
+    Raises
+    ------
+    ValueError
+        If provided data is None
+    Unauthorized
+        401 - Indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource.
+    Forbidden
+        403 - Indicates that the server understands the request but refuses to authorize it.
+    Not Found
+        404 - Indicates that the server cannot find the requested resource.
+    Server Error
+        500 - Indicates that the server encountered an unexpected condition that prevented it from fulfilling the request.
+    """
+    endpoint = f"projects/turbines/{name}"
+    params = {
+        "office": office,
+        "method": method
+    }
+    return api.delete(endpoint=endpoint, params=params, api_version=1)
+
+def delete_projects_turbines_with_office_with_name(
+    office: str, name: str, begin: datetime, end: datetime, override_protection: Optional[bool]
+) -> None:
+    """
+    Delete CWMS Turbine Changes
+    Parameters
+    ----------
+    name (str): Specifies the name of project for the turbine changes to be deleted.
+    office (str): Specifies the owning office of the turbine to be deleted.
+    begin (datetime): The start of the time window
+    end (datetime): The end of the time window
+    override_protection (bool): A flag ('True'/'False') specifying whether to delete protected data. Default is False
+
+    Returns
+    -------
+    None - Turbine successfully deleted from CWMS.
+    
+
+    Raises
+    ------
+    ValueError
+        If provided data is None
+    Unauthorized
+        401 - Indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource.
+    Forbidden
+        403 - Indicates that the server understands the request but refuses to authorize it.
+    Not Found
+        404 - Indicates that the server cannot find the requested resource.
+    Server Error
+        500 - Indicates that the server encountered an unexpected condition that prevented it from fulfilling the request.
+    """
+    endpoint = f"projects/{office}/{name}/turbines"
+    params = {
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
+        "override-protection": override_protection
+    }
+    return api.delete(endpoint=endpoint, params=params, api_version=1)
