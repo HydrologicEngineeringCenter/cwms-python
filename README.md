@@ -78,25 +78,6 @@ Currently, the TimeSeries Profile API may not be fully supported
 until a new version of cwms-data-access is released with the updated 
 endpoint implementation.
 
-## Developer Documentation
-For the Contributors/Maintainers of cwms-python
+## Contributing
 
-cwms-python uses:
-
-- [Poetry](https://python-poetry.org/) for package and dependency management.
-- [pytest](https://pypi.org/project/pytest/) for testing of python functions as they are made.
-- [requests-mock](https://pypi.org/project/requests-mock/) for simulating CDA to provide network-less tests, effectively mocking the requests to CDA.
-
-### Setting up Dev Environment
-
-1. To install poetry (with python 3.8+) run:  
-    `python -m pip install poetry` or `pip install poetry`
-2. To install dependencies with poetry run:  
-    `poetry install`  
-    1. In VSCode you will be prompted to "activate venv", click accept on this to switch to this new poetry venv.  ![alt text](docs/images/poetry-venv.png)
-    2. *NOTE: If you do not have your python `Scripts` directory in your path this will fail.  
-    `Scripts` is located in your python install directory, add this to your PATH.*
-3. Run poetry against all files in the `tests` directory with:  
-    `poetry run pytest`
-4. Run poetry against a single file with:  
-    `poetry run pytest tests/turbines/turbines_test.py` - from the root of the project
+Please view the contribution documentation here: [CONTRIBUTING.md]
