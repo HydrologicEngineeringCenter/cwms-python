@@ -77,3 +77,7 @@ print(json)
 Currently, the TimeSeries Profile API may not be fully supported
 until a new version of cwms-data-access is released with the updated 
 endpoint implementation.
+
+## Contributing
+
+Please view the contribution documentation here: [CONTRIBUTING.md]
