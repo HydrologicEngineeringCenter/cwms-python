@@ -2,11 +2,12 @@ from datetime import datetime
 from typing import Optional
 
 import cwms.api as api
-from cwms.cwms_types import Data, JSON
+from cwms.cwms_types import JSON, Data
 
-#==========================================================================
+# ==========================================================================
 #                             GET CWMS TURBINES
-#==========================================================================
+# ==========================================================================
+
 
 def get_projects_turbines(office: str, projectId: str) -> Data:
     """Returns matching CWMS Turbine Data for a Reservoir Project. Get cwmsData projects turbines.
@@ -67,7 +68,7 @@ def get_projects_turbines_with_office_with_name_turbine_changes(
     if end and not isinstance(end, datetime):
         raise ValueError("end needs to be in datetime")
 
-    endpoint = "projects/turbines"
+    endpoint = f"projects/{office}/{name}/turbines"
     params = {
         "name": name,
         "begin": begin.isoformat() if begin else None,
@@ -81,24 +82,23 @@ def get_projects_turbines_with_office_with_name_turbine_changes(
     response = api.get(endpoint=endpoint, params=params)
     return Data(response)
 
-#==========================================================================
-#                             POST CWMS TURBINES
-#==========================================================================
 
-def store_projects_turbines(
-        data: JSON, 
-        fail_if_exists: Optional[bool]
-) -> None:
+# ==========================================================================
+#                             POST CWMS TURBINES
+# ==========================================================================
+
+
+def store_projects_turbines(data: JSON, fail_if_exists: Optional[bool]) -> None:
     """
     Create a new turbine in CWMS.
     Parameters
     ----------
     fail_if_exists (bool): If True, the request will fail if the turbine already exists.
-    
+
     Returns
     -------
-    None    
-    
+    None
+
 
     Raises
     ------
@@ -123,6 +123,7 @@ def store_projects_turbines(
     }
     return api.post(endpoint=endpoint, data=data, params=params)
 
+
 def store_projects_turbines_with_office_with_name(
     data: JSON, office: str, name: str, override_protection: Optional[bool]
 ) -> None:
@@ -133,11 +134,11 @@ def store_projects_turbines_with_office_with_name(
     office (str): Office id for the reservoir project location associated with the turbine changes.
     name (str): Specifies the name of project of the Turbine changes whose data is to stored.
     override_protection (bool): A flag ('True'/'False') specifying whether to delete protected data. Default is False
-    
+
     Returns
     -------
     None - Turbine successfully stored to CWMS.
-    
+
 
     Raises
     ------
@@ -157,17 +158,18 @@ def store_projects_turbines_with_office_with_name(
             "Cannot store project turbine changes without a JSON data dictionary"
         )
     endpoint = f"projects/{office}/{name}/turbines"
-    params = {
-        "override-protection": override_protection
-    }
+    params = {"override-protection": override_protection}
     return api.post(endpoint=endpoint, data=data, params=params)
 
 
-#==========================================================================
+# ==========================================================================
 #                             DELETE CWMS TURBINES
-#==========================================================================
+# ==========================================================================
 
-def delete_projects_turbines_with_name(name: str, office: str, method: Optional[str]) -> None:
+
+def delete_projects_turbines_with_name(
+    name: str, office: str, method: Optional[str]
+) -> None:
     """
     Delete CWMS Turbine
     Parameters
@@ -178,7 +180,7 @@ def delete_projects_turbines_with_name(name: str, office: str, method: Optional[
     Returns
     -------
     None - Turbine successfully deleted from CWMS.
-    
+
 
     Raises
     ------
@@ -194,14 +196,16 @@ def delete_projects_turbines_with_name(name: str, office: str, method: Optional[
         500 - Indicates that the server encountered an unexpected condition that prevented it from fulfilling the request.
     """
     endpoint = f"projects/turbines/{name}"
-    params = {
-        "office": office,
-        "method": method
-    }
+    params = {"office": office, "method": method}
     return api.delete(endpoint=endpoint, params=params, api_version=1)
 
+
 def delete_projects_turbines_with_office_with_name(
-    office: str, name: str, begin: datetime, end: datetime, override_protection: Optional[bool]
+    office: str,
+    name: str,
+    begin: datetime,
+    end: datetime,
+    override_protection: Optional[bool],
 ) -> None:
     """
     Delete CWMS Turbine Changes
@@ -216,7 +220,7 @@ def delete_projects_turbines_with_office_with_name(
     Returns
     -------
     None - Turbine successfully deleted from CWMS.
-    
+
 
     Raises
     ------
@@ -235,6 +239,6 @@ def delete_projects_turbines_with_office_with_name(
     params = {
         "begin": begin.isoformat() if begin else None,
         "end": end.isoformat() if end else None,
-        "override-protection": override_protection
+        "override-protection": override_protection,
     }
     return api.delete(endpoint=endpoint, params=params, api_version=1)

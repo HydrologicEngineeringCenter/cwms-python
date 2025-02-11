@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pandas as pd
 import pytest
 
@@ -52,7 +54,7 @@ def test_get_projects_turbines(requests_mock):
         "location.vertical-datum",
         "location.elevation",
         "location.bounding-office-id",
-        "location.elevation-units"
+        "location.elevation-units",
     ]
     assert list(data.df.columns) == expected_columns
 
@@ -61,17 +63,154 @@ def test_get_projects_turbines(requests_mock):
 
     # Validate the first row of data
     expected_values = [
-            ["SWT", "KEYS", "SWT", "KEYS-Turbine1", 36.1506371, -96.2525088, True, "Turbine1","Turbine1",  "US/Central", "TURBINE", "US", "OK", "Tulsa", "Sand Springs, OK", "NAD83", 0, 0, "NGVD29", 0, "SWT", "m"],
-            ["SWT", "KEYS", "SWT", "KEYS-Turbine2", 36.1506371, -96.2525088, True, "Turbine2","Turbine2",  "US/Central", "TURBINE", "US", "OK", "Tulsa", "Sand Springs, OK", "NAD83", 0, 0, "NGVD29", 0, "SWT", "m"]
+        [
+            "SWT",
+            "KEYS",
+            "SWT",
+            "KEYS-Turbine1",
+            36.1506371,
+            -96.2525088,
+            True,
+            "Turbine1",
+            "Turbine1",
+            "US/Central",
+            "TURBINE",
+            "US",
+            "OK",
+            "Tulsa",
+            "Sand Springs, OK",
+            "NAD83",
+            0,
+            0,
+            "NGVD29",
+            0,
+            "SWT",
+            "m",
+        ],
+        [
+            "SWT",
+            "KEYS",
+            "SWT",
+            "KEYS-Turbine2",
+            36.1506371,
+            -96.2525088,
+            True,
+            "Turbine2",
+            "Turbine2",
+            "US/Central",
+            "TURBINE",
+            "US",
+            "OK",
+            "Tulsa",
+            "Sand Springs, OK",
+            "NAD83",
+            0,
+            0,
+            "NGVD29",
+            0,
+            "SWT",
+            "m",
+        ],
     ]
     actual_values = data.df.to_numpy().tolist()
 
     assert actual_values == expected_values
 
-def test_store_projects_turbines(requests_mock):
-    requests_mock.post(
-        f"{_MOCK_ROOT}/projects/turbines?fail-if-exists=false"
+
+def test_get_projects_turbines_with_office_with_name(requests_mock):
+    requests_mock.get(
+        f"{_MOCK_ROOT}/projects/SWT/KEYS/turbines", json=_TURBINES_OFFICE_NAME
     )
+
+    office = "SWT"
+    name = "KEYS"
+
+    data = turbines.get_projects_turbines_with_office_with_name_turbine_changes(
+        name=name,
+        begin=datetime(2024, 1, 1),
+        end=datetime(2024, 12, 31),
+        office=office,
+        page_size=100,
+        unit_system=None,
+        start_time_inclusive=True,
+        end_time_inclusive=True,
+    )
+    expected_columns = [
+        "change-date",
+        "protected",
+        "notes",
+        "new-total-discharge-override",
+        "old-total-discharge-override",
+        "discharge-units",
+        "tailwater-elevation",
+        "elevation-units",
+        "settings",
+        "pool-elevation",
+        "project-id.office-id",
+        "project-id.name",
+        "discharge-computation-type.office-id",
+        "discharge-computation-type.display-value",
+        "discharge-computation-type.tooltip",
+        "discharge-computation-type.active",
+        "reason-type.office-id",
+        "reason-type.display-value",
+        "reason-type.tooltip",
+        "reason-type.active",
+    ]
+
+    expected_values = [
+        [
+            1738713600000,
+            False,
+            "from SCADA",
+            0,
+            0,
+            "cfs",
+            637.7499999999999,
+            "ft",
+            [
+                {
+                    "type": "turbine-setting",
+                    "location-id": {"office-id": "SWT", "name": "KEYS-Turbine1"},
+                    "discharge-units": "cfs",
+                    "old-discharge": 0,
+                    "new-discharge": 0,
+                    "generation-units": "MW",
+                    "scheduled-load": 0,
+                    "real-power": 0,
+                },
+                {
+                    "type": "turbine-setting",
+                    "location-id": {"office-id": "SWT", "name": "KEYS-Turbine2"},
+                    "discharge-units": "cfs",
+                    "old-discharge": 0,
+                    "new-discharge": 0,
+                    "generation-units": "MW",
+                    "scheduled-load": 0,
+                    "real-power": 0,
+                },
+            ],
+            723.12,
+            "SWT",
+            "KEYS",
+            "SWT",
+            "R",
+            "Reported by powerhouse",
+            True,
+            "SWT",
+            "S",
+            "Scheduled release to meet loads",
+            True,
+        ]
+    ]
+
+    assert list(data.df.columns) == expected_columns
+    assert data.df.shape == (1, len(expected_columns))
+    assert data.df.to_numpy().tolist() == expected_values
+
+
+def test_store_projects_turbines(requests_mock):
+    requests_mock.post(f"{_MOCK_ROOT}/projects/turbines?fail-if-exists=false")
 
     turbines.store_projects_turbines(data=_TURBINES, fail_if_exists=False)
     assert requests_mock.called
@@ -82,12 +221,9 @@ def test_store_projects_turbines_with_office_with_name(requests_mock):
     requests_mock.post(
         f"{_MOCK_ROOT}/projects/SWT/KEYS/turbines?override-protection=False"
     )
-    
+
     turbines.store_projects_turbines_with_office_with_name(
-        data=_TURBINES_OFFICE_NAME,
-        office="SWT",
-        name="KEYS",
-        override_protection=False
+        data=_TURBINES_OFFICE_NAME, office="SWT", name="KEYS", override_protection=False
     )
     assert requests_mock.called
     assert requests_mock.call_count == 1
