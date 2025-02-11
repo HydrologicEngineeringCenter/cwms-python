@@ -24,13 +24,13 @@ def init_session():
 
 
 def test_get_projects_turbines(requests_mock):
-    requests_mock.get(
-        f"{_MOCK_ROOT}/projects/turbines?project-id=KEYS&office=SWT",
-        json=_TURBINES,
-    )
-
     office = "SWT"
     project_id = "KEYS"
+
+    requests_mock.get(
+        f"{_MOCK_ROOT}/projects/turbines?project-id={project_id}&office={office}",
+        json=_TURBINES,
+    )
 
     data = turbines.get_projects_turbines(project_id=project_id, office=office)
 
@@ -124,13 +124,13 @@ def test_get_projects_turbines(requests_mock):
 
 
 def get_projects_turbines_with_name(requests_mock):
-    requests_mock.get(
-        f"{_MOCK_ROOT}/projects/turbines?name=KEYS&office=SWT",
-        json=_TURBINES_NAME,
-    )
-
     project_id = "KEYS"
     office = "SWT"
+
+    requests_mock.get(
+        f"{_MOCK_ROOT}/projects/turbines?project_id={project_id}&office={office}",
+        json=_TURBINES_NAME,
+    )
 
     data = turbines.get_projects_turbines(office=office, project_id=project_id)
     expected_columns = [
@@ -165,12 +165,12 @@ def get_projects_turbines_with_name(requests_mock):
 
 
 def test_get_projects_turbines_with_office_with_name(requests_mock):
-    requests_mock.get(
-        f"{_MOCK_ROOT}/projects/SWT/KEYS/turbines", json=_TURBINES_OFFICE_NAME
-    )
-
     office = "SWT"
     name = "KEYS"
+
+    requests_mock.get(
+        f"{_MOCK_ROOT}/projects/{office}/{name}/turbines", json=_TURBINES_OFFICE_NAME
+    )
 
     data = turbines.get_projects_turbines_with_office_with_name_turbine_changes(
         name=name,
@@ -270,8 +270,11 @@ def test_store_projects_turbines(requests_mock):
 
 
 def test_store_projects_turbines_with_office_with_name(requests_mock):
+    office = "SWT"
+    name = "KEYS"
+
     requests_mock.post(
-        f"{_MOCK_ROOT}/projects/SWT/KEYS/turbines?override-protection=False"
+        f"{_MOCK_ROOT}/projects/{office}/{name}/turbines?override-protection=False"
     )
 
     turbines.store_projects_turbines_with_office_with_name(
@@ -287,13 +290,13 @@ def test_store_projects_turbines_with_office_with_name(requests_mock):
 
 
 def test_delete_projects_turbines_with_name(requests_mock):
-    requests_mock.delete(
-        f"{_MOCK_ROOT}/projects/turbines/KEYS-Turbine1?office=SWT&method=DELETE_ALL"
-    )
-
     name = "KEYS-Turbine1"
     office = "SWT"
     method = "DELETE_ALL"
+
+    requests_mock.delete(
+        f"{_MOCK_ROOT}/projects/turbines/{name}?office={office}&method={method}"
+    )
 
     turbines.delete_projects_turbines_with_name(name=name, office=office, method=method)
 
@@ -302,10 +305,12 @@ def test_delete_projects_turbines_with_name(requests_mock):
 
 
 def test_delete_projects_turbines_with_office_with_name(requests_mock):
-    requests_mock.delete(f"{_MOCK_ROOT}/projects/SWT/KEYS/turbines")
-
     office = "SWT"
     name = "KEYS"
+
+    requests_mock.delete(
+        f"{_MOCK_ROOT}/projects/{office}/{name}/turbines?override-protection=False"
+    )
 
     turbines.delete_projects_turbines_with_office_with_name(
         office=office,
