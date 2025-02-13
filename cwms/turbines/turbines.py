@@ -9,7 +9,7 @@ from cwms.cwms_types import JSON, Data
 # ==========================================================================
 
 
-def get_projects_turbines(office: str, project_id: str) -> Data:
+def get_project_turbines(office: str, project_id: str) -> Data:
     """Returns matching CWMS Turbine Data for a Reservoir Project. Get cwmsData projects turbines.
     Args:
         office (str): The office associated with the turbine data.
@@ -25,7 +25,7 @@ def get_projects_turbines(office: str, project_id: str) -> Data:
     return Data(response)
 
 
-def get_projects_turbines_with_name(office: str, name: str) -> Data:
+def get_project_turbine(office: str, name: str) -> Data:
     """Returns CWMS Turbine Data Get cwmsData projects turbines with name.
     Args:
         office (str): The office associated with the turbine data.
@@ -33,13 +33,13 @@ def get_projects_turbines_with_name(office: str, name: str) -> Data:
     Returns:
         dict: A dictionary containing the turbine data.
     """
-    endpoint = "projects/turbines"
-    params = {"office": office, "name": name}
+    endpoint = f"projects/turbines/{name}"
+    params = {"office": office}
     response = api.get(endpoint=endpoint, params=params)
     return Data(response)
 
 
-def get_projects_turbines_with_office_with_name_turbine_changes(
+def get_project_turbine_changes(
     name: str,
     begin: datetime,
     end: datetime,
@@ -68,7 +68,7 @@ def get_projects_turbines_with_office_with_name_turbine_changes(
     if end and not isinstance(end, datetime):
         raise ValueError("end needs to be in datetime")
 
-    endpoint = f"projects/{office}/{name}/turbines"
+    endpoint = f"projects/{office}/{name}/turbine-changes"
     params = {
         "name": name,
         "begin": begin.isoformat() if begin else None,
@@ -88,7 +88,7 @@ def get_projects_turbines_with_office_with_name_turbine_changes(
 # ==========================================================================
 
 
-def store_projects_turbines(data: JSON, fail_if_exists: Optional[bool]) -> None:
+def store_project_turbine(data: JSON, fail_if_exists: Optional[bool]) -> None:
     """
     Create a new turbine in CWMS.
     Parameters
@@ -124,7 +124,7 @@ def store_projects_turbines(data: JSON, fail_if_exists: Optional[bool]) -> None:
     return api.post(endpoint=endpoint, data=data, params=params)
 
 
-def store_projects_turbines_with_office_with_name(
+def store_project_turbine_changes(
     data: JSON, office: str, name: str, override_protection: Optional[bool]
 ) -> None:
     """
@@ -157,7 +157,7 @@ def store_projects_turbines_with_office_with_name(
         raise ValueError(
             "Cannot store project turbine changes without a JSON data dictionary"
         )
-    endpoint = f"projects/{office}/{name}/turbines"
+    endpoint = f"projects/{office}/{name}/turbine-changes"
     params = {"override-protection": override_protection}
     return api.post(endpoint=endpoint, data=data, params=params)
 
@@ -167,9 +167,7 @@ def store_projects_turbines_with_office_with_name(
 # ==========================================================================
 
 
-def delete_projects_turbines_with_name(
-    name: str, office: str, method: Optional[str]
-) -> None:
+def delete_project_turbine(name: str, office: str, method: Optional[str]) -> None:
     """
     Delete CWMS Turbine
     Parameters
@@ -200,7 +198,7 @@ def delete_projects_turbines_with_name(
     return api.delete(endpoint=endpoint, params=params, api_version=1)
 
 
-def delete_projects_turbines_with_office_with_name(
+def delete_project_turbine_changes(
     office: str,
     name: str,
     begin: datetime,
@@ -235,7 +233,7 @@ def delete_projects_turbines_with_office_with_name(
     Server Error
         500 - Indicates that the server encountered an unexpected condition that prevented it from fulfilling the request.
     """
-    endpoint = f"projects/{office}/{name}/turbines"
+    endpoint = f"projects/{office}/{name}/turbine-changes"
     params = {
         "begin": begin.isoformat() if begin else None,
         "end": end.isoformat() if end else None,
