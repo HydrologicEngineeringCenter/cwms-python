@@ -165,24 +165,25 @@ def test_get_timeseries_unversioned_default(requests_mock):
 
 
 def test_get_empty_ts_df(requests_mock):
+
+    timeseries_id = "KEYS.Elev.Inst.1Hour.0.Ccp-Rev"
+    office_id = "SWT"
     requests_mock.get(
         f"{_MOCK_ROOT}"
-        "/timeseries?office=SWT&"
-        "name=TEST.Text.Inst.1Hour.0.EMPTYTest&"
+        f"/timeseries?office={office_id}&"
+        f"name={timeseries_id}&"
         "unit=EN&"
-        "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
-        "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
+        "begin=2024-05-01T15%3A00%3A00%2B00%3A00&"
+        "end=2024-05-01T17%3A00%3A00%2B00%3A00&"
         "page-size=500000&"
         "trim=true",
         json=_EMPTY_TS_JSON,
     )
-    timeseries_id = "TEST.Text.Inst.1Hour.0.EMPTYTest"
-    office_id = "SWT"
 
     # explicitly format begin and end dates with default timezone as an example
     timezone = pytz.timezone("UTC")
-    begin = timezone.localize(datetime(2008, 5, 1, 15, 0, 0))
-    end = timezone.localize(datetime(2008, 5, 1, 17, 0, 0))
+    begin = timezone.localize(datetime(2024, 5, 1, 15, 0, 0))
+    end = timezone.localize(datetime(2024, 5, 1, 17, 0, 0))
 
     data = timeseries.get_timeseries(
         ts_id=timeseries_id, office_id=office_id, begin=begin, end=end
