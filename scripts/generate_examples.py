@@ -103,12 +103,6 @@ def load_mock_data(resource_data):
     return mock_outputs
 
 
-import os
-
-import nbformat
-import pandas as pd
-
-
 def generate_notebooks():
     """
     Recursively scans TESTS_DIR, processes test files, and generates corresponding Jupyter notebooks.
