@@ -259,9 +259,6 @@ def generate_notebooks():
                                                     f"data = {black.format_str(str(data), mode=black.Mode())}\n"
                                                 )
                                             )
-                                modified_function_code = black.format_str(
-                                    modified_function_code, mode=black.Mode()
-                                )
                                 modified_function_code = modified_function_code.replace(
                                     "data = data\n", ""
                                 )
@@ -272,7 +269,11 @@ def generate_notebooks():
                                 # Remove extra new lines at the end
                                 no_assert_code = re.sub(r"\n\n+", "\n", no_assert_code)
                                 notebook_cells.append(
-                                    nbformat.v4.new_code_cell(no_assert_code)
+                                    nbformat.v4.new_code_cell(
+                                        black.format_str(
+                                            no_assert_code, mode=black.Mode()
+                                        )
+                                    )
                                 )
 
                                 # Replace assert calls with a suitable code cell
@@ -284,7 +285,6 @@ def generate_notebooks():
                                     r"assert (data\.json|data\.df|values|type\(data\))",
                                     modified_function_code,
                                 )
-
                                 # Generate a separate code block for each valid assert statement
                                 for assert_call in assert_calls:
                                     notebook_cells.append(
