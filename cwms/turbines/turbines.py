@@ -45,7 +45,7 @@ def get_project_turbine_changes(
     end: datetime,
     office: str,
     page_size: Optional[int],
-    unit_system: Optional[dict],
+    unit_system: Optional[str],
     start_time_inclusive: Optional[bool],
     end_time_inclusive: Optional[bool],
 ) -> Data:
@@ -59,7 +59,7 @@ def get_project_turbine_changes(
         office (str): The office associated with the turbine data.
         page_size (Optional[int]): The number of records to return per page.
         start_time_inclusive (Optional[bool]): Whether the start time is inclusive.
-        unit_system (Optional[dict]): The unit system to use for the data [SI, EN].
+        unit_system (Optional[str]): The unit system to use for the data [SI, EN].
     Returns:
         dict: A dictionary containing the turbine data.
     """
