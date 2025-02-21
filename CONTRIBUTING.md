@@ -44,7 +44,7 @@ Run poetry against a single file with:
 *\*From the root of the project\**
 
 ```sh
-poetry run pytest tests/turbines/turbines_test.py`
+poetry run pytest tests/turbines/turbines_test.py
 ```
 
 ### Code Style
