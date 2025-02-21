@@ -275,7 +275,7 @@ def test_store_project_turbine_changes(requests_mock):
     name = "KEYS"
 
     requests_mock.post(
-        f"{_MOCK_ROOT}/projects/{office}/{name}/turbines?override-protection=False"
+        f"{_MOCK_ROOT}/projects/{office}/{name}/turbine-changes?override-protection=False"
     )
 
     turbines.store_project_turbine_changes(
@@ -310,7 +310,7 @@ def test_delete_project_turbine_changes(requests_mock):
     name = "KEYS"
 
     requests_mock.delete(
-        f"{_MOCK_ROOT}/projects/{office}/{name}/turbines?override-protection=False"
+        f"{_MOCK_ROOT}/projects/{office}/{name}/turbine-changes?override-protection=False"
     )
 
     turbines.delete_project_turbine_changes(
