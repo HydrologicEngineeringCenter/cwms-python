@@ -134,14 +134,15 @@ def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
       <auto-migrate-extension>{str(data.loc[0,'auto-migrate-extension']).lower()}</auto-migrate-extension>
       <ind-rounding-specs>"""
 
-    i = 1
     ind_rouding = data.loc[0, "independent-rounding-specs"]
-    for rounding in ind_rouding:
-        spec_xml = (
-            spec_xml
-            + f"""\n   <ind-rounding-spec position="{i}">{rounding['value']}</ind-rounding-spec>"""
-        )
-        i = i + 1
+    if isinstance(ind_rouding, list):
+        i = 1
+        for rounding in ind_rouding:
+            spec_xml = (
+                spec_xml
+                + f"""\n   <ind-rounding-spec position="{i}">{rounding['value']}</ind-rounding-spec>"""
+            )
+            i = i + 1
     spec_xml2 = f"""\n  </ind-rounding-specs>
       <dep-rounding-spec>{data.loc[0,'dependent-rounding-spec']}</dep-rounding-spec>
       <description>{data.loc[0,'description']}</description>
