@@ -222,6 +222,7 @@ def rating_simple_df_to_json(
     effective_date: datetime,
     transition_start_date: Optional[datetime] = None,
     description: Optional[str] = None,
+    active: Optional[bool] = True,
 ) -> JSON:
     """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_ratings function. Can
     only be used for simple ratings with a indenpendant and 1 dependant variable.
@@ -255,6 +256,8 @@ def rating_simple_df_to_json(
             The transitional start date of the rating curve to be stored
         description: str Optional = None
             a description to be added to the rating curve
+        active: Boolean Optional = True
+            store the rating as active as True of False
 
     Returns:
         JSON
@@ -288,7 +291,7 @@ def rating_simple_df_to_json(
             "transition-start-date": (
                 transition_start_date.isoformat() if transition_start_date else None
             ),
-            "active": True,
+            "active": active,
             "description": description,
             "rating-points": {"point": points_json},
         }
