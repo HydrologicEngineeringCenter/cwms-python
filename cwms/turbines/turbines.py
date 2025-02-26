@@ -20,7 +20,7 @@ def get_project_turbines(office: str, project_id: str) -> Data:
     endpoint = "projects/turbines"
     params = {"office": office, "project-id": project_id}
 
-    response = api.get(endpoint=endpoint, params=params)
+    response = api.get(endpoint=endpoint, params=params, api_version=1)
 
     return Data(response)
 
@@ -35,7 +35,7 @@ def get_project_turbine(office: str, name: str) -> Data:
     """
     endpoint = f"projects/turbines/{name}"
     params = {"office": office}
-    response = api.get(endpoint=endpoint, params=params)
+    response = api.get(endpoint=endpoint, params=params, api_version=1)
     return Data(response)
 
 
@@ -79,7 +79,7 @@ def get_project_turbine_changes(
         "start-time-inclusive": start_time_inclusive,
         "end-time-inclusive": end_time_inclusive,
     }
-    response = api.get(endpoint=endpoint, params=params)
+    response = api.get(endpoint=endpoint, params=params, api_version=1)
     return Data(response)
 
 
@@ -121,7 +121,7 @@ def store_project_turbine(data: JSON, fail_if_exists: Optional[bool]) -> None:
     params = {
         "fail-if-exists": fail_if_exists,
     }
-    return api.post(endpoint=endpoint, data=data, params=params)
+    return api.post(endpoint=endpoint, data=data, params=params, api_version=1)
 
 
 def store_project_turbine_changes(
@@ -159,7 +159,7 @@ def store_project_turbine_changes(
         )
     endpoint = f"projects/{office}/{name}/turbine-changes"
     params = {"override-protection": override_protection}
-    return api.post(endpoint=endpoint, data=data, params=params)
+    return api.post(endpoint=endpoint, data=data, params=params, api_version=1)
 
 
 # ==========================================================================
