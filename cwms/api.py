@@ -309,7 +309,7 @@ def post(
     # post requires different headers than get for
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
 
-    if isinstance(data, dict):
+    if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
 
     response = SESSION.post(endpoint, params=params, headers=headers, data=data)
@@ -349,7 +349,7 @@ def patch(
     if data is None:
         response = SESSION.patch(endpoint, params=params, headers=headers)
     else:
-        if isinstance(data, dict):
+        if isinstance(data, dict) or isinstance(data, list):
             data = json.dumps(data)
         response = SESSION.patch(endpoint, params=params, headers=headers, data=data)
     response.close()
