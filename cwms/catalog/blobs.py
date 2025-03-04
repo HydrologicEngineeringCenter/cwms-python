@@ -47,7 +47,7 @@ def get_blobs(
             cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    endpoint = "clobs"
+    endpoint = "blobs"
     params = {"office": office_id, "page-size": page_size, "like": blob_id_like}
 
     response = api.get(endpoint, params, api_version=1)
@@ -79,7 +79,7 @@ def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     if not isinstance(data, dict):
         raise ValueError("Cannot store a Blob without a JSON data dictionary")
 
-    endpoint = f"blobs"
+    endpoint = "blobs"
     params = {"fail-if-exists": fail_if_exists}
 
     return api.post(endpoint, data, params, api_version=1)

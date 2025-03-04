@@ -75,7 +75,7 @@ def get_timeseries_groups(
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    endpoint = f"timeseries/group"
+    endpoint = "timeseries/group"
     params = {
         "office": office_id,
         "include-assigned": include_assigned,

@@ -152,7 +152,7 @@ def store_clobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     if not isinstance(data, dict):
         raise ValueError("Cannot store a Clob without a JSON data dictionary")
 
-    endpoint = f"clobs"
+    endpoint = "clobs"
     params = {"fail-if-exists": fail_if_exists}
 
     return api.post(endpoint, data, params, api_version=1)

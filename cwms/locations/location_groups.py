@@ -73,7 +73,7 @@ def get_location_groups(
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    endpoint = f"location/group"
+    endpoint = "location/group"
     params = {
         "office": office_id,
         "include-assigned": include_assigned,
