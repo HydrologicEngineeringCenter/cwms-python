@@ -29,6 +29,7 @@ from cwms.timeseries.timeseries_profile import *
 from cwms.timeseries.timeseries_profile_instance import *
 from cwms.timeseries.timeseries_profile_parser import *
 from cwms.timeseries.timeseries_txt import *
+from cwms.turbines.turbines import *
 
 try:
     __version__ = version("cwms-python")
