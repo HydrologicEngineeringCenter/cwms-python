@@ -3,10 +3,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from cwms.timeseries.timeseries import (
-    timeseries_group_df_to_json,
-    update_timeseries_groups,
-)
+import cwms
 
 
 def import_critfile_to_ts_group(
@@ -15,6 +12,7 @@ def import_critfile_to_ts_group(
     group_id: str = "SHEF Data Acquisition",
     category_id: str = "Data Acquisition",
     group_office_id: str = "CWMS",
+    category_office_id: str = "CWMS",
     replace_assigned_ts: bool = False,
 ) -> None:
     """
@@ -116,9 +114,15 @@ def import_critfile_to_ts_group(
         df = append_df(df, office_id, data["Timeseries ID"], data["Alias"])
 
     # Generate JSON dictionary
-    json_dict = timeseries_group_df_to_json(df, group_id, group_office_id, category_id)
+    json_dict = cwms.timeseries_group_df_to_json(
+        data=df,
+        group_id=group_id,
+        group_office_id=group_office_id,
+        category_office_id=category_office_id,
+        category_id=category_id,
+    )
 
-    update_timeseries_groups(
+    cwms.update_timeseries_groups(
         group_id=group_id,
         office_id=office_id,
         replace_assigned_ts=replace_assigned_ts,

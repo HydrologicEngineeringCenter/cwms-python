@@ -42,48 +42,6 @@
         "ts-code": 7009109,
         "alias-id": "59870",
         "attribute": 0
-      },
-      {
-        "office-id": "SWG",
-        "timeseries-id": "Addicks-Gate 3.Flow.Inst.15Minutes.0.USGS-Rev",
-        "ts-code": 32384149,
-        "alias-id": "300027",
-        "attribute": 0
-      },
-      {
-        "office-id": "SWG",
-        "timeseries-id": "Addicks-Gate 1.Flow.Inst.15Minutes.0.USGS-Rev",
-        "ts-code": 32381149,
-        "alias-id": "300028",
-        "attribute": 0
-      },
-      {
-        "office-id": "SWG",
-        "timeseries-id": "Addicks-Gate 2.Flow.Inst.15Minutes.0.USGS-Rev",
-        "ts-code": 32382149,
-        "alias-id": "300029",
-        "attribute": 0
-      },
-      {
-        "office-id": "SWG",
-        "timeseries-id": "Addicks-Gated_Total.Flow.Inst.15Minutes.0.USGS-Rev",
-        "ts-code": 32408149,
-        "alias-id": "300048",
-        "attribute": 0
-      },
-      {
-        "office-id": "SWG",
-        "timeseries-id": "Barker-Gate 1.Flow.Inst.15Minutes.0.USGS-Rev",
-        "ts-code": 32379149,
-        "alias-id": "299976",
-        "attribute": 0
-      },
-      {
-        "office-id": "SWG",
-        "timeseries-id": "Barker-Gated_Total.Flow.Inst.15Minutes.0.USGS-Rev",
-        "ts-code": 32407149,
-        "alias-id": "299978",
-        "attribute": 0
       }
     ]
 }

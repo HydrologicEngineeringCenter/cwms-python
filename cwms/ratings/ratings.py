@@ -325,7 +325,7 @@ def update_ratings(
 
     if not isinstance(data, dict) and xml_heading not in data:
         raise ValueError(
-            "Cannot store a timeseries without a JSON data dictionaryor in XML"
+            "Cannot store a rating without a JSON data dictionary or in XML"
         )
 
     if xml_heading in data:

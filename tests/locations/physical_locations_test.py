@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 import cwms.api
+import cwms.locations.location_groups as location_groups
 import cwms.locations.physical_locations as locations
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
@@ -36,18 +37,28 @@ def init_session():
 
 
 def test_get_location_group(requests_mock):
-    group_id = "test-location-group"
+    loc_group_id = "test-location-group"
     category_id = "test-location-category"
     office_id = "test-office"
+    category_office_id = "test-office"
+    group_office_id = "test-office"
 
     requests_mock.get(
-        f"{_MOCK_ROOT}/location/group/{group_id}?"
+        f"{_MOCK_ROOT}/location/group/{loc_group_id}?"
         f"office={office_id}&"
-        f"category-id={category_id}",
+        f"category-id={category_id}&"
+        f"category-office-id={category_office_id}&"
+        f"group-office-id={group_office_id}",
         json=EXAMPLE_LOCATION_GROUP,
     )
 
-    data = locations.get_location_group(group_id, category_id, office_id)
+    data = location_groups.get_location_group(
+        loc_group_id=loc_group_id,
+        category_id=category_id,
+        office_id=office_id,
+        category_office_id=category_office_id,
+        group_office_id=group_office_id,
+    )
     assert data.json == EXAMPLE_LOCATION_GROUP
 
     assert type(data.df) is pd.DataFrame

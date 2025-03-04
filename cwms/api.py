@@ -1,4 +1,4 @@
-""" Session management and REST functions for CWMS Data API.
+"""Session management and REST functions for CWMS Data API.
 
 This module provides functions for making REST calls to the CWMS Data API (CDA). These
 functions should be used internally to interact with the API. The user should not have to
