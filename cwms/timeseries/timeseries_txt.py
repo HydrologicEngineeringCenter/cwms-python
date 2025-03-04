@@ -78,20 +78,6 @@ def get_text_timeseries(
     return Data(response)
 
 
-def get_large_clob(url: str, encoding: str = "utf-8") -> str:
-    """
-    Retrieves large clob data greater than 64kb from CWMS data api
-    :param url: str
-        Url used in query by CDA
-    :param encoding: str, optional
-        Encoding used to decode text data. Default utf-8
-    :return: str
-        Large text data
-    """
-    response = requests.get(url)
-    return response.content.decode(encoding)
-
-
 def store_text_timeseries(data: JSON, replace_all: bool = False) -> None:
     """
     This method is used to store a text time series through CWMS Data API.
