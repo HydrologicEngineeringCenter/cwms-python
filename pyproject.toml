@@ -1,6 +1,8 @@
 [tool.poetry]
 name = "cwms-python"
+
 version = "0.5.7"
+
 packages = [
     { include = "cwms" },
 ]
