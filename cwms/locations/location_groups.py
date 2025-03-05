@@ -11,8 +11,8 @@ def get_location_group(
     loc_group_id: str,
     category_id: str,
     office_id: str,
-    group_office_id: str,
-    category_office_id: str,
+    group_office_id: Optional[str] = None,
+    category_office_id: Optional[str] = None,
 ) -> Data:
     """Retreives time series stored in the requested time series group
 
