@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "cwms-python"
-
-version = "0.5.8"
+repository = "https://github.com/HydrologicEngineeringCenter/cwms-python"
+version = "0.6.0"
 
 packages = [
     { include = "cwms" },
@@ -9,7 +9,7 @@ packages = [
 description = "Corps water managerment systems (CWMS) REST API for Data Retrieval of USACE water data"
 readme = "README.md"
 license = "LICENSE"
-keywords = ["USACE", "water data"]
+keywords = ["USACE", "water data", "CWMS"]
 authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 
 [tool.poetry.dependencies]
