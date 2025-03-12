@@ -228,14 +228,14 @@ def get(
                 return cast(JSON, response.json())
             # Use automatic charset detection with .text
             if "text/plain" in content_type or "text/" in content_type:
-                return response.text
+                return {"value": response.text}
             # Fallback for remaining content types
-            return response.content.decode("utf-8")
+            return {"value": response.content.decode("utf-8")}
         except JSONDecodeError as error:
             logging.error(
                 f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
             )
-            return response.text
+            return {"error": response.text}
 
 
 def get_with_paging(
