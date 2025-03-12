@@ -190,18 +190,16 @@ def get_xml(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.get(endpoint, params=params, headers=headers)
-    response.close()
+    with SESSION.get(endpoint, params=params, headers=headers) as response:
+        if response.status_code < 200 or response.status_code >= 300:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
 
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
-
-    try:
-        return response.content.decode("utf-8")
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response as xml: {error}")
-        return {}
+        try:
+            return response.content.decode("utf-8")
+        except JSONDecodeError as error:
+            logging.error(f"Error decoding CDA response as xml: {error}")
+            return {}
 
 
 def get(
@@ -228,17 +226,15 @@ def get(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.get(endpoint, params=params, headers=headers)
-    response.close()
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
-
-    try:
-        return cast(JSON, response.json())
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response as json: {error}")
-        return {}
+    with SESSION.get(endpoint, params=params, headers=headers) as response:
+        if response.status_code < 200 or response.status_code >= 300:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
+        try:
+            return cast(JSON, response.json())
+        except JSONDecodeError as error:
+            logging.error(f"Error decoding CDA response as json: {error}")
+            return {}
 
 
 def get_with_paging(
@@ -312,12 +308,10 @@ def post(
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
 
-    response = SESSION.post(endpoint, params=params, headers=headers, data=data)
-    response.close()
-
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
+        if response.status_code < 200 or response.status_code >= 300:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
 
 
 def patch(
@@ -346,16 +340,13 @@ def patch(
     """
 
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-    if data is None:
-        response = SESSION.patch(endpoint, params=params, headers=headers)
-    else:
-        if isinstance(data, dict) or isinstance(data, list):
-            data = json.dumps(data)
-        response = SESSION.patch(endpoint, params=params, headers=headers, data=data)
-    response.close()
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+
+    if data and isinstance(data, dict) or isinstance(data, list):
+        data = json.dumps(data)
+    with SESSION.patch(endpoint, params=params, headers=headers, data=data) as response:
+        if response.status_code < 200 or response.status_code >= 300:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
 
 
 def delete(
@@ -379,8 +370,7 @@ def delete(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.delete(endpoint, params=params, headers=headers)
-    response.close()
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    with SESSION.delete(endpoint, params=params, headers=headers) as response:
+        if response.status_code < 200 or response.status_code >= 300:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
