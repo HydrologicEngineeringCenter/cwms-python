@@ -188,18 +188,8 @@ def get_xml(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
-    headers = {"Accept": api_version_text(api_version)}
-    with SESSION.get(endpoint, params=params, headers=headers) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
-
-        try:
-            return response.content.decode("utf-8")
-        except JSONDecodeError as error:
-            logging.error(f"Error decoding CDA response as xml: {error}")
-            return {}
+    # Wrap the primary get for backwards compatibility
+    return get(endpoint=endpoint, params=params, api_version=api_version)
 
 
 def get(
@@ -231,10 +221,21 @@ def get(
             logging.error(f"CDA Error: response={response}")
             raise ApiError(response)
         try:
-            return cast(JSON, response.json())
+            # Avoid case sensitivity issues with the content type header
+            content_type = response.headers.get("Content-Type", "").lower()
+            # Most CDA content is JSON
+            if "application/json" in content_type:
+                return cast(JSON, response.json())
+            # Use automatic charset detection with .text
+            if "text/plain" in content_type or "text/" in content_type:
+                return response.text
+            # Fallback for remaining content types
+            return response.content.decode("utf-8")
         except JSONDecodeError as error:
-            logging.error(f"Error decoding CDA response as json: {error}")
-            return {}
+            logging.error(
+                f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
+            )
+            return response.text
 
 
 def get_with_paging(

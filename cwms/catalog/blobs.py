@@ -4,7 +4,7 @@ import cwms.api as api
 from cwms.cwms_types import JSON, Data
 
 
-def get_blob(blob_id: str, office_id: str) -> Data:
+def get_blob(blob_id: str, office_id: str) -> str:
     """Get a single clob.
 
     Parameters
@@ -17,13 +17,13 @@ def get_blob(blob_id: str, office_id: str) -> Data:
 
         Returns
         -------
-            cwms data type.  data.json will return the JSON output and data.df will return a dataframe
+            str: the value returned based on the content-type it was stored with as a string
     """
 
     endpoint = f"blobs/{blob_id}"
     params = {"office": office_id}
     response = api.get(endpoint, params, api_version=1)
-    return Data(response)
+    return response
 
 
 def get_blobs(
