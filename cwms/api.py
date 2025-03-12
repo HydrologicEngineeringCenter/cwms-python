@@ -224,7 +224,7 @@ def get(
             # Avoid case sensitivity issues with the content type header
             content_type = response.headers.get("Content-Type", "").lower()
             # Most CDA content is JSON
-            if "application/json" in content_type:
+            if "application/json" in content_type or not content_type:
                 return cast(JSON, response.json())
             # Use automatic charset detection with .text
             if "text/plain" in content_type or "text/" in content_type:
