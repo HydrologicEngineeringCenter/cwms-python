@@ -11,6 +11,7 @@ import pytz
 
 import cwms.api
 import cwms.timeseries.timeseries as timeseries
+import cwms.timeseries.timeseries_group as timeseries_group
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
@@ -40,7 +41,7 @@ def test_update_timeseries_groups(requests_mock):
         status_code=200,
     )
 
-    timeseries.update_timeseries_groups(
+    timeseries_group.update_timeseries_groups(
         data=data,
         group_id=group_id,
         office_id=office_id,
@@ -94,8 +95,12 @@ def test_timeseries_group_df_to_json_valid_data():
         ],
     }
 
-    result = timeseries.timeseries_group_df_to_json(
-        data, "group123", "office123", "cat123"
+    result = timeseries_group.timeseries_group_df_to_json(
+        data=data,
+        group_id="group123",
+        group_office_id="office123",
+        category_office_id="office123",
+        category_id="cat123",
     )
     assert result == expected_json
 
@@ -247,25 +252,42 @@ def test_get_timeseries_paging(requests_mock):
 
 
 def test_get_timeseries_group_default(requests_mock):
+    group_id = "USGS TS Data Acquisition"
+    category_id = "Data Acquisition"
+    office_id = "LRL"
+    category_office_id = "CMWS"
+    group_office_id = "CWMS"
+
+    requests_mock.get(
+        f"{_MOCK_ROOT}/timeseries/group/{group_id}?"
+        f"office={office_id}&"
+        f"category-id={category_id}&"
+        f"category-office-id={category_office_id}&"
+        f"group-office-id={group_office_id}",
+        json=_TS_GROUP,
+    )
+
+    """
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries/group/USGS%20TS%20Data%20Acquisition?office=CWMS&"
         "category-id=Data%20Acquisition",
         json=_TS_GROUP,
     )
+    """
 
-    group_id = "USGS TS Data Acquisition"
-    category_id = "Data Acquisition"
-    office_id = "CWMS"
-
-    data = timeseries.get_timeseries_group(
-        group_id=group_id, category_id=category_id, office_id=office_id
+    data = timeseries_group.get_timeseries_group(
+        group_id=group_id,
+        category_id=category_id,
+        office_id=office_id,
+        category_office_id=category_office_id,
+        group_office_id=group_office_id,
     )
 
     assert data.json == _TS_GROUP
     assert type(data.df) is pd.DataFrame
     assert "timeseries-id" in data.df.columns
-    assert data.df.shape == (11, 5)
+    assert data.df.shape == (5, 5)
     values = data.df.to_numpy().tolist()
     assert values[0] == [
         "LRL",

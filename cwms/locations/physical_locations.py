@@ -7,14 +7,6 @@ import cwms.api as api
 from cwms.cwms_types import JSON, Data
 
 
-def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> Data:
-    endpoint = f"location/group/{loc_group_id}"
-    params = {"office": office_id, "category-id": category_id}
-
-    response = api.get(endpoint, params, api_version=1)
-    return Data(response, selector="assigned-locations")
-
-
 def get_location(location_id: str, office_id: str, unit: str = "EN") -> Data:
     """
     Get location data for a single location

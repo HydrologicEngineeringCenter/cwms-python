@@ -103,6 +103,56 @@ def delete_rating_spec(rating_id: str, office_id: str, delete_method: str) -> No
     return api.delete(endpoint, params)
 
 
+def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
+    """
+    Converts a dataframe containing rating specification parameters
+    into xml to be stored into the database.
+
+    Parameters
+    ----------
+    data : pd_dataframe
+        pandas dataframe that contrains rating specification paramters
+        should follow same formate the is returned from get_rating_spec function
+    Returns
+    -------
+    str: xml that can be used in store_rating_spec function
+    """
+
+    spec_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+    <rating-spec office-id="{data.loc[0,'office-id']}">
+      <rating-spec-id>{data.loc[0,'rating-id']}</rating-spec-id>
+      <template-id>{data.loc[0,'template-id']}</template-id>
+      <location-id>{data.loc[0,'location-id']}</location-id>
+      <version>{data.loc[0,'version']}</version>
+      <source-agency>{data.loc[0,'source-agency']}</source-agency>
+      <in-range-method>{data.loc[0,'in-range-method']}</in-range-method>
+      <out-range-low-method>{data.loc[0,'out-range-low-method']}</out-range-low-method>
+      <out-range-high-method>{data.loc[0,'out-range-high-method']}</out-range-high-method>
+      <active>{str(data.loc[0,'active']).lower()}</active>
+      <auto-update>{str(data.loc[0,'auto-update']).lower()}</auto-update>
+      <auto-activate>{str(data.loc[0,'auto-activate']).lower()}</auto-activate>
+      <auto-migrate-extension>{str(data.loc[0,'auto-migrate-extension']).lower()}</auto-migrate-extension>
+      <ind-rounding-specs>"""
+
+    ind_rouding = data.loc[0, "independent-rounding-specs"]
+    if isinstance(ind_rouding, list):
+        i = 1
+        for rounding in ind_rouding:
+            spec_xml = (
+                spec_xml
+                + f"""\n   <ind-rounding-spec position="{i}">{rounding['value']}</ind-rounding-spec>"""
+            )
+            i = i + 1
+    spec_xml2 = f"""\n  </ind-rounding-specs>
+      <dep-rounding-spec>{data.loc[0,'dependent-rounding-spec']}</dep-rounding-spec>
+      <description>{data.loc[0,'description']}</description>
+     </rating-spec>"""
+
+    spec_xml = spec_xml + spec_xml2
+
+    return spec_xml
+
+
 def store_rating_spec(data: str, fail_if_exists: Optional[bool] = True) -> None:
     """
     This method is used to store a new rating spec.
