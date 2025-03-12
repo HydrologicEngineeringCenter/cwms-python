@@ -1,7 +1,18 @@
+import base64
 from typing import Optional
 
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
+from cwms.utils.checks import is_base64
+
+STORE_DICT = """data = {
+    "office-id": "SWT",
+    "id": "MYFILE_OR_BLOB_ID.TXT",
+    "description": "Your description here",
+    "media-type-id": "application/octet-stream",
+    "value": "STRING of content or BASE64_ENCODED_STRING"
+}
+"""
 
 
 def get_blob(blob_id: str, office_id: str) -> str:
@@ -55,22 +66,16 @@ def get_blobs(
 
 
 def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
-    """Create New Blob
+    f"""Create New Blob
 
     Parameters
     ----------
-        **Note**: The "id" field must be uppercase, or it will be automatically cast to uppercase.
+        **Note**: The "id" field is automatically cast to uppercase.
 
         Data: JSON dictionary
             JSON containing information of Blob to be updated.
 
-                {
-                "office-id": "string",
-                "id": "STRING",
-                "description": "string",
-                "media-type-id": "string",
-                "value": "string"
-                }
+            {STORE_DICT}
         fail_if_exists: Boolean
             Create will fail if the provided ID already exists. Default: True
 
@@ -80,9 +85,15 @@ def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     """
 
     if not isinstance(data, dict):
-        raise ValueError("Cannot store a Blob without a JSON data dictionary")
+        raise ValueError(
+            f"Cannot store a Blob without a JSON data dictionary:\n{STORE_DICT}"
+        )
+
+    # Encode value if it's not already Base64-encoded
+    if "value" in data and not is_base64(data["value"]):
+        # Encode to bytes, then Base64, then decode to string for storing
+        data["value"] = base64.b64encode(data["value"].encode("utf-8")).decode("utf-8")
 
     endpoint = "blobs"
     params = {"fail-if-exists": fail_if_exists}
-
     return api.post(endpoint, data, params, api_version=1)
