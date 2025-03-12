@@ -29,7 +29,7 @@ the error.
 import json
 import logging
 from json import JSONDecodeError
-from typing import Any, Optional, cast, Union
+from typing import Any, Optional, Union, cast
 
 from requests import Response, adapters
 from requests_toolbelt import sessions  # type: ignore
