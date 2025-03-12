@@ -34,7 +34,7 @@ def get_blob(blob_id: str, office_id: str) -> str:
     endpoint = f"blobs/{blob_id}"
     params = {"office": office_id}
     response = api.get(endpoint, params, api_version=1)
-    return response
+    return str(response)
 
 
 def get_blobs(

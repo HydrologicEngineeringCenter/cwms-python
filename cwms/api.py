@@ -29,7 +29,7 @@ the error.
 import json
 import logging
 from json import JSONDecodeError
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, cast
 
 from requests import Response, adapters
 from requests_toolbelt import sessions  # type: ignore
@@ -197,7 +197,7 @@ def get(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
-) -> Union[JSON, str]:
+) -> JSON:
     """Make a GET request to the CWMS Data API.
 
     Args:
