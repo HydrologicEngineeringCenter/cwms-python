@@ -5,12 +5,12 @@ from cwms.cwms_types import JSON, Data
 
 
 def get_blob(blob_id: str, office_id: str) -> str:
-    """Get a single clob.
+    """Get a single BLOB (Binary Large Object).
 
     Parameters
         ----------
             blob_id: string
-                Specifies the id of the blob
+                Specifies the id of the blob. ALL blob ids are UPPERCASE.
             office_id: string
                 Specifies the office of the blob.
 
@@ -58,22 +58,25 @@ def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     """Create New Blob
 
     Parameters
-        ----------
-            Data: JSON dictionary
-                JSON containing information of Blob to be updated
-                    {
-                    "office-id": "string",
-                    "id": "string",
-                    "description": "string",
-                    "media-type-id": "string",
-                    "value": "string"
-                    }
-            fail_if_exists: Boolean
-                Create will fail if provided ID already exists. Default: true
+    ----------
+        **Note**: The "id" field must be uppercase, or it will be automatically cast to uppercase.
 
-        Returns
-        -------
-            None
+        Data: JSON dictionary
+            JSON containing information of Blob to be updated.
+
+                {
+                "office-id": "string",
+                "id": "STRING",
+                "description": "string",
+                "media-type-id": "string",
+                "value": "string"
+                }
+        fail_if_exists: Boolean
+            Create will fail if the provided ID already exists. Default: True
+
+    Returns
+    -------
+        None
     """
 
     if not isinstance(data, dict):
