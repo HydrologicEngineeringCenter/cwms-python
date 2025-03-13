@@ -16,7 +16,7 @@ The goal is to make it easier to update and maintain the project in the long ter
 Each top-level CWMS Data API endpoint corresponds to a `cwms-python` submodule. Nested endpoints would then map to a sub-directory within the submodule. The table below lists some example API endpoints and the corresponding submodule.
 
 | API Endpoint                                  | CWMS Python Module           |
-|-----------------------------------------------|------------------------------|
+| --------------------------------------------- | ---------------------------- |
 | `/cwms-data/location/category`                | `cwms.location.category`     |
 | `/cwms-data/location/group`                   | `cwms.location.group`        |
 | `/cwms-data/locations`                        | `cwms.locations`             |
@@ -80,4 +80,4 @@ We will adopt the directory/file structure outlined above. Whenever possible we 
 
 ## References
 
-1. https://cwms-data-test.cwbi.us/cwms-data/swagger-ui.html
+1. https://cwms-data.usace.army.mil/cwms-data/swagger-ui.html
