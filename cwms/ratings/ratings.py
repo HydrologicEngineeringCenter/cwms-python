@@ -15,7 +15,7 @@ def rating_current_effective_date(rating_id: str, office_id: str) -> Any:
     """Retrieve the most recent effective date for a specific rating id.
 
     Returns
-        datatime
+        Any
             the datetime of the most recent effective date for a rating id. If max effective date is
             not present for rating_id then None will be returned
 
@@ -35,7 +35,7 @@ def get_current_rating(
     rating_id: str,
     office_id: str,
 ) -> Any:
-    """Retrives the rating table for the current active rating.  i.e. the rating table with the latest
+    """Retrieves the rating table for the current active rating.  i.e. the rating table with the latest
     effective date for the rating specification
 
     Parameters
@@ -46,7 +46,7 @@ def get_current_rating(
             The owning office of the rating specifications. If no office is provided information from all offices will
             be returned
         rating_table_in_df: Bool, Optional Default = True
-            define if the independant and dependant variables should be stored as a dataframe
+            define if the independent and dependant variables should be stored as a dataframe
     Returns
     -------
         Data : Data
@@ -79,7 +79,7 @@ def get_ratings(
     format: Optional[str] = None,
     single_rating_df: Optional[bool] = False,
 ) -> Any:
-    """Retrives ratings for a specific rating-id
+    """Retrieves ratings for a specific rating-id
 
     Parameters
     ----------
@@ -91,14 +91,14 @@ def get_ratings(
         begin: datetime, optional
             the start of the time window for data to be included in the response.  This is based on the effective date of the ratings
         end: datetime, optional
-            the end of the time window for data to be included int he reponse. This is based on the effective date of the ratings
+            the end of the time window for data to be included int he response. This is based on the effective date of the ratings
         timezone:
             the time zone of the values in the being and end fields if not specified UTC is used
         method:
-            the retrival method used
-            EAGER: retireves all ratings data include the individual dependenant and independant values
-            LAZY: retrieved all rating data excluding the individual dependance and independant values
-            REFERENCE: only retrievies reference data about the rating spec.
+            the retrieval method used
+            EAGER: retrieves all ratings data include the individual dependant and independent values
+            LAZY: retrieved all rating data excluding the individual dependence and independent values
+            REFERENCE: only retrieves reference data about the rating spec.
         format:
             Specifies the encoding format of the response. Valid values for the format field for this URI are:
             - tab
@@ -149,13 +149,13 @@ def rating_simple_df_to_json(
     active: Optional[bool] = True,
 ) -> Any:
     """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_ratings function. Can
-    only be used for simple ratings with a indenpendant and 1 dependant variable.
+    only be used for simple ratings with a independent and 1 dependant variable.
 
     Parameters
     ----------
         data: pd.Dataframe
             Rating Table to be stored to an exiting rating specification and template.  Can only have 2 columns ind and dep. ind
-            contained the indenpendant variable and dep contains the dependent variable.
+            contained the independent variable and dep contains the dependent variable.
                         ind	dep
                     0	9.62	0.01
                     1	9.63	0.01
@@ -173,7 +173,7 @@ def rating_simple_df_to_json(
         office_id: str
             the owning office of the rating
         units: str
-            units for both the independant and dependent variable seperated by ; i.e. ft;cfs or ft;ft.
+            units for both the independent and dependent variable separated by ; i.e. ft;cfs or ft;ft.
         effective_date: datetime,
             The effective date of the rating curve to be stored.
         transition_start_date: datetime Optional = None
@@ -307,7 +307,7 @@ def delete_ratings(
 
 
 def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
-    """Will create a new ratingset including template/spec and rating
+    """Will create a new rating-set including template/spec and rating
 
     Parameters
     ----------
@@ -326,7 +326,7 @@ def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
 
     if not isinstance(data, dict) and xml_heading not in data:
         raise ValueError(
-            "Cannot store a timeseries without a JSON data dictionaryor in XML"
+            "Cannot store a timeseries without a JSON data dictionary or in XML"
         )
 
     api_version = 2
