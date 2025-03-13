@@ -201,4 +201,4 @@ def store_rating_spec(data: str, fail_if_exists: Optional[bool] = True) -> None:
     endpoint = "ratings/spec/"
     params = {"fail-if-exists": fail_if_exists}
 
-    return api.post(endpoint, data, params, api_version=102)
+    return api.post(endpoint, data, params, format="xml", api_version=2)
