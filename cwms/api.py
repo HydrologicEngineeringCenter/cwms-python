@@ -191,7 +191,6 @@ def get(
     """
     headers = {"Accept": api_version_text(api_version, format=format)}
     with SESSION.get(endpoint, params=params, headers=headers) as response:
-        print(response.url, response.headers)
         if not response.ok:
             logging.error(f"CDA Error: response={response}")
             raise ApiError(response)
