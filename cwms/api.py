@@ -163,7 +163,7 @@ def api_version_text(api_version: int = 0, format: str = "") -> str:
         # XML returns from stdlib as text/xml, but CDA expects application/xml
         mimetype = "application/xml"
     # For present and future versions, append the version number if one is provided. Zero will not set a version.
-    return mimetype + f";version={api_version}" if api_version else mimetype
+    return mimetype if api_version in [0, 1] else mimetype + f";version={api_version}"
 
 
 def get(
