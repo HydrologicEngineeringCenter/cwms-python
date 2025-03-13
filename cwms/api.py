@@ -28,6 +28,7 @@ the error.
 
 import json
 import logging
+import mimetypes
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
@@ -138,39 +139,39 @@ def return_base_url() -> str:
     return str(SESSION.base_url)
 
 
-def api_version_text(api_version: int) -> str:
-    """Initialize CDA request headers.
-
-    The CDA supports multiple versions. To request a specific version, the version number
+def api_version_text(api_version: int = 0, format: str = "") -> str:
+    """CDA supports multiple versions per endpoint. To request a specific version, the version number
     must be included in the request headers.
 
     Args:
         api_version: The CDA version to use for the request.
-
+        format: The format of the response data.
+            Options include:
+                - json (default)
+                - xml
+                - csv
+                - tab
+    Example:
+        api_version_text(2, "json") returns "application/json;version=2"
     Returns:
-        A dict containing the request headers.
-
-    Raises:
-        InvalidVersion: If an unsupported API version is specified.
+        A accept header string with the specified version and/or format.
     """
-
-    if api_version == 1:
-        version = "application/json"
-    elif api_version == 2:
-        version = "application/json;version=2"
-    elif api_version == 102:
-        version = "application/xml;version=2"
-    else:
-        raise InvalidVersion(f"API version {api_version} is not supported.")
-
-    return version
+    # Support future versions by dynamically pulling the format from the mimetypes module
+    mimetype = mimetypes.types_map.get(f".{format}", "application/json")
+    # Handle edge cases the stdlib does not return as expected
+    if format == "xml":
+        # XML returns from stdlib as text/xml, but CDA expects application/xml
+        mimetype = "application/xml"
+    # For present and future versions, append the version number if one is provided. Zero will not set a version.
+    return mimetype + f";version={api_version}" if api_version else mimetype
 
 
-def get_xml(
+def get(
     endpoint: str,
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
+    format: str = "json",
 ) -> Any:
     """Make a GET request to the CWMS Data API.
 
@@ -188,35 +189,9 @@ def get_xml(
     Raises:
         ApiError: If an error response is return by the API.
     """
-    # Wrap the primary get for backwards compatibility
-    return get(endpoint=endpoint, params=params, api_version=api_version)
-
-
-def get(
-    endpoint: str,
-    params: Optional[RequestParams] = None,
-    *,
-    api_version: int = API_VERSION,
-) -> JSON:
-    """Make a GET request to the CWMS Data API.
-
-    Args:
-        endpoint: The CDA endpoint for the record(s).
-        params (optional): Query parameters for the request.
-
-    Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
-            the default API_VERSION will be used.
-
-    Returns:
-        The deserialized JSON response data.
-
-    Raises:
-        ApiError: If an error response is return by the API.
-    """
-
-    headers = {"Accept": api_version_text(api_version)}
+    headers = {"Accept": api_version_text(api_version, format=format)}
     with SESSION.get(endpoint, params=params, headers=headers) as response:
+        print(response.url, response.headers)
         if not response.ok:
             logging.error(f"CDA Error: response={response}")
             raise ApiError(response)
@@ -228,9 +203,9 @@ def get(
                 return cast(JSON, response.json())
             # Use automatic charset detection with .text
             if "text/plain" in content_type or "text/" in content_type:
-                return {"value": response.text}
+                return response.text
             # Fallback for remaining content types
-            return {"value": response.content.decode("utf-8")}
+            return response.content.decode("utf-8")
         except JSONDecodeError as error:
             logging.error(
                 f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
@@ -244,7 +219,8 @@ def get_with_paging(
     params: RequestParams,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+    format: str = "json",
+) -> Any:
     """Make a GET request to the CWMS Data API with paging.
 
     Args:
@@ -255,6 +231,7 @@ def get_with_paging(
     Keyword Args:
         api_version (optional): The CDA version to use for the request. If not specified,
             the default API_VERSION will be used.
+        format (optional): The format of the body data.
 
     Returns:
         The deserialized JSON response data.
@@ -265,7 +242,7 @@ def get_with_paging(
 
     first_pass = True
     while (params["page"] is not None) or first_pass:
-        temp = get(endpoint, params, api_version=api_version)
+        temp = get(endpoint, params, api_version=api_version, format=format)
         if first_pass:
             response = temp
         else:
@@ -284,6 +261,7 @@ def post(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
+    format: str = "json",
 ) -> None:
     """Make a POST request to the CWMS Data API.
 
@@ -295,6 +273,7 @@ def post(
     Keyword Args:
         api_version (optional): The CDA version to use for the request. If not specified,
             the default API_VERSION will be used.
+        format(optional): The format of the body data.
 
     Returns:
         The deserialized JSON response data.
@@ -304,7 +283,10 @@ def post(
     """
 
     # post requires different headers than get for
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+    headers = {
+        "accept": "*/*",
+        "Content-Type": api_version_text(api_version, format=format),
+    }
 
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
@@ -321,6 +303,7 @@ def patch(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
+    format: str = "json",
 ) -> None:
     """Make a PATCH request to the CWMS Data API.
 
@@ -332,6 +315,7 @@ def patch(
     Keyword Args:
         api_version (optional): The CDA version to use for the request. If not specified,
             the default API_VERSION will be used.
+        format (optional): The format of the body data.
 
     Returns:
         The deserialized JSON response data.
@@ -340,7 +324,10 @@ def patch(
         ApiError: If an error response is return by the API.
     """
 
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+    headers = {
+        "accept": "*/*",
+        "Content-Type": api_version_text(api_version, format=format),
+    }
 
     if data and isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
@@ -355,12 +342,14 @@ def delete(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
+    format: str = "json",
 ) -> None:
     """Make a DELETE request to the CWMS Data API.
 
     Args:
         endpoint: The CDA endpoint for the record.
         params (optional): Query parameters for the request.
+        format (optional): The format of the body data.
 
     Keyword Args:
         api_version (optional): The CDA version to use for the request. If not specified,
@@ -370,7 +359,7 @@ def delete(
         ApiError: If an error response is return by the API.
     """
 
-    headers = {"Accept": api_version_text(api_version)}
+    headers = {"Accept": api_version_text(api_version, format=format)}
     with SESSION.delete(endpoint, params=params, headers=headers) as response:
         if not response.ok:
             logging.error(f"CDA Error: response={response}")

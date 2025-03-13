@@ -61,7 +61,7 @@ def get_blobs(
     endpoint = "blobs"
     params = {"office": office_id, "page-size": page_size, "like": blob_id_like}
 
-    response = api.get(endpoint, params, api_version=1)
+    response = api.get(endpoint, params, api_version=2)
     return Data(response, selector="blobs")
 
 
