@@ -77,7 +77,7 @@ def get_timeseries_catalog(
     timeseries_category_like: Optional[str] = None,
     timeseries_group_like: Optional[str] = "DMZ Include List",
     bounding_office_like: Optional[str] = None,
-    include_extents: Optional[bool] = False
+    include_extents: Optional[bool] = False,
 ) -> Data:
     """Retrieves filters for the timeseries catalog
 
