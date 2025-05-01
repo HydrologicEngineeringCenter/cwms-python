@@ -125,7 +125,7 @@ def get_timeseries_catalog(
         "timeseries-category-like": timeseries_category_like,
         "timeseries-group-like": timeseries_group_like,
         "bounding-office-like": bounding_office_like,
-        "include-extents": include_extents
+        "include-extents": include_extents,
     }
 
     response = api.get(endpoint=endpoint, params=params, api_version=2)
