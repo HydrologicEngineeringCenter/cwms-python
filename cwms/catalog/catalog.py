@@ -77,6 +77,7 @@ def get_timeseries_catalog(
     timeseries_category_like: Optional[str] = None,
     timeseries_group_like: Optional[str] = "DMZ Include List",
     bounding_office_like: Optional[str] = None,
+    include_extents: Optional[bool] = False,
 ) -> Data:
     """Retrieves filters for the timeseries catalog
 
@@ -101,6 +102,8 @@ def get_timeseries_catalog(
             The regex for matching against the timeseries group id. This will default to pull only public datasets
         bounding_office_like: string
             The regex for matching against the location bounding office
+        include_extents: bool
+            Whether to include the time series extents in the catalog
 
     Returns
     -------
@@ -122,6 +125,7 @@ def get_timeseries_catalog(
         "timeseries-category-like": timeseries_category_like,
         "timeseries-group-like": timeseries_group_like,
         "bounding-office-like": bounding_office_like,
+        "include-extents": include_extents,
     }
 
     response = api.get(endpoint=endpoint, params=params, api_version=2)
