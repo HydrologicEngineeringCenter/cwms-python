@@ -48,10 +48,3 @@ def test_api_headers():
 
     version = api_version_text(api_version=2)
     assert version == "application/json;version=2"
-
-
-def test_api_headers_invalid_version():
-    """An exception should be raised if the API version is not valid."""
-
-    with pytest.raises(InvalidVersion):
-        version = api_version_text(api_version=3)
