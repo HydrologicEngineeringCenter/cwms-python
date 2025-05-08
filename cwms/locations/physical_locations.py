@@ -70,7 +70,7 @@ def get_locations(
     params = {
         "office": office_id,
         "names": location_ids,
-        "units": units,
+        "unit": units,
         "datum": datum,
     }
 
