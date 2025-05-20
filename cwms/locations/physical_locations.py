@@ -95,6 +95,7 @@ def ExpandLocations(df: DataFrame) -> DataFrame:
 def delete_location(
     location_id: str,
     office_id: Optional[str] = None,
+    cascade_delete: Optional[bool] = False,
 ) -> None:
     """
     Deletes location data with the given ID and office ID.
@@ -105,6 +106,8 @@ def delete_location(
             The ID of the office that the data belongs to.
         loc_ids : str
             The ID of the location that the data belongs to.
+        cascade_delete: bool
+            Whether to delete all data associated with location.
 
     Returns
     -------
@@ -119,6 +122,7 @@ def delete_location(
     endpoint = f"locations/{location_id}"
     params = {
         "office": office_id,
+        "cascade-delete": cascade_delete,
     }
 
     return api.delete(endpoint, params=params)
