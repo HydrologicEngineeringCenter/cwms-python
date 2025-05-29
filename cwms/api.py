@@ -244,7 +244,7 @@ def get_with_paging(
     params: RequestParams,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+) -> Any:
     """Make a GET request to the CWMS Data API with paging.
 
     Args:
