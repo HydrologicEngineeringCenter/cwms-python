@@ -26,9 +26,9 @@ which includes the response object and provides some hints to the user on how to
 the error.
 """
 
+import base64
 import json
 import logging
-import base64
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
