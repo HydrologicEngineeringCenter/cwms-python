@@ -28,6 +28,7 @@ the error.
 
 import json
 import logging
+import base64
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
@@ -229,6 +230,8 @@ def get(
             # Use automatic charset detection with .text
             if "text/plain" in content_type or "text/" in content_type:
                 return response.text
+            if content_type.startswith("image/"):
+                return base64.b64encode(response.content).decode("utf-8")
             # Fallback for remaining content types
             return response.content.decode("utf-8")
         except JSONDecodeError as error:
