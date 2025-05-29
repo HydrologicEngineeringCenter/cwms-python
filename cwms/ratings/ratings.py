@@ -34,8 +34,8 @@ def rating_current_effective_date(rating_id: str, office_id: str) -> Any:
 def get_current_rating(
     rating_id: str,
     office_id: str,
-) -> Any:
-    """Retrieves the rating table for the current active rating.  i.e. the rating table with the latest
+) -> Data:
+    """Retrives the rating table for the current active rating.  i.e. the rating table with the latest
     effective date for the rating specification
 
     Parameters
@@ -69,15 +69,48 @@ def get_current_rating(
     return rating
 
 
-def get_ratings(
+def get_current_rating_xml(
+    rating_id: str,
+    office_id: str,
+) -> Any:
+    """Retrives the rating table for the current active rating.  i.e. the rating table with the latest
+    effective date for the rating specification
+
+    Parameters
+    ----------
+        rating_id: string
+            The rating-id of the effective dates to be retrieved
+        office_id: string
+            The owning office of the rating specifications. If no office is provided information from all offices will
+            be returned
+    Returns
+    -------
+        rating : str
+            xml data as a string
+    """
+
+    max_effective = rating_current_effective_date(
+        rating_id=rating_id, office_id=office_id
+    )
+
+    rating = get_ratings_xml(
+        rating_id=rating_id,
+        office_id=office_id,
+        begin=max_effective,
+        end=max_effective,
+        method="EAGER",
+    )
+
+    return rating
+
+
+def get_ratings_xml(
     rating_id: str,
     office_id: str,
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
     timezone: Optional[str] = None,
     method: Optional[str] = "EAGER",
-    format: Optional[str] = None,
-    single_rating_df: Optional[bool] = False,
 ) -> Any:
     """Retrieves ratings for a specific rating-id
 
@@ -95,16 +128,61 @@ def get_ratings(
         timezone:
             the time zone of the values in the being and end fields if not specified UTC is used
         method:
-            the retrieval method used
-            EAGER: retrieves all ratings data include the individual dependant and independent values
-            LAZY: retrieved all rating data excluding the individual dependence and independent values
-            REFERENCE: only retrieves reference data about the rating spec.
-        format:
-            Specifies the encoding format of the response. Valid values for the format field for this URI are:
-            - tab
-            - csv
-            - xml
-            - json (default)
+            the retrival method used
+            EAGER: retireves all ratings data include the individual dependenant and independant values
+            LAZY: retrieved all rating data excluding the individual dependance and independant values
+            REFERENCE: only retrievies reference data about the rating spec.
+    Returns
+    -------
+        xml_data : str
+            xml data as a string
+    """
+    methods = ["EAGER", "LAZY", "REFERENCE"]
+    if method not in methods:
+        raise ValueError("method needs to be one of EAGER, LAZY, or REFERENCE")
+
+    endpoint = f"ratings/{rating_id}"
+    params = {
+        "office": office_id,
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
+        "timezone": timezone,
+        "method": method,
+    }
+
+    xml_data = api.get_xml(endpoint, params, api_version=102)
+    return xml_data
+
+
+def get_ratings(
+    rating_id: str,
+    office_id: str,
+    begin: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    timezone: Optional[str] = None,
+    method: Optional[str] = "EAGER",
+    single_rating_df: Optional[bool] = False,
+) -> Data:
+    """Retrives ratings for a specific rating-id
+
+    Parameters
+    ----------
+        rating_id: string
+            The rating-id of the effective dates to be retrieved
+        office_id: string
+            The owning office of the rating specifications. If no office is provided information from all offices will
+            be returned
+        begin: datetime, optional
+            the start of the time window for data to be included in the response.  This is based on the effective date of the ratings
+        end: datetime, optional
+            the end of the time window for data to be included int he reponse. This is based on the effective date of the ratings
+        timezone:
+            the time zone of the values in the being and end fields if not specified UTC is used
+        method:
+            the retrival method used
+            EAGER: retireves all ratings data include the individual dependenant and independant values
+            LAZY: retrieved all rating data excluding the individual dependance and independant values
+            REFERENCE: only retrievies reference data about the rating spec.
         single_rating_df: bool, optional = False
             Set to True when using eager and a single rating is returned.  Will place the single rating into the .df function
             used with the get_current_rating or when a only a single rating curve is to be returned.
@@ -124,11 +202,9 @@ def get_ratings(
         "end": end.isoformat() if end else None,
         "timezone": timezone,
         "method": method,
-        "format": format,
     }
 
-    response = api.get(endpoint, params, api_version=2)
-
+    response = api.get(endpoint, params)
     if (method == "EAGER") and single_rating_df:
         data = Data(response, selector="simple-rating.rating-points")
     elif method == "REFERENCE":
@@ -147,7 +223,7 @@ def rating_simple_df_to_json(
     transition_start_date: Optional[datetime] = None,
     description: Optional[str] = None,
     active: Optional[bool] = True,
-) -> Any:
+) -> JSON:
     """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_ratings function. Can
     only be used for simple ratings with a independent and 1 dependant variable.
 
@@ -251,11 +327,12 @@ def update_ratings(
         raise ValueError(
             "Cannot store a rating without a JSON data dictionary or in XML"
         )
-    format = "json"
-    api_version = 2
+
     if xml_heading in data:
-        format = "xml"
-    return api.patch(endpoint, data, params, api_version=api_version, format=format)
+        api_version = 102
+    else:
+        api_version = 2
+    return api.patch(endpoint, data, params, api_version=api_version)
 
 
 def delete_ratings(
