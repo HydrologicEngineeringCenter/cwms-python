@@ -329,8 +329,8 @@ def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
             "Cannot store a timeseries without a JSON data dictionary or in XML"
         )
 
-    api_version = 2
-    format = "json"
     if xml_heading in data:
-        format = "xml"
-    return api.post(endpoint, data, params, api_version=api_version, format=format)
+        api_version = 102
+    else:
+        api_version = 2
+    return api.post(endpoint, data, params, api_version=api_version)
