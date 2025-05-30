@@ -1,7 +1,9 @@
 [tool.poetry]
 name = "cwms-python"
 repository = "https://github.com/HydrologicEngineeringCenter/cwms-python"
+
 version = "0.6.4"
+
 
 packages = [
     { include = "cwms" },
