@@ -21,8 +21,8 @@ def get_multi_timeseries_df(
 
     Parameters
     ----------
-        ts_ids: linst
-            a list of timeseries to get.  If the timeseries is a verioned timeseries then serpeate the ts_id from the
+        ts_ids: list
+            a list of timeseries to get.  If the timeseries is a versioned timeseries then separate the ts_id from the
             version_date using a :.  Example "OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT:2024-04-22 07:00:00-05:00".  Make
             sure that the version date include the timezone offset if not in UTC.
         office_id: string
@@ -163,7 +163,7 @@ def get_timeseries(
             not specified, any required time window ends at the current time. Any timezone
             information should be passed within the datetime object. If no timezone information
             is given, default will be UTC.
-        page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in
+        page_size: int, optional, default is 5000000: Specifies the number of records to obtain in
             a single call.
         version_date: datetime, optional, default is None
             Version date of time series values being requested. If this field is not specified and
@@ -208,7 +208,7 @@ def timeseries_df_to_json(
     office_id: str,
     version_date: Optional[datetime] = None,
 ) -> JSON:
-    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries fucntion.
+    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries function.
 
     Parameters
     ----------
@@ -223,7 +223,7 @@ def timeseries_df_to_json(
                 2   2023-12-20T15:15:00.000-05:00  98.5           0
                 3   2023-12-20T15:30:00.000-05:00  98.5           0
         ts_id: str
-            timeseried id:specified name of the timeseries to be posted to
+            timeseries id:specified name of the timeseries to be posted to
         office_id: str
             the owning office of the time series
         units: str
@@ -280,7 +280,7 @@ def store_timeseries(
     ----------
         data: JSON dictionary
             Time Series data to be stored.
-        create_as_ltrs: bool, optional, defualt is False
+        create_as_ltrs: bool, optional, default is False
             Flag indicating if timeseries should be created as Local Regular Time Series.
         store_rule: str, optional, default is None:
             The business rule to use when merging the incoming with existing data. Available values :
