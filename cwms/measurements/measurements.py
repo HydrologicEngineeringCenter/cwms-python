@@ -88,7 +88,6 @@ def get_measurements(
         "quality": quality,
         "unit-system": unit,
     }
-    # selector = "values"
 
     response = api.get(endpoint, params, api_version=1)
     return Data(response)  # , selector=selector)
