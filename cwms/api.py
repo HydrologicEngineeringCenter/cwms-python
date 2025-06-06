@@ -35,6 +35,7 @@ from typing import Any, Optional, cast
 from requests import Response, adapters
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
+from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
 
@@ -43,8 +44,24 @@ API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
 
 # Initialize a non-authenticated session with the default root URL and set default pool connections.
+
+retry_strategy = Retry(
+    total=6,
+    backoff_factor=0.5,
+    status_forcelist=[
+        403,
+        429,
+        500,
+        502,
+        503,
+        504,
+    ],  # Example: also retry on these HTTP status codes
+    allowed_methods=["GET", "PUT", "POST", "PATCH", "DELETE"],  # Methods to retry
+)
 SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
-adapter = adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+adapter = adapters.HTTPAdapter(
+    pool_connections=100, pool_maxsize=100, max_retries=retry_strategy
+)
 SESSION.mount("https://", adapter)
 
 
@@ -119,7 +136,9 @@ def init_session(
         logging.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
         adapter = adapters.HTTPAdapter(
-            pool_connections=pool_connections, pool_maxsize=pool_connections
+            pool_connections=pool_connections,
+            pool_maxsize=pool_connections,
+            max_retries=retry_strategy,
         )
         SESSION.mount("https://", adapter)
     if api_key:
