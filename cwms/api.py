@@ -61,7 +61,6 @@ SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
 adapter = adapters.HTTPAdapter(
     pool_connections=100, pool_maxsize=100, max_retries=retry_strategy
 )
-# adapter = adapters.HTTPAdapter(max_retries=retry_strategy)
 SESSION.mount("https://", adapter)
 
 
@@ -140,7 +139,6 @@ def init_session(
             pool_maxsize=pool_connections,
             max_retries=retry_strategy,
         )
-        # adapter = adapters.HTTPAdapter(max_retries=retry_strategy)
         SESSION.mount("https://", adapter)
     if api_key:
         logging.debug(f"Setting authorization key: api_key={api_key}")
