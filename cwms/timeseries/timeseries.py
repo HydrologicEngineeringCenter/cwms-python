@@ -155,7 +155,7 @@ def get_timeseries(
             not specified, any required time window ends at the current time. Any timezone
             information should be passed within the datetime object. If no timezone information
             is given, default will be UTC.
-        page_size: int, optional, default is 5000000: Specifies the number of records to obtain in
+        page_size: int, optional, default is 300000: Specifies the number of records to obtain in
             a single call.
         version_date: datetime, optional, default is None
             Version date of time series values being requested. If this field is not specified and
