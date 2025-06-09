@@ -114,9 +114,6 @@ def store_pump_accounting(
     data : dict
         A dictionary representing the JSON data to be stored. This should match the
         WaterSupplyAccounting structure as defined by the API.
-    fail_if_exists : bool, optional
-        Whether the request should fail if the accounting entry already exists.
-        Defaults to True. (Query)
 
     Returns
     -------
