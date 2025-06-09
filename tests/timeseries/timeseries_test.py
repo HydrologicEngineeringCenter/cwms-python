@@ -148,7 +148,7 @@ def test_get_timeseries_unversioned_default(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=500000",
+        "page-size=300000",
         json=_UNVERS_TS_JSON,
     )
 
@@ -177,7 +177,7 @@ def test_get_empty_ts_df(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=500000&"
+        "page-size=300000&"
         "trim=true",
         json=_EMPTY_TS_JSON,
     )
@@ -306,7 +306,7 @@ def test_get_multi_timeseries_default(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=500000&"
+        "page-size=300000&"
         "version-date=2021-06-20T08%3A00%3A00%2B00%3A00",
         json=_VERS_TS_JSON,
     )
@@ -318,7 +318,7 @@ def test_get_multi_timeseries_default(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=500000",
+        "page-size=300000",
         json=_UNVERS_TS_JSON,
     )
 
@@ -362,7 +362,7 @@ def test_get_timeseries_versioned_default(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=500000&"
+        "page-size=300000&"
         "version-date=2021-06-20T08%3A00%3A00%2B00%3A00",
         json=_VERS_TS_JSON,
     )

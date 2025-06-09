@@ -1,4 +1,4 @@
-import threading
+import concurrent.futures
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -16,6 +16,7 @@ def get_multi_timeseries_df(
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
     melted: Optional[bool] = False,
+    max_workers: Optional[int] = 30,
 ) -> DataFrame:
     """gets multiple timeseries and stores into a single dataframe
 
@@ -46,6 +47,9 @@ def get_multi_timeseries_df(
         melted: Boolean, optional, default is false
             if set to True a melted dataframe will be provided. By default a multi-index column dataframe will be
             returned.
+        max_workers: Int, Optional, default is None
+            It is a number of Threads aka size of pool in concurrent.futures.ThreadPoolExecutor. From 3.8 onwards
+            default value is min(32, os.cpu_count() + 4). Out of these 5 threads are preserved for I/O bound task.
 
 
         Returns
@@ -53,60 +57,48 @@ def get_multi_timeseries_df(
             dataframe
     """
 
-    def get_ts_ids(
-        result_dict: list[Dict[str, Any]],
-        ts_id: str,
-        office_id: str,
-        begin: datetime,
-        end: datetime,
-        unit: str,
-        version_date: datetime,
-    ) -> None:
-        data = get_timeseries(
-            ts_id=ts_id,
-            office_id=office_id,
-            unit=unit,
-            begin=begin,
-            end=end,
-            version_date=version_date,
-        )
-        result_dict.append(
-            {
-                "ts_id": ts_id,
-                "unit": data.json["units"],
-                "version_date": version_date,
-                "values": data.df,
-            }
-        )
+    def get_ts_ids(ts_id: str) -> Any:
 
-    result_dict = []  # type: list[Dict[str,Any]]
-    threads = []
-    for ts_id in ts_ids:
         if ":" in ts_id:
             ts_id, version_date = ts_id.split(":", 1)
             version_date_dt = pd.to_datetime(version_date)
         else:
             version_date_dt = None
-        t = threading.Thread(
-            target=get_ts_ids,
-            args=(result_dict, ts_id, office_id, begin, end, unit, version_date_dt),
-        )
-        threads.append(t)
-        t.start()
+        try:
+            data = get_timeseries(
+                ts_id=ts_id,
+                office_id=office_id,
+                unit=unit,
+                begin=begin,
+                end=end,
+                version_date=version_date_dt,
+            )
+            result_dict = {
+                "ts_id": ts_id,
+                "unit": data.json["units"],
+                "version_date": version_date_dt,
+                "values": data.df,
+            }
+            return result_dict
+        except Exception as e:
+            print(f"Error processing {ts_id}: {e}")
+            return None
 
-    for t in threads:
-        t.join()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = executor.map(get_ts_ids, ts_ids)
 
+    result_dict = list(results)
     data = pd.DataFrame()
     for row in result_dict:
-        temp_df = row["values"]
-        temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
-        if "version_date" in row.keys():
-            temp_df = temp_df.assign(version_date=row["version_date"])
-        temp_df.dropna(how="all", axis=1, inplace=True)
-        data = pd.concat([data, temp_df], ignore_index=True)
+        if row:
+            temp_df = row["values"]
+            temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+            if "version_date" in row.keys():
+                temp_df = temp_df.assign(version_date=row["version_date"])
+            temp_df.dropna(how="all", axis=1, inplace=True)
+            data = pd.concat([data, temp_df], ignore_index=True)
 
-    if not melted:
+    if not melted and "date-time" in data.columns:
         cols = ["ts_id", "units"]
         if "version_date" in data.columns:
             cols.append("version_date")
@@ -129,7 +121,7 @@ def get_timeseries(
     datum: Optional[str] = None,
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
-    page_size: Optional[int] = 500000,
+    page_size: Optional[int] = 300000,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
 ) -> Data:
@@ -163,7 +155,7 @@ def get_timeseries(
             not specified, any required time window ends at the current time. Any timezone
             information should be passed within the datetime object. If no timezone information
             is given, default will be UTC.
-        page_size: int, optional, default is 5000000: Specifies the number of records to obtain in
+        page_size: int, optional, default is 300000: Specifies the number of records to obtain in
             a single call.
         version_date: datetime, optional, default is None
             Version date of time series values being requested. If this field is not specified and
@@ -242,7 +234,7 @@ def timeseries_df_to_json(
         df["quality-code"] = 0
     if "date-time" not in df:
         raise TypeError(
-            "date-time is a required column in data when posting as a dateframe"
+            "date-time is a required column in data when posting as a dataframe"
         )
     if "value" not in df:
         raise TypeError(
