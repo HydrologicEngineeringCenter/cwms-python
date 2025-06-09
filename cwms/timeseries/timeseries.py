@@ -64,22 +64,25 @@ def get_multi_timeseries_df(
             version_date_dt = pd.to_datetime(version_date)
         else:
             version_date_dt = None
-
-        data = get_timeseries(
-            ts_id=ts_id,
-            office_id=office_id,
-            unit=unit,
-            begin=begin,
-            end=end,
-            version_date=version_date_dt,
-        )
-        result_dict = {
-            "ts_id": ts_id,
-            "unit": data.json["units"],
-            "version_date": version_date_dt,
-            "values": data.df,
-        }
-        return result_dict
+        try:
+            data = get_timeseries(
+                ts_id=ts_id,
+                office_id=office_id,
+                unit=unit,
+                begin=begin,
+                end=end,
+                version_date=version_date_dt,
+            )
+            result_dict = {
+                "ts_id": ts_id,
+                "unit": data.json["units"],
+                "version_date": version_date_dt,
+                "values": data.df,
+            }
+            return result_dict
+        except Exception as e:
+            print(f"Error processing {ts_id}: {e}")
+            return None
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         results = executor.map(get_ts_ids, ts_ids)
@@ -87,14 +90,15 @@ def get_multi_timeseries_df(
     result_dict = list(results)
     data = pd.DataFrame()
     for row in result_dict:
-        temp_df = row["values"]
-        temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
-        if "version_date" in row.keys():
-            temp_df = temp_df.assign(version_date=row["version_date"])
-        temp_df.dropna(how="all", axis=1, inplace=True)
-        data = pd.concat([data, temp_df], ignore_index=True)
+        if row:
+            temp_df = row["values"]
+            temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+            if "version_date" in row.keys():
+                temp_df = temp_df.assign(version_date=row["version_date"])
+            temp_df.dropna(how="all", axis=1, inplace=True)
+            data = pd.concat([data, temp_df], ignore_index=True)
 
-    if not melted:
+    if not melted and "date-time" in data.columns:
         cols = ["ts_id", "units"]
         if "version_date" in data.columns:
             cols.append("version_date")
@@ -117,7 +121,7 @@ def get_timeseries(
     datum: Optional[str] = None,
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
-    page_size: Optional[int] = 500000,
+    page_size: Optional[int] = 300000,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
 ) -> Data:
