@@ -116,8 +116,11 @@ def store_measurements(
         "fail-if-exists": fail_if_exists,
     }
 
-    if not isinstance(data, dict):
-        raise ValueError("Cannot store a timeseries without a JSON data dictionary")
+    if not isinstance(data, list):
+        raise ValueError("Cannot store a measurement without a JSON list, object is not a list of dictionaries")
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError("Cannot store a measurement without a JSON list: a non-dictionary object was found")
 
     return api.post(endpoint, data, params, api_version=1)
 
