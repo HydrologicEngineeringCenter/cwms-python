@@ -79,7 +79,7 @@ class Data:
                 df["date-time"] = to_datetime(df["date-time"], unit="ms", utc=True)
             return df
 
-        def reorder_measurement_cols(df):
+        def reorder_measurement_cols(df: DataFrame) -> DataFrame:
             # reorders measurement columns for usability
 
             # Define the columns to bring to the front
