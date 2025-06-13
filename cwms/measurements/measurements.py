@@ -186,7 +186,7 @@ def delete_measurements(
 
 def get_measurements_extents(
     office_mask: Optional[str] = None,
-) -> None:
+) -> Data:
     """Get time extents of streamflow measurements
 
     Parameters
