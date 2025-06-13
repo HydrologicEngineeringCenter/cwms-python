@@ -202,7 +202,7 @@ def get_measurements_extents(
     endpoint = f"measurements/time-extents"
 
     params = {
-        "office_mask": office_mask,
+        "office-mask": office_mask,
     }
 
     response = api.get(endpoint, params, api_version=1)
