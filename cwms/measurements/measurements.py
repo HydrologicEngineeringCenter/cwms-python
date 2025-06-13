@@ -182,3 +182,28 @@ def delete_measurements(
     }
 
     return api.delete(endpoint, params, api_version=1)
+
+
+def get_measurements_extents(
+    office_mask: Optional[str] = None,
+) -> None:
+    """Get time extents of streamflow measurements
+
+    Parameters
+    ----------
+        office_mask: string
+            Office Id used to filter the results.
+
+    Returns
+    -------
+        cwms data type.  data.json will return the JSON output and data.df will return a dataframe. Dates returned are all in UTC.
+
+    """
+    endpoint = f"measurements/time-extents"
+
+    params = {
+        "office_mask": office_mask,
+    }
+
+    response = api.get(endpoint, params, api_version=1)
+    return Data(response)  # , selector=selector)
