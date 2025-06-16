@@ -199,7 +199,7 @@ def timeseries_df_to_json(
     office_id: str,
     version_date: Optional[datetime] = None,
 ) -> JSON:
-    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries fucntion.
+    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries function.
 
     Parameters
     ----------

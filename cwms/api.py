@@ -26,6 +26,7 @@ which includes the response object and provides some hints to the user on how to
 the error.
 """
 
+import base64
 import json
 import logging
 from json import JSONDecodeError
@@ -207,20 +208,8 @@ def get_xml(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
-    headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.get(endpoint, params=params, headers=headers)
-    response.close()
-
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
-
-    try:
-        return response.content.decode("utf-8")
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response as xml: {error}")
-        return {}
+    # Wrap the primary get for backwards compatibility
+    return get(endpoint=endpoint, params=params, api_version=api_version)
 
 
 def get(
@@ -228,7 +217,7 @@ def get(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+) -> Any:
     """Make a GET request to the CWMS Data API.
 
     Args:
@@ -247,17 +236,28 @@ def get(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.get(endpoint, params=params, headers=headers)
-    response.close()
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
-
-    try:
-        return cast(JSON, response.json())
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response as json: {error}")
-        return {}
+    with SESSION.get(endpoint, params=params, headers=headers) as response:
+        if not response.ok:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
+        try:
+            # Avoid case sensitivity issues with the content type header
+            content_type = response.headers.get("Content-Type", "").lower()
+            # Most CDA content is JSON
+            if "application/json" in content_type or not content_type:
+                return cast(JSON, response.json())
+            # Use automatic charset detection with .text
+            if "text/plain" in content_type or "text/" in content_type:
+                return response.text
+            if content_type.startswith("image/"):
+                return base64.b64encode(response.content).decode("utf-8")
+            # Fallback for remaining content types
+            return response.content.decode("utf-8")
+        except JSONDecodeError as error:
+            logging.error(
+                f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
+            )
+            return response.text
 
 
 def get_with_paging(
@@ -266,7 +266,7 @@ def get_with_paging(
     params: RequestParams,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+) -> Any:
     """Make a GET request to the CWMS Data API with paging.
 
     Args:
@@ -331,12 +331,10 @@ def post(
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
 
-    response = SESSION.post(endpoint, params=params, headers=headers, data=data)
-    response.close()
-
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
+        if not response.ok:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
 
 
 def patch(
@@ -365,16 +363,13 @@ def patch(
     """
 
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-    if data is None:
-        response = SESSION.patch(endpoint, params=params, headers=headers)
-    else:
-        if isinstance(data, dict) or isinstance(data, list):
-            data = json.dumps(data)
-        response = SESSION.patch(endpoint, params=params, headers=headers, data=data)
-    response.close()
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+
+    if data and isinstance(data, dict) or isinstance(data, list):
+        data = json.dumps(data)
+    with SESSION.patch(endpoint, params=params, headers=headers, data=data) as response:
+        if not response.ok:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
 
 
 def delete(
@@ -398,8 +393,7 @@ def delete(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.delete(endpoint, params=params, headers=headers)
-    response.close()
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    with SESSION.delete(endpoint, params=params, headers=headers) as response:
+        if not response.ok:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)

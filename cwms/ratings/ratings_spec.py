@@ -8,7 +8,7 @@ from cwms.cwms_types import JSON, Data
 
 
 def get_rating_spec(rating_id: str, office_id: str) -> Data:
-    """Retrives a single rating spec
+    """Retrieves a single rating spec
 
       Parameters
       ----------
@@ -37,7 +37,7 @@ def get_rating_specs(
     rating_id_mask: Optional[str] = None,
     page_size: int = 500000,
 ) -> Data:
-    """Retrives a list of rating specification
+    """Retrieves a list of rating specification
 
       Parameters
       ----------
@@ -45,7 +45,7 @@ def get_rating_specs(
               The owning office of the rating specifications. If no office is provided information from all offices will
               be returned
           rating-id-mask: string, optional
-              Posix regular expression that specifies the rating ids to be included in the reponce.  If not specified all
+              Posix regular expression that specifies the rating ids to be included in the response.  If not specified all
               rating specs shall be returned.
           page-size: int, optional, default is 5000000: Specifies the number of records to obtain in
               a single call.
@@ -111,7 +111,7 @@ def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
     Parameters
     ----------
     data : pd_dataframe
-        pandas dataframe that contrains rating specification paramters
+        pandas dataframe that contains rating specification parameters
         should follow same formate the is returned from get_rating_spec function
     Returns
     -------
@@ -134,10 +134,10 @@ def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
       <auto-migrate-extension>{str(data.loc[0,'auto-migrate-extension']).lower()}</auto-migrate-extension>
       <ind-rounding-specs>"""
 
-    ind_rouding = data.loc[0, "independent-rounding-specs"]
-    if isinstance(ind_rouding, list):
+    ind_rounding = data.loc[0, "independent-rounding-specs"]
+    if isinstance(ind_rounding, list):
         i = 1
-        for rounding in ind_rouding:
+        for rounding in ind_rounding:
             spec_xml = (
                 spec_xml
                 + f"""\n   <ind-rounding-spec position="{i}">{rounding['value']}</ind-rounding-spec>"""
