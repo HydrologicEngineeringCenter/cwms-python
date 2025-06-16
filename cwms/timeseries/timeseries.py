@@ -58,13 +58,12 @@ def get_multi_timeseries_df(
     """
 
     def get_ts_ids(ts_id: str) -> Any:
-
-        if ":" in ts_id:
-            ts_id, version_date = ts_id.split(":", 1)
-            version_date_dt = pd.to_datetime(version_date)
-        else:
-            version_date_dt = None
         try:
+            if ":" in ts_id:
+                ts_id, version_date = ts_id.split(":", 1)
+                version_date_dt = pd.to_datetime(version_date)
+            else:
+                version_date_dt = None
             data = get_timeseries(
                 ts_id=ts_id,
                 office_id=office_id,
@@ -258,6 +257,54 @@ def timeseries_df_to_json(
     }
 
     return ts_dict
+
+
+def store_multi_timeseries_df(
+    ts_data: pd.DataFrame, office_id: str, max_workers: Optional[int] = 30
+) -> None:
+
+    def store_ts_ids(
+        data: pd.DataFrame,
+        ts_id: str,
+        office_id: str,
+        version_date: Optional[datetime] = None,
+    ) -> None:
+        units = data["units"].iloc[0]
+        data_json = timeseries_df_to_json(
+            data=data,
+            ts_id=ts_id,
+            units=units,
+            office_id=office_id,
+            version_date=version_date,
+        )
+        store_timeseries(data=data_json)
+        return None
+
+    unique_tsids = (
+        ts_data["ts_id"].astype(str) + ":" + ts_data["version_date"].astype(str)
+    ).unique()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for ts_id_all in unique_tsids:
+            try:
+                ts_id, version_date = ts_id_all.split(":", 1)
+                if version_date != "NaT":
+                    version_date_dt = pd.to_datetime(version_date)
+                    data = ts_data[
+                        (ts_data["ts_id"] == ts_id)
+                        & (ts_data["version_date"] == version_date_dt)
+                    ]
+                else:
+                    version_date_dt = None
+                    data = ts_data[
+                        (ts_data["ts_id"] == ts_id) & ts_data["version_date"].isna()
+                    ]
+                if not data.empty:
+                    executor.submit(
+                        store_ts_ids, data, ts_id, office_id, version_date_dt
+                    )
+            except Exception as e:
+                print(f"Error processing {ts_id}: {e}")
 
 
 def store_timeseries(
