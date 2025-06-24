@@ -50,7 +50,7 @@ services:
         condition: service_completed_successfully
       traefik:
         condition: service_healthy
-    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:latest}
+    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:latest-dev}
     restart: unless-stopped
     volumes:
       - ./compose_files/pki/certs:/conf/
@@ -119,7 +119,7 @@ services:
 
   # Proxy for HTTPS for OpenID
   traefik:
-    image: "traefik:v3.3.3"
+    image: traefik:v3.3.3
     ports:
       - "${APP_PORT:-8081}:80"
     expose:
