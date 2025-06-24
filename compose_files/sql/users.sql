@@ -27,6 +27,9 @@ begin
     cwms_sec.add_user_to_group('m5testadmin','All Users', 'LRL');
     cwms_sec.add_user_to_group('m5testadmin','CWMS Users', 'LRL');
     cwms_sec.add_user_to_group('m5testadmin','CWMS User Admins', 'LRL');
+
+    insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('L2HECTEST', 'testkey', '1234567890abcdef1234567890abcdef');
+
 end;
 /
 quit;
