@@ -1,0 +1,186 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    env:
+      APP_PORT: 8081
+      DB_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:latest-dev
+      SCHEMA_INS_IMAGE: registry-public.hecdev.net/cwms/schema_installer:latest-dev
+      DATA_API_IMAGE: ghcr.io/usace/cwms-data-api:latest
+      KEYCLOAK_IMAGE: quay.io/keycloak/keycloak:19.0.1
+      TRAEFIK_IMAGE: traefik:v3.3.3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # If your DATA_API_IMAGE lives in a private registry:
+      #- name: Log in to Container Registry
+      #  uses: docker/login-action@v2
+      #  with:
+      #    registry: myregistry
+      #    username: ${{ secrets.REG_USERNAME }}
+      #    password: ${{ secrets.REG_PASSWORD }}
+
+      - name: Create network & volumes
+        run: |
+          docker network create testnet   || true
+          docker volume create oracle_data_1 || true
+          docker volume create auth_data    || true
+
+      - name: Start Oracle DB
+        run: |
+          docker run -d --name db --network testnet \
+            -e ORACLE_PASSWORD=badSYSpassword \
+            -e CWMS_PASSWORD=simplecwmspasswD1 \
+            -e OFFICE_ID=HQ \
+            -e OFFICE_EROC=s0 \
+            -v oracle_data_1:/opt/oracle/oradata \
+            -p 1525:1521 \
+            $DB_IMAGE
+
+      - name: Wait for Oracle
+        run: |
+          until nc -z localhost 1525; do
+            echo "waiting for oracle..."
+            sleep 10
+          done
+
+      - name: Run schema installer
+        run: |
+          docker run --rm --network testnet \
+            -e DB_HOST_PORT=db:1521 \
+            -e DB_NAME=/FREEPDB1 \
+            -e CWMS_PASSWORD=simplecwmspasswD1 \
+            -e SYS_PASSWORD=badSYSpassword \
+            -e OFFICE_ID=HQ \
+            -e OFFICE_EROC=s0 \
+            -e INSTALLONCE=1 \
+            -e QUIET=1 \
+            -v $GITHUB_WORKSPACE/compose_files/sql:/setup_sql:ro \
+            $SCHEMA_INS_IMAGE \
+            sh -xc "sqlplus CWMS_20/$$CWMS_PASSWORD@$$DB_HOST_PORT$$DB_NAME @/setup_sql/users $$OFFICE_EROC"
+
+      - name: Start Traefik
+        run: |
+          docker run -d --name traefik --network testnet \
+            -p ${APP_PORT}:80 \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            $TRAEFIK_IMAGE \
+            --entrypoints.web.address=:80 \
+            --providers.docker=true \
+            --providers.docker.exposedbydefault=false \
+            --api.insecure=true \
+            --ping
+
+      - name: Start Keycloak
+        run: |
+          docker run -d --name auth --network testnet \
+            -e KEYCLOAK_ADMIN=admin \
+            -e KEYCLOAK_ADMIN_PASSWORD=admin \
+            -e KC_HTTP_PORT=${APP_PORT} \
+            -v $GITHUB_WORKSPACE/compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro \
+            $KEYCLOAK_IMAGE \
+            start-dev --features-disabled=admin2 --import-realm
+
+      - name: Wait for Keycloak
+        run: |
+          until curl -sfI http://localhost:${APP_PORT}/auth/health/ready; do
+            echo "waiting for keycloak..."
+            sleep 5
+          done
+
+      - name: Pull Data-API image
+        run: docker pull $DATA_API_IMAGE
+
+      - name: Start Data-API
+        run: |
+          docker run -d --name data-api --network testnet \
+            -p 7000:7000 \
+            -v $GITHUB_WORKSPACE/compose_files/pki/certs:/conf \
+            -v $GITHUB_WORKSPACE/compose_files/tomcat/logging.properties:/usr/local/tomcat/conf/logging.properties:ro \
+            -e CDA_JDBC_DRIVER=oracle.jdbc.driver.OracleDriver \
+            -e CDA_JDBC_URL=jdbc:oracle:thin:@db/FREEPDB1 \
+            -e CDA_JDBC_USERNAME=s0webtest \
+            -e CDA_JDBC_PASSWORD=simplecwmspasswD1 \
+            -e CDA_POOL_INIT_SIZE=5 \
+            -e CDA_POOL_MAX_ACTIVE=10 \
+            -e CDA_POOL_MAX_IDLE=5 \
+            -e CDA_POOL_MIN_IDLE=2 \
+            -e cwms.dataapi.access.provider=MultipleAccessManager \
+            -e cwms.dataapi.access.providers=KeyAccessManager,OpenID \
+            -e cwms.dataapi.access.openid.create_users=true \
+            -e cwms.dataapi.access.openid.wellKnownUrl=http://auth:${APP_PORT}/auth/realms/cwms/.well-known/openid-configuration \
+            -e cwms.dataapi.access.openid.altAuthUrl=http://localhost:${APP_PORT} \
+            -e cwms.dataapi.access.openid.useAltWellKnown=true \
+            -e cwms.dataapi.access.openid.issuer=http://localhost:${APP_PORT}/auth/realms/cwms \
+            $DATA_API_IMAGE \
+            bash -c "/conf/installcerts.sh && /usr/local/tomcat/bin/catalina.sh run"
+
+      - name: Wait for Data-API
+        run: |
+          until curl -sfI http://localhost:7000/cwms-data/offices/HEC; do
+            echo "waiting for data-api..."
+            sleep 5
+          done
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # Unlike the code-check workflow, this job requires the dev dependencies to be
+      # installed to make sure we have the necessary, tools, stub files, etc.
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v4
+
+      - name: Cache Virtual Environment
+        uses: actions/cache@v4
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install Dependencies
+        run: poetry install
+
+      # Run pytest and generate coverage report data.
+      - name: Run Tests
+        run: poetry run pytest tests/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
+
+      # Run mypy with strict mode enabled. Only the main source code is type checked (test
+      # and example code is excluded).
+      - name: Check Types
+        run: poetry run mypy --strict cwms/
+
+      - name: Generate Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: out/coverage.xml
+          format: markdown
+          output: both
+          badge: true
+
+      - name: Generate Job Summary
+        uses: x-color/github-actions-job-summary@v0.1.1
+        with:
+          file: ./code-coverage-results.md
+          vars: |-
+            empty: empty
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker rm -f data-api auth traefik db || true
+          docker network rm testnet        || true
+          docker volume rm oracle_data_1 auth_data || true
