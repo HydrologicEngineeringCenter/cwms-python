@@ -1,6 +1,8 @@
-import pytest
-import cwms
 from unittest.mock import patch
+
+import pytest
+
+import cwms
 
 
 def pytest_addoption(parser):
