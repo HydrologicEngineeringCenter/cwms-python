@@ -11,7 +11,7 @@ services:
       - OFFICE_ID=HQ
       - OFFICE_EROC=s0
     ports:
-      - "1525:1521"
+      - "1526:1521"
     healthcheck:
       test: ["CMD","tnsping", "FREEPDB1"]
       interval: 30s
@@ -67,10 +67,10 @@ services:
       - cwms.dataapi.access.provider=MultipleAccessManager
       - cwms.dataapi.access.providers=KeyAccessManager,OpenID
       - cwms.dataapi.access.openid.create_users=true
-      - cwms.dataapi.access.openid.wellKnownUrl=http://auth:${APP_PORT:-8081}/auth/realms/cwms/.well-known/openid-configuration
-      - cwms.dataapi.access.openid.altAuthUrl=http://localhost:${APP_PORT:-8081}
+      - cwms.dataapi.access.openid.wellKnownUrl=http://auth:${APP_PORT:-8082}/auth/realms/cwms/.well-known/openid-configuration
+      - cwms.dataapi.access.openid.altAuthUrl=http://localhost:${APP_PORT:-8082}
       - cwms.dataapi.access.openid.useAltWellKnown=true
-      - cwms.dataapi.access.openid.issuer=http://localhost:${APP_PORT:-8081}/auth/realms/cwms
+      - cwms.dataapi.access.openid.issuer=http://localhost:${APP_PORT:-8082}/auth/realms/cwms
     expose:
       - 7000
     healthcheck:
@@ -88,7 +88,7 @@ services:
     image: quay.io/keycloak/keycloak:19.0.1
     command: ["start-dev", "--features-disabled=admin2","--import-realm"]
     healthcheck:
-      test: "/usr/bin/curl -If localhost:${APP_PORT:-8081}/auth/health/ready || exit 1"
+      test: "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit 1"
       interval: 5s
       timeout: 1s
       retries: 100
@@ -98,8 +98,8 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
       - KC_FEATURES=admin-fine-grained-authz
-      - KC_HTTP_PORT=${APP_PORT:-8081}
-      - KEYCLOAK_FRONTEND_URL=http://localhost:${APP_PORT:-8081}
+      - KC_HTTP_PORT=${APP_PORT:-8082}
+      - KEYCLOAK_FRONTEND_URL=http://localhost:${APP_PORT:-8082}
       - KC_HOSTNAME_STRICT=false
       - KC_PROXY=none
       - KC_HTTP_ENABLED=true
@@ -110,7 +110,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
       - "traefik.http.routers.auth.entryPoints=web"
-      - "traefik.http.services.auth.loadbalancer.server.port=${APP_PORT:-8081}"
+      - "traefik.http.services.auth.loadbalancer.server.port=${APP_PORT:-8082}"
     depends_on:
       traefik:
         condition: service_healthy
@@ -121,7 +121,7 @@ services:
   traefik:
     image: traefik:v3.3.3
     ports:
-      - "${APP_PORT:-8081}:80"
+      - "${APP_PORT:-8082}:80"
     expose:
       - "8080"
     volumes:

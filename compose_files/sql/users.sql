@@ -12,6 +12,7 @@ begin
     cwms_sec.add_user_to_group('l2hectest','All Users', 'SPK');
     cwms_sec.add_user_to_group('l2hectest','CWMS Users', 'SPK');
     cwms_sec.add_user_to_group('l2hectest','TS ID Creator','SPK');
+    cwms_sec.add_user_to_group('l2hectest','CWMS User Admins', 'SPK');
 
     cwms_sec.add_cwms_user('l1hectest',NULL,'SPL');
     -- intentionally no extra permissions.
@@ -23,12 +24,29 @@ begin
     execute immediate 'grant execute on cwms_20.cwms_upass to web_user';
 
 
-    cwms_sec.add_user_cwms('m5testadmin', NULL, 'LRL');
+    cwms_sec.add_cwms_user('m5testadmin', NULL, 'LRL');
     cwms_sec.add_user_to_group('m5testadmin','All Users', 'LRL');
     cwms_sec.add_user_to_group('m5testadmin','CWMS Users', 'LRL');
     cwms_sec.add_user_to_group('m5testadmin','CWMS User Admins', 'LRL');
 
-    insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('L2HECTEST', 'testkey', '1234567890abcdef1234567890abcdef');
+    cwms_sec.add_cwms_user('q0hectest', NULL, 'LRL');
+    cwms_sec.add_user_to_group('q0hectest','All Users', 'LRL');
+    cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'LRL');
+    cwms_sec.add_user_to_group('q0hectest','TS ID Creator','LRL');
+
+    cwms_sec.add_cwms_user('q0hectest', NULL, 'SPK');
+    cwms_sec.add_user_to_group('q0hectest','All Users', 'SPK');
+    cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'SPK');
+    cwms_sec.add_user_to_group('q0hectest','TS ID Creator','SPK');
+
+    cwms_sec.add_cwms_user('q0hectest', NULL, 'MVP');
+    cwms_sec.add_user_to_group('q0hectest','All Users', 'MVP');
+    cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'MVP');
+    cwms_sec.add_user_to_group('q0hectest','TS ID Creator','MVP');
+
+    insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('Q0HECTEST', 'testkey', '0123456789abcdef0123456789abcdef');
+
+    insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('L2HECTEST', 'testkey2', '1234567890abcdef1234567890abcdef');
 
 end;
 /

@@ -47,6 +47,51 @@ Run poetry against a single file with:
 poetry run pytest tests/turbines/turbines_test.py
 ```
 
+### Local CDA Testing and Development
+
+To test and develop with a local CDA instance, follow these steps:
+
+1. **Install Docker**  
+    Download and install Docker from the [official website](https://www.docker.com/get-started/).
+
+2. **Start and Verify CDA Services**  
+    From the project root, run:
+    ```sh
+    docker compose up -d
+    ```
+    This will start the required services: Oracle database instance, CWMS API, Keycloak Auth, and Traefik proxy.  
+    Additionally, there is a one-time service that runs and then shuts down; this service connects to the database instance to set initial conditions and users.  
+    If you want to update the initial data in the database, you can do so by editing the `compose_files/sql/users.sql` file.
+
+    Ensure all these services are running by checking their status:
+    ```sh
+    docker compose ps
+    ```
+    All containers should have a `State` of `Up` before proceeding.
+
+    #### Service Ports and Access
+
+    By default, the local CDA instance will be accessible at [http://localhost:8082](http://localhost:8082), and the Oracle database will be available on port `1526`. When developing or running tests, ensure your application or test configuration points to these ports.
+
+    > **Note:** If you are running other instances of CDA or Oracle on your machine, they may use different ports. Always verify which ports are in use and update your configuration files accordingly to avoid conflicts.
+
+3. **Run Tests Against CDA**  
+    Once the services are running, execute the tests:
+    ```sh
+    poetry run pytest tests/
+    ```
+    This will run all tests, including those that require a CDA connection.
+
+    #### Running CDA Tests Against Other Instances
+
+    Developers can also run the tests in the `tests/cda/` package against other CDA instances by providing the `--api_key` and `--api_root` command line arguments. For example:
+
+    ```sh
+    poetry run pytest tests/cda/ --api_root=http://localhost:8082/cwms-data/
+    ```
+
+    > **Warning:** The tests in the `tests/cda/` package are destructive and may cause irreversible deletion of data from the targeted CDA instance. Use caution and avoid running these tests against production or important environments.
+
 ### Code Style
 
 In order for a pull request to be accepted, python code must be formatted using [black][black] and [isort][isort]. YAML files should also be formatted using either Prettier or the provided pre-commit hook. Developer are encouraged to integrate these tools into their workflow. Pre-commit hooks can be installed to automatically validate any code changes, and reformat if necessary.
