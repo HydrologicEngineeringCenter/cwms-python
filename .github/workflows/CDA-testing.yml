@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: set up backend
-        run: docker compose up -d
+        run: docker compose up --build -d
 
       - name: Set Up Python
         uses: actions/setup-python@v5
@@ -26,6 +26,10 @@ jobs:
       # installed to make sure we have the necessary, tools, stub files, etc.
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
+
+      - name: Add Poetry to PATH (for act)
+        if: env.ACT
+        run: echo "/root/.local/bin" >> $GITHUB_PATH
 
       - name: Cache Virtual Environment
         uses: actions/cache@v4

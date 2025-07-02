@@ -2,19 +2,21 @@ import pytest
 import cwms
 from unittest.mock import patch
 
+
 def pytest_addoption(parser):
     parser.addoption(
         "--api_key",
         action="store",
-        default='0123456789abcdef0123456789abcdef',
-        help="Set a custom API key for the CWMS API"
+        default="0123456789abcdef0123456789abcdef",
+        help="Set a custom API key for the CWMS API",
     )
     parser.addoption(
         "--api_root",
         action="store",
-        default='http://localhost:8082/cwms-data/',
-        help="Set a custom API root for the CWMS API"
+        default="http://localhost:8082/cwms-data/",
+        help="Set a custom API root for the CWMS API",
     )
+
 
 @pytest.fixture(scope="package", autouse=True)
 def auto_track_locations(request):

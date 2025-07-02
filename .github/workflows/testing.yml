@@ -32,7 +32,7 @@ jobs:
 
       # Run pytest and generate coverage report data.
       - name: Run Tests
-        run: poetry run pytest tests/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
+        run: poetry run pytest tests/mock/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
 
       # Run mypy with strict mode enabled. Only the main source code is type checked (test
       # and example code is excluded).

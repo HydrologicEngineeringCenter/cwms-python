@@ -141,10 +141,10 @@ def init_session(
         )
         SESSION.mount("https://", adapter)
     if api_key:
-        if(api_key.startswith("apikey ")):
+        if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
         logging.debug(f"Setting authorization key: api_key={api_key}")
-        SESSION.headers.update({"Authorization": 'apikey '+ api_key})
+        SESSION.headers.update({"Authorization": "apikey " + api_key})
 
     return SESSION
 
