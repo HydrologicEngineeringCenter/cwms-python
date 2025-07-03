@@ -62,8 +62,8 @@ class Data:
         def rating_type(data: JSON) -> DataFrame:
             # grab the correct point values for a rating table
             df = DataFrame(data["point"]) if data["point"] else DataFrame()
-            df = df.apply(to_numeric)
-            return df
+            df_numeric = df.apply(to_numeric, axis=0, result_type="expand")
+            return DataFrame(df_numeric)
 
         def timeseries_type(orig_json: JSON, value_json: JSON) -> DataFrame:
             # if timeseries values are present then grab the values and put into

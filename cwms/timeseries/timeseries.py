@@ -58,13 +58,12 @@ def get_multi_timeseries_df(
     """
 
     def get_ts_ids(ts_id: str) -> Any:
-
-        if ":" in ts_id:
-            ts_id, version_date = ts_id.split(":", 1)
-            version_date_dt = pd.to_datetime(version_date)
-        else:
-            version_date_dt = None
         try:
+            if ":" in ts_id:
+                ts_id, version_date = ts_id.split(":", 1)
+                version_date_dt = pd.to_datetime(version_date)
+            else:
+                version_date_dt = None
             data = get_timeseries(
                 ts_id=ts_id,
                 office_id=office_id,
@@ -248,16 +247,69 @@ def timeseries_df_to_json(
     df = df.reindex(columns=["date-time", "value", "quality-code"])
     if df.isnull().values.any():
         raise ValueError("Null/NaN data must be removed from the dataframe")
-
+    if version_date:
+        version_date_iso = version_date.isoformat()
+    else:
+        version_date_iso = None
     ts_dict = {
         "name": ts_id,
         "office-id": office_id,
         "units": units,
         "values": df.values.tolist(),
-        "version-date": version_date,
+        "version-date": version_date_iso,
     }
 
     return ts_dict
+
+
+def store_multi_timeseries_df(
+    data: pd.DataFrame, office_id: str, max_workers: Optional[int] = 30
+) -> None:
+    def store_ts_ids(
+        data: pd.DataFrame,
+        ts_id: str,
+        office_id: str,
+        version_date: Optional[datetime] = None,
+    ) -> None:
+        try:
+            units = data["units"].iloc[0]
+            data_json = timeseries_df_to_json(
+                data=data,
+                ts_id=ts_id,
+                units=units,
+                office_id=office_id,
+                version_date=version_date,
+            )
+            store_timeseries(data=data_json)
+        except Exception as e:
+            print(f"Error processing {ts_id}: {e}")
+        return None
+
+    ts_data_all = data.copy()
+    if "version_date" not in ts_data_all.columns:
+        ts_data_all = ts_data_all.assign(version_date=pd.to_datetime(pd.Series([])))
+    unique_tsids = (
+        ts_data_all["ts_id"].astype(str) + ":" + ts_data_all["version_date"].astype(str)
+    ).unique()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for unique_tsid in unique_tsids:
+            ts_id, version_date = unique_tsid.split(":", 1)
+            if version_date != "NaT":
+                version_date_dt = pd.to_datetime(version_date)
+                ts_data = ts_data_all[
+                    (ts_data_all["ts_id"] == ts_id)
+                    & (ts_data_all["version_date"] == version_date_dt)
+                ]
+            else:
+                version_date_dt = None
+                ts_data = ts_data_all[
+                    (ts_data_all["ts_id"] == ts_id) & ts_data_all["version_date"].isna()
+                ]
+            if not data.empty:
+                executor.submit(
+                    store_ts_ids, ts_data, ts_id, office_id, version_date_dt
+                )
 
 
 def store_timeseries(
