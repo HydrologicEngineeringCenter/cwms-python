@@ -79,6 +79,44 @@ class Data:
                 df["date-time"] = to_datetime(df["date-time"], unit="ms", utc=True)
             return df
 
+        def reorder_measurement_cols(df: DataFrame) -> DataFrame:
+            # reorders measurement columns for usability
+
+            # Define the columns to bring to the front
+            front_columns = [
+                "id.office-id",
+                "id.name",
+                "number",
+                "instant",
+                "streamflow-measurement.gage-height",
+                "streamflow-measurement.flow",
+                "streamflow-measurement.quality",
+                "used",
+                "agency",
+                "wm-comments",
+            ]
+
+            # Identify columns containing 'unit' to be last
+            unit_columns = [col for col in df.columns if "unit" in col]
+
+            # Identify remaining columns (not in front_columns or unit_columns)
+            remaining_columns = [
+                col
+                for col in df.columns
+                if col not in front_columns and col not in unit_columns
+            ]
+
+            # Construct the new column order
+            new_column_order = front_columns + remaining_columns + unit_columns
+
+            # Filter out columns that might not actually exist in the DataFrame.
+            existing_columns = [col for col in new_column_order if col in df.columns]
+
+            # Reorder the DataFrame
+            df = df[existing_columns]
+
+            return df
+
         data = deepcopy(json)
 
         if selector:
@@ -95,6 +133,9 @@ class Data:
                 df = json_normalize(df_data) if df_data else DataFrame()
         else:
             df = json_normalize(data)
+            # if streamflow-measurement reorder columns
+            if "streamflow-measurement.flow" in df.columns:
+                df = reorder_measurement_cols(df)
 
         return df
 
