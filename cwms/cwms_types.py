@@ -109,7 +109,7 @@ class Data:
             # Construct the new column order
             new_column_order = front_columns + remaining_columns + unit_columns
 
-            # Filter out columns that might not actually exist in the DataFrame.  Critically important!
+            # Filter out columns that might not actually exist in the DataFrame.  
             existing_columns = [col for col in new_column_order if col in df.columns]
 
             # Reorder the DataFrame

@@ -199,7 +199,7 @@ def get_measurements_extents(
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. Dates returned are all in UTC.
 
     """
-    endpoint = f"measurements/time-extents"
+    endpoint = "measurements/time-extents"
 
     params = {
         "office-mask": office_mask,
