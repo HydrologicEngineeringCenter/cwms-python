@@ -41,7 +41,7 @@ jobs:
       # The tests should have already been run in the testing workflow, but we run them
       # again here to make sure that we do not deploy a broken distribution.
       - name: Run Tests
-        run: poetry run pytest tests/
+        run: poetry run pytest tests/mock/
 
       # Once the tests have passsed we can build the distribution and store it, so it can
       # be accessed in the jobs below.

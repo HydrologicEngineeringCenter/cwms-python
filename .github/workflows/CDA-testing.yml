@@ -1,15 +1,21 @@
-name: Testing
+name: CI
 
-# Run the workflow on all branches.
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, githubAction-testing ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  # Run tests and generate code coverage report.
-  run-tests:
+  integration-tests:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: set up backend
+        run: docker compose up --build -d
 
       - name: Set Up Python
         uses: actions/setup-python@v5
@@ -20,6 +26,10 @@ jobs:
       # installed to make sure we have the necessary, tools, stub files, etc.
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
+
+      - name: Add Poetry to PATH (for act)
+        if: env.ACT
+        run: echo "/root/.local/bin" >> $GITHUB_PATH
 
       - name: Cache Virtual Environment
         uses: actions/cache@v4
@@ -32,7 +42,7 @@ jobs:
 
       # Run pytest and generate coverage report data.
       - name: Run Tests
-        run: poetry run pytest tests/mock/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
+        run: poetry run pytest tests/cda/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
 
       # Run mypy with strict mode enabled. Only the main source code is type checked (test
       # and example code is excluded).

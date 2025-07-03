@@ -18,7 +18,7 @@ _MOCK_ROOT = "https://mockwebserver.cwms.gov"
 _TSP_INST_JSON = read_resource_file("timeseries_profile_instance.json")
 _TSP_INST_ARRAY_JSON = read_resource_file("timeseries_profile_instances.json")
 current_path = Path(__file__).resolve().parent.parent.parent
-resource_path = current_path / "tests" / "resources" / "timeseries_profile_data.txt"
+resource_path = current_path / "resources" / "timeseries_profile_data.txt"
 with open(resource_path, "r") as file:
     _TSP_PROFILE_DATA = file.read().strip("\n")
 

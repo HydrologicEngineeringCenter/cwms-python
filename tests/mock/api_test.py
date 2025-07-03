@@ -37,7 +37,7 @@ def test_session_init_api_key():
 
     # Both the URL and the auth key should be set on the session.
     assert session.base_url == "https://example.com"
-    assert session.headers["Authorization"] == "API_AUTH_KEY"
+    assert session.headers["Authorization"] == "apikey API_AUTH_KEY"
 
 
 def test_api_headers():
