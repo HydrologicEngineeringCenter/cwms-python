@@ -131,7 +131,6 @@ def init_session(
     """
 
     global SESSION
-
     if api_root:
         logging.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
@@ -142,8 +141,10 @@ def init_session(
         )
         SESSION.mount("https://", adapter)
     if api_key:
+        if api_key.startswith("apikey "):
+            api_key = api_key.replace("apikey ", "")
         logging.debug(f"Setting authorization key: api_key={api_key}")
-        SESSION.headers.update({"Authorization": api_key})
+        SESSION.headers.update({"Authorization": "apikey " + api_key})
 
     return SESSION
 
