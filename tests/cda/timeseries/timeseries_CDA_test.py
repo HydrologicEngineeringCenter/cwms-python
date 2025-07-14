@@ -1,3 +1,4 @@
+"""
 import pytest
 import pandas as pd
 import cwms.api
@@ -18,7 +19,7 @@ TEST_INTERVAL = "1Hour"
 TEST_START = datetime.utcnow() - timedelta(hours=2)
 TEST_END = datetime.utcnow()
 
-'''
+
 @pytest.fixture(scope="module", autouse=True)
 def init_timeseries_session():
     cwms.api.init_session(api_root=API_ROOT, api_key=API_KEY)
@@ -138,4 +139,4 @@ def test_delete_timeseries(requests_mock):
     assert df_final.empty
 
     locations.delete_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE)
-    '''
+"""
