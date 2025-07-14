@@ -18,11 +18,12 @@ TEST_INTERVAL = "1Hour"
 TEST_START = datetime.utcnow() - timedelta(hours=2)
 TEST_END = datetime.utcnow()
 
+'''
 @pytest.fixture(scope="module", autouse=True)
 def init_timeseries_session():
     cwms.api.init_session(api_root=API_ROOT, api_key=API_KEY)
 
-'''
+
 def test_store_timeseries(requests_mock):
     locations_url = f"{API_ROOT}/locations/{TEST_OFFICE}/{TEST_LOCATION_ID}"
     timeseries_url = f"{API_ROOT}/timeseries/{TEST_OFFICE}/{TEST_TS_ID}"
