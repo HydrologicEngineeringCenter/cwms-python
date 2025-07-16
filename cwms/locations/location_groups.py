@@ -84,6 +84,7 @@ def get_location_groups(
     response = api.get(endpoint=endpoint, params=params, api_version=1)
     return Data(response)
 
+
 def location_group_df_to_json(
     data: pd.DataFrame,
     group_id: str,
@@ -161,6 +162,7 @@ def location_group_df_to_json(
 
     return json_dict
 
+
 def store_location_groups(data: JSON) -> None:
     """
     Create new Location Group
@@ -216,7 +218,12 @@ def update_location_group(
     api.patch(endpoint=endpoint, data=data, params=params, api_version=1)
 
 
-def delete_location_group(group_id: str, category_id: str, office_id: str) -> None:
+def delete_location_group(
+    group_id: str,
+    category_id: str,
+    office_id: str,
+    cascade_delete: Optional[bool] = False,
+) -> None:
     """Deletes requested time series group
 
     Parameters
@@ -237,6 +244,7 @@ def delete_location_group(group_id: str, category_id: str, office_id: str) -> No
     params = {
         "office": office_id,
         "category-id": category_id,
+        "cascade-delete": cascade_delete,
     }
 
     return api.delete(endpoint, params=params, api_version=1)
