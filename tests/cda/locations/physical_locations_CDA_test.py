@@ -1,7 +1,5 @@
-import pandas as pd
 import pytest
-import cwms
-import cwms.api
+
 import cwms.locations.physical_locations as locations
 
 TEST_OFFICE = "SPK"
@@ -34,23 +32,27 @@ def init_session(request):
 def test_store_location():
     locations.store_location(BASE_LOCATION_DATA)
     df = locations.get_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE).df
-    assert TEST_LOCATION_ID in df["location-id"].values
+    assert TEST_LOCATION_ID in df["name"].values
 
 
 def test_update_location_public_name():
     updated_data = BASE_LOCATION_DATA.copy()
     updated_data["public-name"] = "Updated Public Name"
     locations.store_location(updated_data)
-    df_updated = locations.get_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE).df
-    row = df_updated[df_updated["location-id"] == TEST_LOCATION_ID].iloc[0]
+    df_updated = locations.get_location(
+        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE
+    ).df
+    row = df_updated[df_updated["name"] == TEST_LOCATION_ID].iloc[0]
     assert row["public-name"] == "Updated Public Name"
 
 
 def test_delete_location():
     locations.store_location(BASE_LOCATION_DATA)
     locations.delete_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE)
-    df_final = locations.get_locations(office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID).df
-    assert TEST_LOCATION_ID not in df_final["location-id"].values
+    df_final = locations.get_locations(
+        office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
+    ).df
+    assert TEST_LOCATION_ID not in df_final["name"].values
 
 
 def test_get_location_returns_expected_data():
@@ -62,7 +64,7 @@ def test_get_location_returns_expected_data():
     # Check returned data matches stored location
     assert df.shape[0] == 1
     row = df.iloc[0]
-    assert row["location-id"] == TEST_LOCATION_ID
+    assert row["name"] == TEST_LOCATION_ID
     assert row["office-id"] == TEST_OFFICE
     assert row["latitude"] == TEST_LATITUDE
     assert row["longitude"] == TEST_LONGITUDE
@@ -83,7 +85,7 @@ def test_get_locations_returns_multiple_locations():
     df = result.df
 
     # Check that both locations are present
-    loc_ids = df["location-id"].values
+    loc_ids = df["name"].values
     assert TEST_LOCATION_ID in loc_ids
     assert second_location_id in loc_ids
 
@@ -91,11 +93,13 @@ def test_get_locations_returns_multiple_locations():
 def test_get_locations_returns_expected_location():
     locations.store_location(BASE_LOCATION_DATA)
 
-    result = locations.get_locations(office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID)
+    result = locations.get_locations(
+        office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
+    )
     df = result.df
 
-    assert TEST_LOCATION_ID in df["location-id"].values
-    row = df[df["location-id"] == TEST_LOCATION_ID].iloc[0]
+    assert TEST_LOCATION_ID in df["name"].values
+    row = df[df["name"] == TEST_LOCATION_ID].iloc[0]
     assert row["office-id"] == TEST_OFFICE
     assert row["latitude"] == TEST_LATITUDE
     assert row["longitude"] == TEST_LONGITUDE
