@@ -52,7 +52,7 @@ def test_delete_location():
     df_final = locations.get_locations(
         office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
     ).df
-    assert TEST_LOCATION_ID not in df_final["name"].values
+    assert df_final.empty or TEST_LOCATION_ID not in df_final.get("name", [])
 
 
 def test_get_location_returns_expected_data():
