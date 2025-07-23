@@ -70,6 +70,28 @@ def test_get_location_returns_expected_data():
     assert row["longitude"] == TEST_LONGITUDE
 
 
+def test_get_locations_returns_expected_location():
+    # Store both locations
+    second_location_id = "pytest-loc-456"
+    second_location_data = BASE_LOCATION_DATA.copy()
+    second_location_data["name"] = second_location_id
+    second_location_data["longitude"] = -94.0
+    locations.store_location(BASE_LOCATION_DATA)
+    locations.store_location(second_location_data)
+
+    # Retrieve both locations
+    pattern = f"{TEST_LOCATION_ID}|{second_location_id}"
+    result = locations.get_locations(office_id=TEST_OFFICE, location_ids=pattern)
+    df = result.df
+
+    for loc_data in [BASE_LOCATION_DATA, second_location_data]:
+        loc_id = loc_data["name"]
+        assert loc_id in df["name"].values
+        row = df[df["name"] == loc_id].iloc[0]
+        for key in ["office-id", "latitude", "longitude"]:
+            assert row[key] == loc_data[key]
+
+
 def test_get_locations_returns_multiple_locations():
     # Store a second location
     second_location_id = "pytest-loc-456"
@@ -88,18 +110,3 @@ def test_get_locations_returns_multiple_locations():
     loc_ids = df["name"].values
     assert TEST_LOCATION_ID in loc_ids
     assert second_location_id in loc_ids
-
-
-def test_get_locations_returns_expected_location():
-    locations.store_location(BASE_LOCATION_DATA)
-
-    result = locations.get_locations(
-        office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
-    )
-    df = result.df
-
-    assert TEST_LOCATION_ID in df["name"].values
-    row = df[df["name"] == TEST_LOCATION_ID].iloc[0]
-    assert row["office-id"] == TEST_OFFICE
-    assert row["latitude"] == TEST_LATITUDE
-    assert row["longitude"] == TEST_LONGITUDE
