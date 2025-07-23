@@ -3,10 +3,36 @@ from datetime import datetime, timedelta, timezone
 import pandas as pd
 import pytest
 
+import cwms
+import cwms.api
 import cwms.timeseries.timeseries as ts
 
+
+# Setup and teardown fixture for test location
+@pytest.fixture(scope="module", autouse=True)
+def setup_data():
+    loc_id = "pytest_loc"
+    location_data = {
+        "name": loc_id,
+        "latitude": 38.0,
+        "longitude": -121.0,
+        "public-name": "pytest location",
+        "long-name": "Pytest Location for Timeseries Testing",
+        "elevation": 10.0,
+        "unit": "m",
+    }
+
+    # Store location before tests
+    cwms.store_location(location_data, office_id=TEST_OFFICE)
+
+    yield
+
+    # Delete location after tests
+    cwms.delete_location(loc_id, office_id=TEST_OFFICE)
+
+
 TEST_OFFICE = "SPK"
-TEST_TS_ID = "pytest.Temperature.Inst.1Hour.0.Raw"
+TEST_TS_ID = "pytest_loc.Temperature.Inst.1Hour.0.Raw"
 TEST_UNIT = "degF"
 NOW = datetime.now(timezone.utc)
 START_TIME = NOW - timedelta(hours=2)
@@ -22,7 +48,7 @@ TEST_DATA = pd.DataFrame(
     }
 )
 
-SECOND_TS_ID = "pytest.Temperature.Inst.1Hour.1.Raw"
+SECOND_TS_ID = "pytest_loc.Temperature.Inst.1Hour.1.Raw"
 SECOND_TEST_DATA = pd.DataFrame(
     {
         "date-time": [
@@ -49,7 +75,6 @@ def test_store_timeseries():
     assert not df.empty
 
 
-# Unsure if correct
 def test_update_timeseries_value():
     updated_data = TEST_DATA.copy()
     updated_data.loc[1, "value"] = 67.2
