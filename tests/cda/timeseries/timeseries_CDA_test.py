@@ -23,12 +23,12 @@ def setup_data():
     }
 
     # Store location before tests
-    cwms.store_location(location_data, office_id=TEST_OFFICE)
+    cwms.store_location(location_data)
 
     yield
 
     # Delete location after tests
-    cwms.delete_location(loc_id, office_id=TEST_OFFICE)
+    cwms.delete_location(loc_id)
 
 
 TEST_OFFICE = "SPK"
