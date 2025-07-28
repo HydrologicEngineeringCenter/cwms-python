@@ -27,8 +27,6 @@ BASE_LOCATION_DATA = {
 }
 
 
-
-
 TEST_CATEGORY_ID = "Test Category Name"
 TEST_CAT_DESCRIPT = "test cat description"
 TEST_GROUP_ID = "Test Group Name"
@@ -44,7 +42,6 @@ LOC_GROUP_DATA = {
         "description": TEST_CAT_DESCRIPT,
     },
     "description": TEST_GROUP_DESCRIPT,
-   
 }
 
 LOC_GROUP_DATA_UPDATE = {
@@ -56,8 +53,7 @@ LOC_GROUP_DATA_UPDATE = {
         "description": TEST_CAT_DESCRIPT,
     },
     "description": TEST_GROUP_DESCRIPT,
-    "assigned-locations": [{"location-id": TEST_LOCATION_ID, 
-                            "office-id": TEST_OFFICE}]
+    "assigned-locations": [{"location-id": TEST_LOCATION_ID, "office-id": TEST_OFFICE}],
 }
 
 
@@ -82,27 +78,17 @@ def test_store_location_group():
         group_office_id=TEST_OFFICE,
         category_office_id=TEST_OFFICE,
     ).json
-    assert TEST_LOCATION_ID in data["id"]
     assert TEST_CATEGORY_ID in data["location-category"]["id"]
+
 
 def test_get_location_groups():
     data = lg.get_location_groups(
         office_id=TEST_OFFICE,
         category_office_id=TEST_OFFICE,
         location_office_id=TEST_OFFICE,
-        location_category_like=TEST_CATEGORY_ID
+        location_category_like=TEST_CATEGORY_ID,
     ).json
-    assert TEST_CATEGORY_ID in data["location-category"]["id"]
-
-    data = lg.get_location_group(
-        loc_group_id=TEST_GROUP_ID,
-        category_id=TEST_CATEGORY_ID,
-        office_id=TEST_OFFICE,
-        group_office_id=TEST_OFFICE,
-        category_office_id=TEST_OFFICE,
-    ).json
-    assert TEST_LOCATION_ID in data["id"]
-    assert TEST_CATEGORY_ID in data["location-category"]["id"]
+    assert TEST_CATEGORY_ID in data[0]["location-category"]["id"]
 
 
 def test_location_group_df_to_json():
@@ -145,9 +131,19 @@ def test_update_location_group():
         group_office_id=TEST_OFFICE,
         category_office_id=TEST_OFFICE,
     ).json
-    assert TEST_LOCATION_ID in data["id"]
-    assert TEST_CATEGORY_ID in data["location-category"]["id"]
+    assert data["id"] == TEST_GROUP_ID
+    assert len(data["assigned-locations"]) == 1
+    assert data["assigned-locations"][0]["location-id"] == TEST_LOCATION_ID
+    assert data["assigned-locations"][0]["office-id"] == TEST_OFFICE
 
+
+def test_delete_location_group():
+    lg.delete_location_group(
+        group_id=TEST_GROUP_ID,
+        category_id=TEST_CATEGORY_ID,
+        office_id=TEST_OFFICE,
+        cascade_delete=True,
+    )
 
 
 def test_delete_location():
