@@ -1,6 +1,6 @@
-import pytest
 import pandas as pd
-import datetime
+import pytest
+
 
 import cwms.locations.physical_locations as locations
 import cwms.timeseries.timeseries as timeseries
