@@ -1,13 +1,14 @@
-import pytest
 import pandas as pd
+import pytest
+
 
 import cwms.locations.physical_locations as locations
 import cwms.locations.location_groups as lg
 
-TEST_OFFICE = "SPK"
+TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group-loc-123"
-TEST_LATITUDE = 44.1
-TEST_LONGITUDE = -93.1
+TEST_LATITUDE = 45.1704758
+TEST_LONGITUDE = -92.8411439
 
 
 BASE_LOCATION_DATA = {
@@ -21,7 +22,7 @@ BASE_LOCATION_DATA = {
     "location-type": "TESTING",
     "public-name": "Test Location",
     "long-name": "A pytest-generated location",
-    "timezone-name": "America/Los_Angeles",
+    "timezone-name": "America/Chicago",
     "location-kind": "SITE",
     "nation": "US",
 }
@@ -148,7 +149,7 @@ def test_delete_location_group():
 
 def test_delete_location():
     locations.store_location(BASE_LOCATION_DATA)
-    locations.delete_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE)
+    locations.delete_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True)
     df_final = locations.get_locations(
         office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
     ).df
