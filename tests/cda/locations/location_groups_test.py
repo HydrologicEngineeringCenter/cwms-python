@@ -4,7 +4,7 @@ import cwms.locations.location_groups as lg
 import cwms.locations.physical_locations as locations
 
 TEST_OFFICE = "MVP"
-TEST_LOCATION_ID = "pytest_group-loc-123"
+TEST_LOCATION_ID = "pytest_group"
 TEST_LATITUDE = 45.1704758
 TEST_LONGITUDE = -92.8411439
 

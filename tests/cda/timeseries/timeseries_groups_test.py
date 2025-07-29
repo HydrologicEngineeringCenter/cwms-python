@@ -5,7 +5,7 @@ import cwms.timeseries.timeseries as timeseries
 import cwms.timeseries.timeseries_group as tg
 
 TEST_OFFICE = "MVP"
-TEST_LOCATION_ID = "pytest_group-loc-123"
+TEST_LOCATION_ID = "pytest_group"
 TEST_LATITUDE = 45.1704758
 TEST_LONGITUDE = -92.8411439
 
