@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 import cwms.locations.location_groups as lg
 import cwms.locations.physical_locations as locations
 
