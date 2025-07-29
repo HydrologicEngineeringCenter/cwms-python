@@ -149,7 +149,9 @@ def test_delete_location_group():
 
 def test_delete_location():
     locations.store_location(BASE_LOCATION_DATA)
-    locations.delete_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True)
+    locations.delete_location(
+        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
+    )
     df_final = locations.get_locations(
         office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
     ).df
