@@ -1,9 +1,7 @@
 import pandas as pd
 import pytest
-
-
-import cwms.locations.physical_locations as locations
 import cwms.locations.location_groups as lg
+import cwms.locations.physical_locations as locations
 
 TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group-loc-123"
