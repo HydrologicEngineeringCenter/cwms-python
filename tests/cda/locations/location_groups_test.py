@@ -1,30 +1,11 @@
 import pandas as pd
 import pytest
 
+import cwms
 import cwms.locations.location_groups as lg
-import cwms.locations.physical_locations as locations
 
 TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group"
-TEST_LATITUDE = 45.1704758
-TEST_LONGITUDE = -92.8411439
-
-
-BASE_LOCATION_DATA = {
-    "name": TEST_LOCATION_ID,
-    "office-id": TEST_OFFICE,
-    "latitude": TEST_LATITUDE,
-    "longitude": TEST_LONGITUDE,
-    "elevation": 250.0,
-    "horizontal-datum": "NAD83",
-    "vertical-datum": "NAVD88",
-    "location-type": "TESTING",
-    "public-name": "Test Location",
-    "long-name": "A pytest-generated location",
-    "timezone-name": "America/Chicago",
-    "location-kind": "SITE",
-    "nation": "US",
-}
 
 
 TEST_CATEGORY_ID = "Test Category Name"
@@ -57,15 +38,43 @@ LOC_GROUP_DATA_UPDATE = {
 }
 
 
+# Setup and teardown fixture for test location
+@pytest.fixture(scope="module", autouse=True)
+def setup_data():
+
+    TEST_LATITUDE = 45.1704758
+    TEST_LONGITUDE = -92.8411439
+
+    BASE_LOCATION_DATA = {
+        "name": TEST_LOCATION_ID,
+        "office-id": TEST_OFFICE,
+        "latitude": TEST_LATITUDE,
+        "longitude": TEST_LONGITUDE,
+        "elevation": 250.0,
+        "horizontal-datum": "NAD83",
+        "vertical-datum": "NAVD88",
+        "location-type": "TESTING",
+        "public-name": "Test Location",
+        "long-name": "A pytest-generated location",
+        "timezone-name": "America/Chicago",
+        "location-kind": "SITE",
+        "nation": "US",
+    }
+
+    # Store location before tests
+    cwms.store_location(BASE_LOCATION_DATA)
+
+    yield
+
+    # Delete location and TS after tests
+    cwms.delete_location(
+        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
+    )
+
+
 @pytest.fixture(autouse=True)
 def init_session(request):
     print("Initializing CWMS API session for locations operations test...")
-
-
-def test_store_location():
-    locations.store_location(BASE_LOCATION_DATA)
-    df = locations.get_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE).df
-    assert TEST_LOCATION_ID in df["name"].values
 
 
 def test_store_location_group():
@@ -144,14 +153,3 @@ def test_delete_location_group():
         office_id=TEST_OFFICE,
         cascade_delete=True,
     )
-
-
-def test_delete_location():
-    locations.store_location(BASE_LOCATION_DATA)
-    locations.delete_location(
-        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
-    )
-    df_final = locations.get_locations(
-        office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
-    ).df
-    assert df_final.empty or TEST_LOCATION_ID not in df_final.get("name", [])

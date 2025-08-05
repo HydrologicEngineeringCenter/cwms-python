@@ -30,7 +30,6 @@ TS_GROUP_DATA = {
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
 
-    
     TEST_LATITUDE = 45.1704758
     TEST_LONGITUDE = -92.8411439
 
@@ -52,8 +51,6 @@ def setup_data():
 
     # Store location before tests
     cwms.store_location(BASE_LOCATION_DATA)
-
-    
 
     TS1_DATA = {
         "name": TEST_TSID,
