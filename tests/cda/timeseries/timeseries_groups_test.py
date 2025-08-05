@@ -1,47 +1,12 @@
 import pandas as pd
 import pytest
 
-import cwms.locations.physical_locations as locations
-import cwms.timeseries.timeseries as timeseries
+import cwms
 import cwms.timeseries.timeseries_group as tg
 
 TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group"
-TEST_LATITUDE = 45.1704758
-TEST_LONGITUDE = -92.8411439
-
-
-BASE_LOCATION_DATA = {
-    "name": TEST_LOCATION_ID,
-    "office-id": TEST_OFFICE,
-    "latitude": TEST_LATITUDE,
-    "longitude": TEST_LONGITUDE,
-    "elevation": 250.0,
-    "horizontal-datum": "NAD83",
-    "vertical-datum": "NAVD88",
-    "location-type": "TESTING",
-    "public-name": "Test Location",
-    "long-name": "A pytest-generated location",
-    "timezone-name": "America/Chicago",
-    "location-kind": "SITE",
-    "nation": "US",
-}
-
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.test1"
-
-TS1_DATA = {
-    "name": TEST_TSID,
-    "units": "ft",
-    "office-id": TEST_OFFICE,
-    "values": [[1509654000000, 54.3, 0]],
-}
-
-TS2_DATA = {
-    "name": f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.test1",
-    "office-id": TEST_OFFICE,
-    "values": [[1509654000000, 66.0, 0]],
-}
-
 
 TEST_CATEGORY_ID = "Test Category Name"
 TEST_CAT_DESCRIPT = "test cat description"
@@ -61,21 +26,55 @@ TS_GROUP_DATA = {
 }
 
 
+# Setup and teardown fixture for test location
+@pytest.fixture(scope="module", autouse=True)
+def setup_data():
+
+    
+    TEST_LATITUDE = 45.1704758
+    TEST_LONGITUDE = -92.8411439
+
+    BASE_LOCATION_DATA = {
+        "name": TEST_LOCATION_ID,
+        "office-id": TEST_OFFICE,
+        "latitude": TEST_LATITUDE,
+        "longitude": TEST_LONGITUDE,
+        "elevation": 250.0,
+        "horizontal-datum": "NAD83",
+        "vertical-datum": "NAVD88",
+        "location-type": "TESTING",
+        "public-name": "Test Location",
+        "long-name": "A pytest-generated location",
+        "timezone-name": "America/Chicago",
+        "location-kind": "SITE",
+        "nation": "US",
+    }
+
+    # Store location before tests
+    cwms.store_location(BASE_LOCATION_DATA)
+
+    
+
+    TS1_DATA = {
+        "name": TEST_TSID,
+        "units": "ft",
+        "office-id": TEST_OFFICE,
+        "values": [[1509654000000, 54.3, 0]],
+    }
+    # Store timeseries before tests
+    cwms.store_timeseries(TS1_DATA)
+
+    yield
+
+    # Delete location and TS after tests
+    cwms.delete_location(
+        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
+    )
+
+
 @pytest.fixture(autouse=True)
 def init_session(request):
     print("Initializing CWMS API session for locations operations test...")
-
-
-def test_store_location():
-    locations.store_location(BASE_LOCATION_DATA)
-    df = locations.get_location(location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE).df
-    assert TEST_LOCATION_ID in df["name"].values
-
-
-def test_store_timeseries():
-    timeseries.store_timeseries(TS1_DATA)
-    data = timeseries.get_timeseries(ts_id=TEST_TSID, office_id=TEST_OFFICE).json
-    assert TEST_TSID in data["name"]
 
 
 def test_store_timeseries_group():
@@ -172,13 +171,3 @@ def test_delete_timeseries_group():
     tg.delete_timeseries_group(
         group_id=TEST_GROUP_ID, category_id=TEST_CATEGORY_ID, office_id=TEST_OFFICE
     )
-
-
-def test_delete_location():
-    locations.delete_location(
-        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
-    )
-    df_final = locations.get_locations(
-        office_id=TEST_OFFICE, location_ids=TEST_LOCATION_ID
-    ).df
-    assert df_final.empty or TEST_LOCATION_ID not in df_final.get("name", [])
