@@ -12,6 +12,7 @@ import cwms.timeseries.timeseries as ts
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
     loc_id = "pytest_loc"
+    # fmt: off
     location_data = {
         "name": loc_id,
         "latitude": 38.0,
@@ -19,8 +20,9 @@ def setup_data():
         "public-name": "pytest location",
         "long-name": "Pytest Location for Timeseries Testing",
         "elevation": 10.0,
-        "unit": "m",
+        "unit": "m"
     }
+    # fmt: on
 
     # Store location before tests
     cwms.store_location(location_data)
