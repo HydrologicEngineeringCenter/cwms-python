@@ -85,6 +85,84 @@ def get_location_groups(
     return Data(response)
 
 
+def location_group_df_to_json(
+    data: pd.DataFrame,
+    group_id: str,
+    group_office_id: str,
+    category_office_id: str,
+    category_id: str,
+) -> JSON:
+    """
+    Converts a dataframe to a json dictionary in the correct format.
+
+    Parameters
+    ----------
+        data: pd.DataFrame
+            Dataframe containing timeseries information.
+        group_id: str
+            The group ID for the timeseries.
+        office_id: str
+            The ID of the office associated with the specified timeseries.
+        category_id: str
+            The ID of the category associated with the group
+
+    Returns
+    -------
+    JSON
+        JSON dictionary of the timeseries data.
+    """
+    df = data.copy()
+    required_columns = ["office-id", "location-id"]
+    optional_columns = ["alias-id", "attribute", "ref-location-id"]
+    for column in required_columns:
+        if column not in df.columns:
+            raise TypeError(
+                f"{column} is a required column in data when posting as a dataframe"
+            )
+
+    if df[required_columns].isnull().any().any():
+        raise ValueError(
+            f"Null/NaN values found in required columns: {required_columns}. "
+        )
+
+    # Fill optional columns with default values if missing
+    if "alias-id" not in df.columns:
+        df["alias-id"] = None
+    if "attribute" not in df.columns:
+        df["attribute"] = 0
+
+    # Replace NaN with None for optional columns
+    for column in optional_columns:
+        if column in df.columns:
+            data[column] = df[column].where(pd.notnull(df[column]), None)
+
+    # Build the list of time-series entries
+    assigned_locs = df.apply(
+        lambda entry: {
+            "office-id": entry["office-id"],
+            "location-id": entry["location-id"],
+            "alias-id": entry["alias-id"],
+            "attribute": entry["attribute"],
+            **(
+                {"ref-location-id": entry["ref-location-id"]}
+                if "ref-location-id" in entry and pd.notna(entry["ref-location-id"])
+                else {}
+            ),
+        },
+        axis=1,
+    ).tolist()
+
+    # Construct the final JSON dictionary
+    json_dict = {
+        "office-id": group_office_id,
+        "id": group_id,
+        "location-category": {"office-id": category_office_id, "id": category_id},
+        "assigned-locations": assigned_locs,
+    }
+
+    return json_dict
+
+
 def store_location_groups(data: JSON) -> None:
     """
     Create new Location Group
@@ -140,7 +218,12 @@ def update_location_group(
     api.patch(endpoint=endpoint, data=data, params=params, api_version=1)
 
 
-def delete_location_group(group_id: str, category_id: str, office_id: str) -> None:
+def delete_location_group(
+    group_id: str,
+    category_id: str,
+    office_id: str,
+    cascade_delete: Optional[bool] = False,
+) -> None:
     """Deletes requested time series group
 
     Parameters
@@ -161,6 +244,7 @@ def delete_location_group(group_id: str, category_id: str, office_id: str) -> No
     params = {
         "office": office_id,
         "category-id": category_id,
+        "cascade-delete": cascade_delete,
     }
 
     return api.delete(endpoint, params=params, api_version=1)
