@@ -4,38 +4,12 @@ import pandas as pd
 import pytest
 
 import cwms
-import cwms.api
 import cwms.timeseries.timeseries as ts
 
-
-# Setup and teardown fixture for test location
-@pytest.fixture(scope="module", autouse=True)
-def setup_data():
-    loc_id = "pytest_loc"
-    # fmt: off
-    location_data = {
-        "name": loc_id,
-        "latitude": 38.0,
-        "longitude": -121.0,
-        "public-name": "pytest location",
-        "long-name": "Pytest Location for Timeseries Testing",
-        "elevation": 10.0,
-        "unit": "m"
-    }
-    # fmt: on
-
-    # Store location before tests
-    cwms.store_location(location_data)
-
-    yield
-
-    # Delete location after tests
-    cwms.delete_location(loc_id)
-
-
 TEST_OFFICE = "SPK"
-TEST_TS_ID = "pytest_loc.Temperature.Inst.1Hour.0.Raw"
-TEST_UNIT = "degF"
+TEST_LOCATION_ID = "pytest_loc"
+TEST_TS_ID = f"{TEST_LOCATION_ID}.Flow.Inst.1Hour.0.Raw"
+TEST_UNIT = "cfs"
 NOW = datetime.now(timezone.utc)
 START_TIME = NOW - timedelta(hours=2)
 END_TIME = NOW
@@ -50,17 +24,52 @@ TEST_DATA = pd.DataFrame(
     }
 )
 
-SECOND_TS_ID = "pytest_loc.Temperature.Inst.1Hour.1.Raw"
+SECOND_TS_ID = f"{TEST_LOCATION_ID}.Flow.Inst.1Day.0.Raw"
 SECOND_TEST_DATA = pd.DataFrame(
     {
         "date-time": [
             START_TIME.isoformat(),
-            (START_TIME + timedelta(hours=1)).isoformat(),
+            (START_TIME + timedelta(days=1)).isoformat(),
         ],
         "value": [72.1, 74.0],
         "quality-code": [0, 0],
     }
 )
+
+# Setup and teardown fixture for test location
+
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_data():
+    TEST_LATITUDE = 45.1704758
+    TEST_LONGITUDE = -92.8411439
+
+    location_data = {
+        "name": TEST_LOCATION_ID,
+        "office-id": TEST_OFFICE,
+        "latitude": TEST_LATITUDE,
+        "longitude": TEST_LONGITUDE,
+        "elevation": 250.0,
+        "horizontal-datum": "NAD83",
+        "vertical-datum": "NAVD88",
+        "location-type": "TESTING",
+        "public-name": "Test Location",
+        "long-name": "A pytest-generated location",
+        "timezone-name": "America/Los_Angeles",
+        "location-kind": "SITE",
+        "nation": "US",
+    }
+    # fmt: on
+
+    # Store location before tests
+    cwms.store_location(location_data)
+
+    yield
+
+    # Delete location after tests
+    cwms.delete_location(
+        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
+    )
 
 
 @pytest.fixture(autouse=True)
