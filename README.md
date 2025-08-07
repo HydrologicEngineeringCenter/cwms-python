@@ -82,7 +82,6 @@ endpoint implementation.
 
 Please view the contribution documentation here: [CONTRIBUTING.md]
 
-
 ## CLI Utilities
 
 You can invoke various utilities from cwms-python. 
@@ -99,11 +98,11 @@ Then to run a utility's help you can run:
 You can store files from your local disk to the blob endpoint with this script:
 `cwms store_file`
 
-And example call for this might be:
+An example call for this might be:
 `cwms store_file "C:/path/to/MY_TEXT FILE.shef" MY_TEXT_FILE.SHEF`
-*NOTE* Blobs Ids get stored all uppercase even if the output name has lowercase in it!
+*NOTE* Blob Ids get stored all UPPERCASE even if the output name (second argument) has lowercase in it!
 
-The `store_file` utility expects you to have environment variables set or via the CLI. 
+The `store_file` utility expects you to have environment variables set or via the CLI arguments.  
 
 #### Environment Variable Options  
 
@@ -114,25 +113,27 @@ The `store_file` utility expects you to have environment variables set or via th
 
 #### Arguments
 
-*Required*
-- input_file 
+##### Required
+
+- input_file  
 - output_id  
 
-*Optional*
+##### Optional
 
-- Help [-h] 
-- Blob Description [--description DESCRIPTION] 
+- Help [-h]  
+- Blob Description [--description DESCRIPTION]  
 - File Media Type [--media-type MEDIA_TYPE] - [Mime-Type Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types)
-- 3/4 Letter Office ID [--office-id OFFICE_ID] 
+- 3/4 Letter Office ID [--office-id OFFICE_ID]  
 - CDA Endpoint [--api-root CDA_API_ROOT] (Overrides Env Var)
 - CDA API KEY [--api-key CDA_API_KEY] (Overrides Env Var)
-- [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] 
+- [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]  
 
 **Some args become required if their environment variable is not set!**
 
 ### Environment Variables
 
 The common environment variables names agreed upon by the CWMS community are:  
+
 - `OFFICE="SWT"`  
 - `ENVIRONMENT="dev"` (or "test" or "prod")  
 - `CDA_API_ROOT="https://cwms-data.usace.army.mil/cwms-data"` (or your T7 URL, or Dev, or Test)  
