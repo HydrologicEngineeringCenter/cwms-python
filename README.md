@@ -81,3 +81,59 @@ endpoint implementation.
 ## Contributing
 
 Please view the contribution documentation here: [CONTRIBUTING.md]
+
+
+## CLI Utilities
+
+You can invoke various utilities from cwms-python. 
+
+To see a list of utilities run:
+    `cwms`
+
+Then to run a utility's help you can run:
+    `cwms store_file` or `cwms store_file -h`
+    *This will show the arguments*
+
+### Storing Files
+
+You can store files from your local disk to the blob endpoint with this script:
+`cwms store_file`
+
+And example call for this might be:
+`cwms store_file "C:/path/to/MY_TEXT FILE.shef" MY_TEXT_FILE.SHEF`
+*NOTE* Blobs Ids get stored all uppercase even if the output name has lowercase in it!
+
+The `store_file` utility expects you to have environment variables set or via the CLI. 
+
+#### Environment Variable Options  
+
+- `OFFICE`
+- `CDA_API_ROOT`  
+- `CDA_API_KEY`  
+- `LOG_LEVEL` (Options: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")  
+
+#### Arguments
+
+*Required*
+- input_file 
+- output_id  
+
+*Optional*
+
+- Help [-h] 
+- Blob Description [--description DESCRIPTION] 
+- File Media Type [--media-type MEDIA_TYPE] - [Mime-Type Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types)
+- 3/4 Letter Office ID [--office-id OFFICE_ID] 
+- CDA Endpoint [--api-root CDA_API_ROOT] (Overrides Env Var)
+- CDA API KEY [--api-key CDA_API_KEY] (Overrides Env Var)
+- [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] 
+
+**Some args become required if their environment variable is not set!**
+
+### Environment Variables
+
+The common environment variables names agreed upon by the CWMS community are:  
+- `OFFICE="SWT"`  
+- `ENVIRONMENT="dev"` (or "test" or "prod")  
+- `CDA_API_ROOT="https://cwms-data.usace.army.mil/cwms-data"` (or your T7 URL, or Dev, or Test)  
+- `CDA_API_KEY="LongKeyFromAuthEndpointInCDA"`  
