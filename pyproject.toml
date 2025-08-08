@@ -19,6 +19,9 @@ python = "^3.9"
 pandas = "^2.1.3"
 requests-toolbelt = "^1.0.0"
 requests = "^2.31.0"
+# ONLY expects to be installed when the user calls the extras that require it
+hecdss  = { version = ">=0.1.24", optional = true }  # Via https://github.com/HydrologicEngineeringCenter/hec-python-library/blob/main/hec/shared.py#L9-10
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"
@@ -47,3 +50,8 @@ preserve_quotes = true
 
 [tool.poetry.scripts]
 cwms = "cwms.utils.cli.__main__:main"
+dss2cwms = "cwms.utils.cli.dss2cwms:main"
+
+[tool.poetry.extras]
+cwms = ["cwms-python"]
+dss2cwms = ["hecdss", "cwms-python"]
