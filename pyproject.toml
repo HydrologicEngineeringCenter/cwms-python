@@ -44,3 +44,6 @@ comments_min_spaces_from_content = 1
 whitelines = 1
 explicit_start = false
 preserve_quotes = true
+
+[tool.poetry.scripts]
+cwms = "cwms.utils.cli.__main__:main"
