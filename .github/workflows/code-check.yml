@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Verify that python files are formatted using black and isort. Both of the actions
       # below simply check the source code and fail if they find any files that need to be
