@@ -29,4 +29,21 @@ def main():
     if args.command in {"fixed", "lookback", "monitor"}:
         require_hec_or_exit()
 
-    dss2cwms.run(args)
+    # Confirm the required fields are met even if they are not in the env vars
+    if not args.cda_api_key:
+        print("CDA_API_KEY is required. Set this via env vars or command line args.")
+        sys.exit(1)
+    if not args.cda_api_root:
+        print("CDA_API_ROOT is required. Set this via env vars or command line args.")
+        sys.exit(1)
+
+    dss2cwms.run(
+        dss_file_name=args.dss,
+        dss_start_time=args.begin,
+        dss_end_time=args.end,
+        dss_time_series_pattern=args.time_series_pattern,
+        cda_api_root=args.cda_api_root,
+        cda_api_key=args.cda_api_key,
+        cda_office_name=args.office,
+        verify=args.dt,
+    )
