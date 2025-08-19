@@ -320,7 +320,7 @@ def post(
             the default API_VERSION will be used.
 
     Returns:
-        The deserialized JSON response data.
+        None
 
     Raises:
         ApiError: If an error response is return by the API.
@@ -336,6 +336,61 @@ def post(
         if not response.ok:
             logging.error(f"CDA Error: response={response}")
             raise ApiError(response)
+
+
+def post_with_returned_data(
+    endpoint: str,
+    data: Any,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> Any:
+    """Make a POST request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record type.
+        data: A dict containing the new record data. Must be JSON-serializable.
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    # post requires different headers than get for
+    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+
+    if isinstance(data, dict) or isinstance(data, list):
+        data = json.dumps(data)
+
+    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
+        if not response.ok:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
+        try:
+            # Avoid case sensitivity issues with the content type header
+            content_type = response.headers.get("Content-Type", "").lower()
+            # Most CDA content is JSON
+            if "application/json" in content_type or not content_type:
+                return cast(JSON, response.json())
+            # Use automatic charset detection with .text
+            if "text/plain" in content_type or "text/" in content_type:
+                return response.text
+            if content_type.startswith("image/"):
+                return base64.b64encode(response.content).decode("utf-8")
+            # Fallback for remaining content types
+            return response.content.decode("utf-8")
+        except JSONDecodeError as error:
+            logging.error(
+                f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
+            )
+            return response.text
 
 
 def patch(
