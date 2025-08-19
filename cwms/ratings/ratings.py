@@ -414,7 +414,9 @@ def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
     return api.post(endpoint, data, params, api_version=api_version)
 
 
-def _validate_rating_params(rating_id: str, office_id: str, units: str) -> str:
+def _validate_rating_params(
+    rating_id: str, office_id: str, units: str, values: list[list[float]]
+) -> str:
     if not rating_id:
         raise ValueError("Cannot rate values without a rating identifier")
     parts = rating_id.split(".")
@@ -428,6 +430,8 @@ def _validate_rating_params(rating_id: str, office_id: str, units: str) -> str:
         raise ValueError("Cannot rate values without an office identifier")
     if not units:
         raise ValueError("Cannot rate values without units")
+    if not values:
+        raise ValueError("No values specified")
     return ind_params
 
 
@@ -459,13 +463,11 @@ def _perform_value_rating(
     # ------------------------------ #
     # for forward and reverse rating #
     # ------------------------------ #
-    ind_params = _validate_rating_params(rating_id, office_id, units)
+    ind_params = _validate_rating_params(rating_id, office_id, units, values)
     try:
         ind_units_str, dep_unit = units.split(";")
     except Exception:
         raise ValueError("Invalid units string")
-    if not values:
-        raise ValueError("No values specified")
     value_count = len(values[0])
     times = _get_times(value_count, times)
     if not rating_time:
