@@ -414,6 +414,37 @@ def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
     return api.post(endpoint, data, params, api_version=api_version)
 
 
+def _validate_rating_params(rating_id: str, office_id: str, units: str) -> str:
+    if not rating_id:
+        raise ValueError("Cannot rate values without a rating identifier")
+    parts = rating_id.split(".")
+    if len(parts) != 4:
+        raise ValueError(f"Invalid rating identifer: {rating_id}")
+    try:
+        ind_params, _ = parts[1].split(";")
+    except Exception:
+        raise ValueError(f"Invalid rating template: {parts[1]}")
+    if not office_id:
+        raise ValueError("Cannot rate values without an office identifier")
+    if not units:
+        raise ValueError("Cannot rate values without units")
+    return ind_params
+
+
+def _get_times(value_count: int, times: Optional[list[int]]) -> list[int]:
+    if times:
+        time_count = len(times)
+        if time_count == 0:
+            times = value_count * [int(datetime.now().timestamp())]
+        if time_count < value_count:
+            times = (value_count - time_count) * [times[-1]]
+        elif time_count > value_count:
+            times = times[:value_count]
+    else:
+        times = value_count * [int(datetime.now().timestamp())]
+    return times
+
+
 def _perform_value_rating(
     reverse_rate: bool,
     rating_id: str,
@@ -425,39 +456,10 @@ def _perform_value_rating(
     round: bool = False,
 ) -> JSON:
 
-    def _validate_params_1(rating_id: str, office_id: str, units: str) -> str:
-        if not rating_id:
-            raise ValueError("Cannot rate values without a rating identifier")
-        parts = rating_id.split(".")
-        if len(parts) != 4:
-            raise ValueError(f"Invalid rating identifer: {rating_id}")
-        try:
-            ind_params, _ = parts[1].split(";")
-        except Exception:
-            raise ValueError(f"Invalid rating template: {parts[1]}")
-        if not office_id:
-            raise ValueError("Cannot rate values without an office identifier")
-        if not units:
-            raise ValueError("Cannot rate values without units")
-        return ind_params
-
-    def _get_times(times: Optional[list[int]]) -> list[int]:
-        if times:
-            time_count = len(times)
-            if time_count == 0:
-                times = value_count * [int(datetime.now().timestamp())]
-            if time_count < value_count:
-                times = (value_count - time_count) * [times[-1]]
-            elif time_count > value_count:
-                times = times[:value_count]
-        else:
-            times = value_count * [int(datetime.now().timestamp())]
-        return times
-
     # ------------------------------ #
     # for forward and reverse rating #
     # ------------------------------ #
-    ind_params = _validate_params_1(rating_id, office_id, units)
+    ind_params = _validate_rating_params(rating_id, office_id, units)
     try:
         ind_units_str, dep_unit = units.split(";")
     except Exception:
@@ -465,7 +467,7 @@ def _perform_value_rating(
     if not values:
         raise ValueError("No values specified")
     value_count = len(values[0])
-    times = _get_times(times)
+    times = _get_times(value_count, times)
     if not rating_time:
         rating_time = int(datetime.now().timestamp())
 
