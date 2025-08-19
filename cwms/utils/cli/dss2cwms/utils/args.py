@@ -1,11 +1,19 @@
 import argparse
+import os
 
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Load data from a HEC-DSS file into a CWMS database."
     )
 
+    # Read environment options for defaults
+    CDA_API_KEY = os.getenv("CDA_API_KEY")
+    if CDA_API_KEY:
+        print(f"Using CDA API key from environment variable.")
+    CDA_API_ROOT = os.getenv("CDA_API_ROOT")
+    if CDA_API_ROOT:
+        print(f"Using CDA API root from environment variable.")
     # Global options
     parser.add_argument(
         "--dss",
@@ -43,15 +51,25 @@ def get_args():
         metavar="db_file_name",
         help="HEC Password File with CWMS DB credentials.",
     )
+    # ofc should be accepted but the help should display --office, for backwards compatibility
     parser.add_argument(
-        "--ofc", metavar="office", help="Office for storing series in CWMS DB."
+        "--office",
+        "--ofc",
+        metavar="office",
+        help="Office for storing series in CWMS DB.",
+        required=True,
     )
     parser.add_argument(
-        "--mch",
-        type=int,
-        metavar="max_connect_hours",
-        default=6,
-        help="Max hours connected to CWMS DB before reconnecting (default: 6).",
+        "--cda_api_key",
+        metavar="cda_api_key",
+        help="API key for writing to CDA.",
+        default=CDA_API_KEY,
+    )
+    parser.add_argument(
+        "--cda_api_root",
+        metavar="cda_api_root",
+        help="API root URL for CDA.",
+        default=CDA_API_ROOT,
     )
     parser.add_argument(
         "--logd",
@@ -73,6 +91,13 @@ def get_args():
         help="Verbosity: 0=almost none, 1=normal, 2=lots (default: 1).",
     )
 
+    parser.add_argument(
+        "--time_series_pattern",
+        metavar="time_series_pattern",
+        help="pattern (Optional[str], must be passed by name): Wildcard pattern (using `*` and `?`) to use for matching pathnames. `regex` takes precedence if both are specified. Defaults to None.",
+        default="*",
+    )
+
     # Subcommands
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -81,16 +106,16 @@ def get_args():
         "fixed", help="Run a fixed retrieval period from HEC-DSS file."
     )
     fixed_parser.add_argument(
+        "--begin",
         "--tws",
-        required=True,
-        metavar="time_window_start",
-        help="Start time (HecTime format).",
+        metavar="begin",
+        help="Start time (ISO 8601 format: YYYY-MM-DDTHH:MM:SS).",
     )
     fixed_parser.add_argument(
+        "--end",
         "--twe",
-        required=True,
-        metavar="time_window_end",
-        help="End time (HecTime format).",
+        metavar="end",
+        help="End time (ISO 8601 format: YYYY-MM-DDTHH:MM:SS).",
     )
     fixed_parser.add_argument(
         "--dt",
