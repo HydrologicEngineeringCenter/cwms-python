@@ -13,11 +13,11 @@ def require_hec_or_exit():
         importlib.import_module("hec")
     except ModuleNotFoundError:
         msg = (
-            "hecdss (package:hecdss) is required for this command.\n"
+            "hec-python-library (package:hec-python-library) is required for this command.\n"
             "Install with:\n"
-            "\tpip install hecdss\n"
+            "\tpip install hec-python-library\n"
             "\t\tor\n"
-            "\tpython -m pip install hecdss\n"
+            "\tpython -m pip install hec-python-library\n"
         )
         print(msg, file=sys.stderr)
         sys.exit(2)
