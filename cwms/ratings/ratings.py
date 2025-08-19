@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from json import dumps, loads
+from json import loads
 from typing import Any, Optional, cast
 
 import pandas as pd
@@ -510,7 +510,6 @@ def _perform_value_rating(
             "round": round,
         }
 
-    print(dumps(data))
     response = api.post_with_returned_data(endpoint=endpoint, data=data, api_version=1)
     return cast(JSON, response)
 
