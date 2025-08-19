@@ -213,6 +213,27 @@ def get_xml(
     return get(endpoint=endpoint, params=params, api_version=api_version)
 
 
+def _process_response(response: Response) -> Any:
+    try:
+        # Avoid case sensitivity issues with the content type header
+        content_type = response.headers.get("Content-Type", "").lower()
+        # Most CDA content is JSON
+        if "application/json" in content_type or not content_type:
+            return cast(JSON, response.json())
+        # Use automatic charset detection with .text
+        if "text/plain" in content_type or "text/" in content_type:
+            return response.text
+        if content_type.startswith("image/"):
+            return base64.b64encode(response.content).decode("utf-8")
+        # Fallback for remaining content types
+        return response.content.decode("utf-8")
+    except JSONDecodeError as error:
+        logging.error(
+            f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
+        )
+        return response.text
+
+
 def get(
     endpoint: str,
     params: Optional[RequestParams] = None,
@@ -241,24 +262,7 @@ def get(
         if not response.ok:
             logging.error(f"CDA Error: response={response}")
             raise ApiError(response)
-        try:
-            # Avoid case sensitivity issues with the content type header
-            content_type = response.headers.get("Content-Type", "").lower()
-            # Most CDA content is JSON
-            if "application/json" in content_type or not content_type:
-                return cast(JSON, response.json())
-            # Use automatic charset detection with .text
-            if "text/plain" in content_type or "text/" in content_type:
-                return response.text
-            if content_type.startswith("image/"):
-                return base64.b64encode(response.content).decode("utf-8")
-            # Fallback for remaining content types
-            return response.content.decode("utf-8")
-        except JSONDecodeError as error:
-            logging.error(
-                f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
-            )
-            return response.text
+        return _process_response(response)
 
 
 def get_with_paging(
@@ -326,16 +330,10 @@ def post(
         ApiError: If an error response is return by the API.
     """
 
-    # post requires different headers than get for
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-
-    if isinstance(data, dict) or isinstance(data, list):
-        data = json.dumps(data)
-
-    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
+    post_with_returned_data(
+        endpoint=endpoint, data=data, params=params, api_version=api_version
+    )
+    return None
 
 
 def post_with_returned_data(
@@ -373,24 +371,7 @@ def post_with_returned_data(
         if not response.ok:
             logging.error(f"CDA Error: response={response}")
             raise ApiError(response)
-        try:
-            # Avoid case sensitivity issues with the content type header
-            content_type = response.headers.get("Content-Type", "").lower()
-            # Most CDA content is JSON
-            if "application/json" in content_type or not content_type:
-                return cast(JSON, response.json())
-            # Use automatic charset detection with .text
-            if "text/plain" in content_type or "text/" in content_type:
-                return response.text
-            if content_type.startswith("image/"):
-                return base64.b64encode(response.content).decode("utf-8")
-            # Fallback for remaining content types
-            return response.content.decode("utf-8")
-        except JSONDecodeError as error:
-            logging.error(
-                f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
-            )
-            return response.text
+        return _process_response(response)
 
 
 def patch(
