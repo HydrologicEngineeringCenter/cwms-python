@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from json import loads
+from json import dumps, loads
 from typing import Any, Optional, cast
 
 import pandas as pd
@@ -414,6 +414,107 @@ def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
     return api.post(endpoint, data, params, api_version=api_version)
 
 
+def _perform_value_rating(
+    reverse_rate: bool,
+    rating_id: str,
+    office_id: str,
+    units: str,
+    values: list[list[float]],
+    times: Optional[list[int]] = None,
+    rating_time: Optional[int] = None,
+    round: bool = False,
+) -> JSON:
+    # ------------------------------ #
+    # for forward and reverse rating #
+    # ------------------------------ #
+    if not rating_id:
+        raise ValueError("Cannot rate values without a rating identifier")
+    parts = rating_id.split(".")
+    if len(parts) != 4:
+        raise ValueError(f"Invalid rating identifer: {rating_id}")
+    try:
+        ind_params, dep_param = parts[1].split(";")
+    except:
+        raise ValueError(f"Invalid rating template: {parts[1]}")
+    if not office_id:
+        raise ValueError("Cannot rate values without an office identifier")
+    if not units:
+        raise ValueError("Cannot rate values without units")
+    try:
+        ind_units_str, dep_unit = units.split(";")
+    except:
+        raise ValueError("Invalid units string")
+    if not values:
+        raise ValueError("No values specified")
+    value_count = len(values[0])
+    if times:
+        time_count = len(times)
+        if time_count == 0:
+            times = value_count * [int(datetime.now().timestamp())]
+        if time_count < value_count:
+            times = (value_count - time_count) * [times[-1]]
+        elif time_count > value_count:
+            times = times[:value_count]
+    else:
+        times = value_count * [int(datetime.now().timestamp())]
+    if not rating_time:
+        rating_time = int(datetime.now().timestamp())
+
+    if reverse_rate:
+        # ----------------------- #
+        # for reverse rating only #
+        # ----------------------- #
+        if ind_params.find(",") != -1:
+            raise ValueError(
+                "Cannot reverse-rate with a rating specification with multiple independent parameters"
+            )
+
+        endpoint = f"ratings/reverse-rate-values/{office_id}/{rating_id}"
+
+        data = {
+            "input-units": [dep_unit],
+            "output-unit": ind_units_str,
+            "values": values,
+            "value-times": times,
+            "rating-time": rating_time,
+            "round": round,
+        }
+    else:
+        # ----------------------- #
+        # for forward rating only #
+        # ----------------------- #
+        ind_param_count = len(ind_params.split(","))
+        ind_units = ind_units_str.split(",")
+        if len(ind_units) != ind_param_count:
+            raise ValueError(
+                f"Expected {ind_param_count} indpendent parameter units, got {len(ind_units)}"
+            )
+        if len(values) != ind_param_count:
+            raise ValueError(
+                f"Expected {ind_param_count} lists of independent values, got {len(values)}"
+            )
+        for i in range(1, ind_param_count):
+            if len(values[i]) != value_count:
+                raise ValueError(
+                    "Independent parameter value lists are not all of same length"
+                )
+
+        endpoint = f"ratings/rate-values/{office_id}/{rating_id}"
+
+        data = {
+            "input-units": ind_units,
+            "output-unit": dep_unit,
+            "values": values,
+            "value-times": times,
+            "rating-time": rating_time,
+            "round": round,
+        }
+
+    print(dumps(data))
+    response = api.post_with_returned_data(endpoint=endpoint, data=data, api_version=1)
+    return cast(JSON, response)
+
+
 def rate_values(
     rating_id: str,
     office_id: str,
@@ -454,68 +555,16 @@ def rate_values(
     -------
     response
     """
-    if not rating_id:
-        raise ValueError("Cannot rate values without a rating identifier")
-    parts = rating_id.split(".")
-    if len(parts) != 4:
-        raise ValueError(f"Invalid rating identifer: {rating_id}")
-    try:
-        ind_params, dep_param = parts[1].split(";")
-    except:
-        raise ValueError(f"Invalid rating template: {parts[1]}")
-    ind_param_count = len(ind_params.split(","))
-    if not office_id:
-        raise ValueError("Cannot rate values without an office identifier")
-    if not units:
-        raise ValueError("Cannot rate values without units")
-    try:
-        ind_units_str, dep_unit = units.split(";")
-    except:
-        raise ValueError("Invalid units string")
-    else:
-        ind_units = ind_units_str.split(",")
-        if len(ind_units) != ind_param_count:
-            raise ValueError(
-                f"Expected {ind_param_count} indpendent parameter units, got {len(ind_units)}"
-            )
-    if not values:
-        raise ValueError("No values specified")
-    if len(values) != ind_param_count:
-        raise ValueError(
-            f"Expected {ind_param_count} lists of independent values, got {len(values)}"
-        )
-    value_count = len(values[0])
-    for i in range(1, ind_param_count):
-        if len(values[i]) != value_count:
-            raise ValueError(
-                "Independent parameter value lists are not all of same length"
-            )
-    if times:
-        time_count = len(times)
-        if time_count == 0:
-            times = value_count * [int(datetime.now().timestamp())]
-        if time_count < value_count:
-            times = (value_count - time_count) * [times[-1]]
-        elif time_count > value_count:
-            times = times[:value_count]
-    else:
-        times = value_count * [int(datetime.now().timestamp())]
-    if not rating_time:
-        rating_time = int(datetime.now().timestamp())
-
-    endpoint = f"ratings/rate-values/{office_id}/{rating_id}"
-
-    data = {
-        "input-units": ind_units,
-        "output-unit": dep_unit,
-        "values": values,
-        "value-times": times,
-        "rating-time": rating_time,
-        "round": round,
-    }
-
-    response = api.post_with_returned_data(endpoint=endpoint, data=data, api_version=1)
-    return cast(JSON, response)
+    return _perform_value_rating(
+        reverse_rate=False,
+        rating_id=rating_id,
+        office_id=office_id,
+        units=units,
+        values=values,
+        times=times,
+        rating_time=rating_time,
+        round=round,
+    )
 
 
 def reverse_rate_values(
@@ -558,54 +607,13 @@ def reverse_rate_values(
     -------
     response
     """
-    if not rating_id:
-        raise ValueError("Cannot rate values without a rating identifier")
-    parts = rating_id.split(".")
-    if len(parts) != 4:
-        raise ValueError(f"Invalid rating identifer: {rating_id}")
-    try:
-        ind_params, dep_param = parts[1].split(";")
-    except:
-        raise ValueError(f"Invalid rating template: {parts[1]}")
-    else:
-        if ind_params.find(",") != -1:
-            raise ValueError(
-                "Cannot reverse-rate with a rating specification with multiple independent parameters"
-            )
-    if not office_id:
-        raise ValueError("Cannot rate values without an office identifier")
-    if not units:
-        raise ValueError("Cannot rate values without units")
-    try:
-        ind_unit, dep_unit = units.split(";")
-    except:
-        raise ValueError("Invalid units string")
-    if not values:
-        raise ValueError("No values specified")
-    value_count = len(values)
-    if times:
-        time_count = len(times)
-        if time_count == 0:
-            times = value_count * [int(datetime.now().timestamp())]
-        if time_count < value_count:
-            times = (value_count - time_count) * [times[-1]]
-        elif time_count > value_count:
-            times = times[:value_count]
-    else:
-        times = value_count * [int(datetime.now().timestamp())]
-    if not rating_time:
-        rating_time = int(datetime.now().timestamp())
-
-    endpoint = f"ratings/reverse-rate-values/{office_id}/{rating_id}"
-
-    data = {
-        "input-units": [dep_unit],
-        "output-unit": ind_unit,
-        "values": [values],
-        "value-times": times,
-        "rating-time": rating_time,
-        "round": round,
-    }
-
-    response = api.post_with_returned_data(endpoint=endpoint, data=data, api_version=1)
-    return cast(JSON, response)
+    return _perform_value_rating(
+        reverse_rate=True,
+        rating_id=rating_id,
+        office_id=office_id,
+        units=units,
+        values=[values],
+        times=times,
+        rating_time=rating_time,
+        round=round,
+    )
