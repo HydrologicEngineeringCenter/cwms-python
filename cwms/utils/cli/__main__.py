@@ -1,57 +1,94 @@
 import argparse
 import importlib
-import os
+import inspect
 import sys
 from pathlib import Path
 
 
-def discover_commands():
+def discover_commands() -> dict[str, str]:
     """
-    Discovers all Python files in cwms/utils/cli/ and returns a dict of command -> module
-    """
-    base_dir = Path(__file__).parent
-    commands = {}
+    Discover scripts under cwms/utils/cli:
 
-    for file in os.listdir(base_dir):
-        # Only call .py scripts and ignore any dunder files (i.e. starts with _)
-        if file.endswith(".py") and not file.startswith("_"):
-            cmd = file[:-3]
-            mod_path = f"cwms.utils.cli.{cmd}"
-            commands[cmd] = mod_path
+    - Any top-level *.py file (not starting with '_')
+    - Any immediate subdirectory that contains __init__.py
+
+    Returns: dict of {command_name: module_import_path}
+    """
+    # Root of the cli directory
+    base_dir = Path(__file__).parent
+    base_pkg = __package__ or "cwms.utils.cli"
+
+    commands: dict[str, str] = {}
+
+    # Use any named python files in the root of the cli directory
+    for p in base_dir.iterdir():
+        if p.is_file() and p.suffix == ".py" and not p.name.startswith("_"):
+            cmd = p.stem
+            if cmd:
+                commands[cmd] = f"{base_pkg}.{cmd}"
+
+    # Grab sub packages within the cli directory, i.e. __init__.py within dirs
+    for p in base_dir.iterdir():
+        if p.is_dir() and not p.name.startswith("_"):
+            if (p / "__init__.py").is_file():
+                # Prefer package over file if both exist with same name
+                commands[p.name] = f"{base_pkg}.{p.name}"
 
     return commands
 
 
 def main():
     commands = discover_commands()
+    if not commands:
+        print("No commands found under cwms.utils.cli")
+        sys.exit(1)
+
+    command_names = sorted(commands.keys())
 
     parser = argparse.ArgumentParser(
-        prog="cwms", description="CWMS-Python CLI Utilities"
+        prog="cwms",
+        description="CWMS CLI Utilities",
+        epilog="Use 'cwms <command> --help' for more information on a command.",
     )
-    parser.add_argument("command", choices=commands.keys(), help="The script to run")
-    parser.add_argument(
-        "args", nargs=argparse.REMAINDER, help="Arguments to pass to the script"
-    )
+    parser.add_argument("command", choices=command_names, help="Command to run")
+    # Catch all for unparsed arguments to pass through
+    parser.add_argument("remainder", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
 
-    # Ensures that at least one argument (the command) is provided otherwise provides the cwms help
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit(1)
 
     parsed = parser.parse_args()
     command = parsed.command
-    args = parsed.args
+    remainder = parsed.remainder
 
-    # Loads the selected command module and calls its main function
+    mod_path = commands[command]
     try:
-        mod = importlib.import_module(commands[command])
-        if hasattr(mod, "main"):
-            mod.main(args)
-        else:
-            print(
-                f"The module {commands[command]} does not have a 'main(args)' function."
-            )
-            sys.exit(2)
+        mod = importlib.import_module(mod_path)
     except ImportError as e:
-        print(f"Failed to import command module '{command}': {e}")
+        print(f"Failed to import command module '{mod_path}': {e}")
+        sys.exit(1)
+
+    fn = getattr(mod, "main", None)
+    if not callable(fn):
+        print(f"The module {mod_path} does not have a callable 'main' function.")
+        sys.exit(2)
+
+    # Pass in the remainder args
+    sys.argv = [f"{parser.prog} {command}"] + remainder
+
+    # Call main() with appropriate signature
+    # We need this because some commands may expect their arguments in a specific format
+    try:
+        sig = inspect.signature(fn)
+        if len(sig.parameters) == 0:
+            fn()
+        else:
+            # If they prefer main(args: list[str]) style, pass the remainder.
+            fn(remainder)
+    except SystemExit:
+        # Let subcommand's argparse exit codes bubble up cleanly.
+        raise
+    except Exception as e:
+        print(f"Error while running '{command}': {e}")
         sys.exit(1)
