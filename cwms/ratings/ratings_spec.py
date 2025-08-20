@@ -157,7 +157,7 @@ def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
     except Exception:  
       spec_xml2 += """
       <description/>"""
-    spec_xml2 += f"""
+    spec_xml2 += """
      </rating-spec>"""
 
     spec_xml = spec_xml + spec_xml2
