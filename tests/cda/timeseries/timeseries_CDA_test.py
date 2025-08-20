@@ -30,13 +30,18 @@ def setup_data():
     }
     cwms.store_location(location)
 
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    now_epoch_ms = int(now.timestamp() * 1000)
+    iso_now = now.isoformat()
     ts_json = {
         "name": TEST_TSID,
         "units": "ft",
         "office-id": TEST_OFFICE,
-        "values": [
-            [datetime.now(timezone.utc).replace(microsecond=0).isoformat(), 1.23, 0]
-        ],
+        "values": [[now_epoch_ms, 1.23, 0]],
+        "begin": iso_now,
+        "end": iso_now,
+        "version-date": iso_now,
+        "time-zone": "UTC",
     }
     cwms.store_timeseries(ts_json)
     yield
@@ -59,6 +64,7 @@ def test_get_multi_timeseries_df():
 
 def test_timeseries_df_to_json():
     dt = datetime(2023, 1, 1, 0, 0, tzinfo=timezone.utc)
+    dt_epoch_ms = int(dt.timestamp() * 1000)
     df = pd.DataFrame(
         {
             "date-time": [dt.isoformat()],
@@ -74,15 +80,16 @@ def test_timeseries_df_to_json():
     assert json_out["office-id"] == office, "Incorrect office-id in output"
     assert json_out["units"] == units, "Incorrect units in output"
     assert json_out["values"] == [
-        [dt.isoformat(), 42.0, 0]
+        [dt_epoch_ms, 42.0, 0]
     ], "Values do not match expected"
 
 
 def test_store_multi_timeseries_df():
     now = datetime.now(timezone.utc).replace(microsecond=0)
+    now_epoch_ms = int(now.timestamp() * 1000)
     df = pd.DataFrame(
         {
-            "date-time": [now.isoformat()],
+            "date-time": [now_epoch_ms],
             "value": [7.89],
             "quality-code": [0],
             "ts_id": [TEST_TSID],
@@ -94,11 +101,17 @@ def test_store_multi_timeseries_df():
 
 def test_store_timeseries():
     now = datetime.now(timezone.utc).replace(microsecond=0)
+    now_epoch_ms = int(now.timestamp() * 1000)
+    iso_now = now.isoformat()
     ts_json = {
         "name": TEST_TSID,
         "office-id": TEST_OFFICE,
         "units": "ft",
-        "values": [[now.isoformat(), 99.9, 0]],
+        "values": [[now_epoch_ms, 99.9, 0]],
+        "begin": iso_now,
+        "end": iso_now,
+        "version-date": iso_now,
+        "time-zone": "UTC",
     }
     ts.store_timeseries(ts_json)
 
