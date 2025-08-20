@@ -124,11 +124,11 @@ def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
       <template-id>{data.loc[0,'template-id']}</template-id>
       <location-id>{data.loc[0,'location-id']}</location-id>
       <version>{data.loc[0,'version']}</version>"""
-    try:  
-      spec_xml += f"""
+    try:
+        spec_xml += f"""
       <source-agency>{data.loc[0,'source-agency']}</source-agency>"""
-    except Exception:  
-      spec_xml += """
+    except Exception:
+        spec_xml += """
       <source-agency/>"""
     spec_xml += f"""
       <in-range-method>{data.loc[0,'in-range-method']}</in-range-method>
@@ -151,11 +151,11 @@ def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
             i = i + 1
     spec_xml2 = f"""\n  </ind-rounding-specs>
       <dep-rounding-spec>{data.loc[0,'dependent-rounding-spec']}</dep-rounding-spec>"""
-    try:  
-      spec_xml2 += f"""
+    try:
+        spec_xml2 += f"""
       <description>{data.loc[0,'description']}</description>"""
-    except Exception:  
-      spec_xml2 += """
+    except Exception:
+        spec_xml2 += """
       <description/>"""
     spec_xml2 += """
      </rating-spec>"""
