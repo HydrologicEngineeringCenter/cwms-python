@@ -1,6 +1,7 @@
+import logging
 from datetime import datetime
 from json import loads
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import pandas as pd
 
@@ -411,3 +412,220 @@ def store_rating(data: Any, store_template: Optional[bool] = True) -> None:
     else:
         api_version = 2
     return api.post(endpoint, data, params, api_version=api_version)
+
+
+def _validate_rating_params(
+    rating_id: str, office_id: str, units: str, values: list[list[float]]
+) -> str:
+    if not rating_id:
+        raise ValueError("Cannot rate values without a rating identifier")
+    parts = rating_id.split(".")
+    if len(parts) != 4:
+        raise ValueError(f"Invalid rating identifer: {rating_id}")
+    try:
+        ind_params, _ = parts[1].split(";")
+    except Exception:
+        raise ValueError(f"Invalid rating template: {parts[1]}")
+    if not office_id:
+        raise ValueError("Cannot rate values without an office identifier")
+    if not units:
+        raise ValueError("Cannot rate values without units")
+    if not values:
+        raise ValueError("No values specified")
+    return ind_params
+
+
+def _get_times(value_count: int, times: Optional[list[int]]) -> list[int]:
+    if times:
+        time_count = len(times)
+        if time_count == 0:
+            times = value_count * [int(datetime.now().timestamp())]
+        if time_count < value_count:
+            times = (value_count - time_count) * [times[-1]]
+        elif time_count > value_count:
+            times = times[:value_count]
+    else:
+        times = value_count * [int(datetime.now().timestamp())]
+    return times
+
+
+def _perform_value_rating(
+    reverse_rate: bool,
+    rating_id: str,
+    office_id: str,
+    units: str,
+    values: list[list[float]],
+    times: Optional[list[int]] = None,
+    rating_time: Optional[int] = None,
+    round: bool = False,
+) -> JSON:
+
+    # ------------------------------ #
+    # for forward and reverse rating #
+    # ------------------------------ #
+    ind_params = _validate_rating_params(rating_id, office_id, units, values)
+    try:
+        ind_units_str, dep_unit = units.split(";")
+    except Exception:
+        raise ValueError("Invalid units string")
+    value_count = len(values[0])
+    times = _get_times(value_count, times)
+    if not rating_time:
+        rating_time = int(datetime.now().timestamp())
+
+    if reverse_rate:
+        # ----------------------- #
+        # for reverse rating only #
+        # ----------------------- #
+        if ind_params.find(",") != -1:
+            raise ValueError(
+                "Cannot reverse-rate with a rating specification with multiple independent parameters"
+            )
+
+        endpoint = f"ratings/reverse-rate-values/{office_id}/{rating_id}"
+
+        data = {
+            "input-units": [dep_unit],
+            "output-unit": ind_units_str,
+            "values": values,
+            "value-times": times,
+            "rating-time": rating_time,
+            "round": round,
+        }
+    else:
+        # ----------------------- #
+        # for forward rating only #
+        # ----------------------- #
+        ind_param_count = len(ind_params.split(","))
+        ind_units = ind_units_str.split(",")
+        if len(ind_units) != ind_param_count:
+            raise ValueError(
+                f"Expected {ind_param_count} indpendent parameter units, got {len(ind_units)}"
+            )
+        if len(values) != ind_param_count:
+            raise ValueError(
+                f"Expected {ind_param_count} lists of independent values, got {len(values)}"
+            )
+        for i in range(1, ind_param_count):
+            if len(values[i]) != value_count:
+                raise ValueError(
+                    "Independent parameter value lists are not all of same length"
+                )
+
+        endpoint = f"ratings/rate-values/{office_id}/{rating_id}"
+
+        data = {
+            "input-units": ind_units,
+            "output-unit": dep_unit,
+            "values": values,
+            "value-times": times,
+            "rating-time": rating_time,
+            "round": round,
+        }
+
+    response = api.post_with_returned_data(endpoint=endpoint, data=data, api_version=1)
+    return cast(JSON, response)
+
+
+def rate_values(
+    rating_id: str,
+    office_id: str,
+    units: str,
+    values: list[list[float]],
+    times: Optional[list[int]] = None,
+    rating_time: Optional[int] = None,
+    round: bool = False,
+) -> JSON:
+    """Rates a list of independent parameter values using a specified rating set in
+    the database. Returns the rated (dependent) parameter values in the response.
+
+    Parameters
+    ----------
+    rating_id: string
+        The rating-id (rating specification) of the the rating set to use
+    office_id: string
+        The owning office of the rating set.
+    units: string
+        The unit of each independent parameter separated by commas concatenated with a semicolon followed by the
+        desired dependent_parameter unit (e.g., 'ft;ac-ft' or 'unit,%,ft;cfs')
+    values: list[list[float]]
+        The independent parameter values to rate (one list for each independent parameter, in parameter order).
+        For multiple independent parameters, each list must be of the same length.
+    times: list[integer] Optional Default = None
+        A list of times (in milliseconds since 1970-01-01T00:00:00Z) for the independent parameter values.
+        If None, the current time is used.
+        If specified but the constains fewer times than the number of independent parameter values, the last
+        time is used for all independent parameter values from that position to the end of the list.
+    rating_time: integer Optional Default = None
+        A specific date/time to use as the "current time" of the rating. No ratings with a create date later than
+        this will be used. Useful for performing historical ratings. If not specified or NULL, the current time is used.
+    round: boolean Optional Default = False
+        Whether to round the rated values according to the rounding spec contained in the rating specification in the database
+
+
+    Returns
+    -------
+    response
+    """
+    return _perform_value_rating(
+        reverse_rate=False,
+        rating_id=rating_id,
+        office_id=office_id,
+        units=units,
+        values=values,
+        times=times,
+        rating_time=rating_time,
+        round=round,
+    )
+
+
+def reverse_rate_values(
+    rating_id: str,
+    office_id: str,
+    units: str,
+    values: list[float],
+    times: Optional[list[int]] = None,
+    rating_time: Optional[int] = None,
+    round: bool = False,
+) -> JSON:
+    """Reverse rates a list of dependent parameter values using a specified rating set in
+    the database. Returns the rated (independent) parameter values in the response.
+
+    Reverse ratings can only be performed on single-input-parameter ratings.
+
+    Parameters
+    ----------
+    rating_id: string
+        The rating-id (rating specification) of the the rating set to use
+    office_id: string
+        The owning office of the rating set.
+    units: string
+        The independent parameter unit and the dependent parameter unit concatenated by a semicolon (e.g., "ft;cfs", "ft;ac-ft")
+    values: list[float]
+        The dependent parameter values to rate.
+    times: list[integer] Optional Default = None
+        A list of times (in milliseconds since 1970-01-01T00:00:00Z) for the dependent parameter values.
+        If None, the current time is used.
+        If specified but the constains fewer times than the number of independent parameter values, the last
+        time is used for all independent parameter values from that position to the end of the list.
+    rating_time: integer Optional Default = None
+        A specific date/time to use as the "current time" of the rating. No ratings with a create date later than
+        this will be used. Useful for performing historical ratings. If not specified or NULL, the current time is used.
+    round: boolean Optional Default = False
+        Whether to round the rated values according to the rounding spec contained in the rating specification in the database
+
+
+    Returns
+    -------
+    response
+    """
+    return _perform_value_rating(
+        reverse_rate=True,
+        rating_id=rating_id,
+        office_id=office_id,
+        units=units,
+        values=[values],
+        times=times,
+        rating_time=rating_time,
+        round=round,
+    )
