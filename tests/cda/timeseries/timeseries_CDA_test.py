@@ -33,20 +33,6 @@ def setup_data():
     }
     cwms.store_location(location)
 
-    now = datetime.now(timezone.utc).replace(microsecond=0)
-    now_epoch_ms = int(now.timestamp() * 1000)
-    iso_now = now.isoformat()
-    ts_json = {
-        "name": TEST_TSID,
-        "units": "ft",
-        "office-id": TEST_OFFICE,
-        "values": [[now_epoch_ms, 1.23, 0]],
-        "begin": iso_now,
-        "end": iso_now,
-        "version-date": iso_now,
-        "time-zone": "UTC",
-    }
-    cwms.store_timeseries(ts_json)
     yield
     cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
 
@@ -56,13 +42,34 @@ def init_session():
     print("Initializing CWMS API session for timeseries tests...")
 
 
-def test_get_multi_timeseries_df():
-    df = ts.get_multi_timeseries_df([TEST_TSID], TEST_OFFICE)
-    assert df is not None, "Returned DataFrame is None"
-    assert not df.empty, "Returned DataFrame is empty"
-    assert any(
-        TEST_TSID in str(col) for col in df.columns
-    ), f"{TEST_TSID} not found in DataFrame columns"
+def test_store_timeseries():
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    now_epoch_ms = int(now.timestamp() * 1000)
+    iso_now = now.isoformat()
+    ts_json = {
+        "name": TEST_TSID_STORE,
+        "office-id": TEST_OFFICE,
+        "units": "ft",
+        "values": [[now_epoch_ms, 99.9, 0]],
+        "begin": iso_now,
+        "end": iso_now,
+        "version-date": iso_now,
+        "time-zone": "UTC",
+    }
+    ts.store_timeseries(ts_json)
+    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE).json
+    assert data["name"] == TEST_TSID_STORE
+    assert data["office-id"] == TEST_OFFICE
+    assert data["units"] == "ft"
+    assert data["values"][0][1] == 99.9
+
+
+def test_get_timeseries():
+    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE).json
+    assert data["name"] == TEST_TSID_STORE
+    assert data["office-id"] == TEST_OFFICE
+    assert data["units"] == "ft"
+    assert data["values"][0][1] == 99.9
 
 
 def test_timeseries_df_to_json():
@@ -89,64 +96,47 @@ def test_timeseries_df_to_json():
 def test_store_multi_timeseries_df():
     now = datetime.now(timezone.utc).replace(microsecond=0)
     now_epoch_ms = int(now.timestamp() * 1000)
+    ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     df = pd.DataFrame(
         {
-            "date-time": [now_epoch_ms],
-            "value": [7.89],
-            "quality-code": [0],
-            "ts_id": [TEST_TSID_MULTI],
-            "units": ["ft"],
+            "date-time": [now_epoch_ms, now_epoch_ms],
+            "value": [7.89, 8.91],
+            "quality-code": [0, 0],
+            "ts_id": [TEST_TSID_MULTI, ts_id_rev_test],
+            "units": ["ft", "ft"],
         }
     )
     ts.store_multi_timeseries_df(df, TEST_OFFICE)
-    data = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE).json
-    assert data["name"] == TEST_TSID_MULTI
-    assert data["office-id"] == TEST_OFFICE
-    assert data["units"] == "ft"
-    assert data["values"][0][1] == 7.89
+    data1 = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE).json
+    data2 = ts.get_timeseries(ts_id_rev_test, TEST_OFFICE).json
+    assert data1["name"] == TEST_TSID_MULTI
+    assert data1["office-id"] == TEST_OFFICE
+    assert data1["units"] == "ft"
+    assert data1["values"][0][1] == 7.89
+    assert data2["name"] == ts_id_rev_test
+    assert data2["office-id"] == TEST_OFFICE
+    assert data2["units"] == "ft"
+    assert data2["values"][0][1] == 8.91
 
 
-def test_store_timeseries():
-    now = datetime.now(timezone.utc).replace(microsecond=0)
-    now_epoch_ms = int(now.timestamp() * 1000)
-    iso_now = now.isoformat()
-    ts_json = {
-        "name": TEST_TSID_STORE,
-        "office-id": TEST_OFFICE,
-        "units": "ft",
-        "values": [[now_epoch_ms, 99.9, 0]],
-        "begin": iso_now,
-        "end": iso_now,
-        "version-date": iso_now,
-        "time-zone": "UTC",
-    }
-    ts.store_timeseries(ts_json)
-    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE).json
-    assert data["name"] == TEST_TSID_STORE
-    assert data["office-id"] == TEST_OFFICE
-    assert data["units"] == "ft"
-    assert data["values"][0][1] == 99.9
+def test_get_multi_timeseries_df():
+    ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
+    df = ts.get_multi_timeseries_df([TEST_TSID_MULTI, ts_id_rev_test], TEST_OFFICE)
+    assert df is not None, "Returned DataFrame is None"
+    assert not df.empty, "Returned DataFrame is empty"
+    assert any(
+        TEST_TSID_MULTI in str(col) for col in df.columns
+    ), f"{TEST_TSID_MULTI} not found in DataFrame columns"
+    assert any(
+        ts_id_rev_test in str(col) for col in df.columns
+    ), f"{ts_id_rev_test} not found in DataFrame columns"
 
 
 def test_delete_timeseries():
+    ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     now = datetime.now(timezone.utc).replace(microsecond=0)
-    now_epoch_ms = int(now.timestamp() * 1000)
-    iso_now = now.isoformat()
-    # create and store a timeseries to delete
-    ts_json = {
-        "name": TEST_TSID_DELETE,
-        "office-id": TEST_OFFICE,
-        "units": "ft",
-        "values": [[now_epoch_ms, 50.0, 0]],
-        "begin": iso_now,
-        "end": iso_now,
-        "version-date": iso_now,
-        "time-zone": "UTC",
-    }
-    ts.store_timeseries(ts_json)
-
     begin = now - timedelta(minutes=15)
     end = now + timedelta(minutes=15)
-    ts.delete_timeseries(TEST_TSID_DELETE, TEST_OFFICE, begin, end)
-    result = ts.get_timeseries(TEST_TSID_DELETE, TEST_OFFICE)
+    ts.delete_timeseries(ts_id_rev_test, TEST_OFFICE, begin, end)
+    result = ts.get_timeseries(ts_id_rev_test, TEST_OFFICE)
     assert result is None or result.json.get("values", []) == []
