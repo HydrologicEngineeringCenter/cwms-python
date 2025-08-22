@@ -67,7 +67,7 @@ def test_timeseries_df_to_json():
     dt_epoch_ms = int(dt.timestamp() * 1000)
     df = pd.DataFrame(
         {
-            "date-time": [dt.isoformat()],
+            "date-time": [dt_epoch_ms],
             "value": [42.0],
             "quality-code": [0],
         }
