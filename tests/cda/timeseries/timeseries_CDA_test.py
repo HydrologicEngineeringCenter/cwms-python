@@ -95,11 +95,10 @@ def test_timeseries_df_to_json():
 
 def test_store_multi_timeseries_df():
     now = datetime.now(timezone.utc).replace(microsecond=0)
-    now_epoch_ms = int(now.timestamp() * 1000)
     ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     df = pd.DataFrame(
         {
-            "date-time": [now_epoch_ms, now_epoch_ms],
+            "date-time": [now, now],
             "value": [7.89, 8.91],
             "quality-code": [0, 0],
             "ts_id": [TEST_TSID_MULTI, ts_id_rev_test],
