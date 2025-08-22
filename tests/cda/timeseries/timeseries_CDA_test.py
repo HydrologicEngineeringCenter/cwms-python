@@ -9,6 +9,9 @@ import cwms.timeseries.timeseries as ts
 TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Test"
+TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
+TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
+TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -91,13 +94,13 @@ def test_store_multi_timeseries_df():
             "date-time": [now_epoch_ms],
             "value": [7.89],
             "quality-code": [0],
-            "ts_id": [TEST_TSID],
+            "ts_id": [TEST_TSID_MULTI],
             "units": ["ft"],
         }
     )
     ts.store_multi_timeseries_df(df, TEST_OFFICE)
-    data = ts.get_timeseries(TEST_TSID, TEST_OFFICE).json
-    assert data["name"] == TEST_TSID
+    data = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE).json
+    assert data["name"] == TEST_TSID_MULTI
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
     assert data["values"][0][1] == 7.89
@@ -108,7 +111,7 @@ def test_store_timeseries():
     now_epoch_ms = int(now.timestamp() * 1000)
     iso_now = now.isoformat()
     ts_json = {
-        "name": TEST_TSID,
+        "name": TEST_TSID_STORE,
         "office-id": TEST_OFFICE,
         "units": "ft",
         "values": [[now_epoch_ms, 99.9, 0]],
@@ -118,8 +121,8 @@ def test_store_timeseries():
         "time-zone": "UTC",
     }
     ts.store_timeseries(ts_json)
-    data = ts.get_timeseries(TEST_TSID, TEST_OFFICE).json
-    assert data["name"] == TEST_TSID
+    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE).json
+    assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
     assert data["values"][0][1] == 99.9
@@ -127,8 +130,23 @@ def test_store_timeseries():
 
 def test_delete_timeseries():
     now = datetime.now(timezone.utc).replace(microsecond=0)
+    now_epoch_ms = int(now.timestamp() * 1000)
+    iso_now = now.isoformat()
+    # create and store a timeseries to delete
+    ts_json = {
+        "name": TEST_TSID_DELETE,
+        "office-id": TEST_OFFICE,
+        "units": "ft",
+        "values": [[now_epoch_ms, 50.0, 0]],
+        "begin": iso_now,
+        "end": iso_now,
+        "version-date": iso_now,
+        "time-zone": "UTC",
+    }
+    ts.store_timeseries(ts_json)
+
     begin = now - timedelta(minutes=15)
     end = now + timedelta(minutes=15)
-    ts.delete_timeseries(TEST_TSID, TEST_OFFICE, begin, end)
-    result = ts.get_timeseries(TEST_TSID, TEST_OFFICE)
+    ts.delete_timeseries(TEST_TSID_DELETE, TEST_OFFICE, begin, end)
+    result = ts.get_timeseries(TEST_TSID_DELETE, TEST_OFFICE)
     assert result is None or result.json.get("values", []) == []
