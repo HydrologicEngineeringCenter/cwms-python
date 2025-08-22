@@ -96,6 +96,11 @@ def test_store_multi_timeseries_df():
         }
     )
     ts.store_multi_timeseries_df(df, TEST_OFFICE)
+    data = ts.get_timeseries(TEST_TSID, TEST_OFFICE).json
+    assert data["name"] == TEST_TSID
+    assert data["office-id"] == TEST_OFFICE
+    assert data["units"] == "ft"
+    assert data["values"][0][1] == 7.89
 
 
 def test_store_timeseries():
@@ -113,6 +118,11 @@ def test_store_timeseries():
         "time-zone": "UTC",
     }
     ts.store_timeseries(ts_json)
+    data = ts.get_timeseries(TEST_TSID, TEST_OFFICE).json
+    assert data["name"] == TEST_TSID
+    assert data["office-id"] == TEST_OFFICE
+    assert data["units"] == "ft"
+    assert data["values"][0][1] == 99.9
 
 
 def test_delete_timeseries():
@@ -120,3 +130,5 @@ def test_delete_timeseries():
     begin = now - timedelta(minutes=15)
     end = now + timedelta(minutes=15)
     ts.delete_timeseries(TEST_TSID, TEST_OFFICE, begin, end)
+    result = ts.get_timeseries(TEST_TSID, TEST_OFFICE)
+    assert result is None or result.json.get("values", []) == []
