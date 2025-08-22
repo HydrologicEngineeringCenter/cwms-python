@@ -64,10 +64,9 @@ def test_get_multi_timeseries_df():
 
 def test_timeseries_df_to_json():
     dt = datetime(2023, 1, 1, 0, 0, tzinfo=timezone.utc)
-    dt_epoch_ms = int(dt.timestamp() * 1000)
     df = pd.DataFrame(
         {
-            "date-time": [dt_epoch_ms],
+            "date-time": [dt],
             "value": [42.0],
             "quality-code": [0],
         }
@@ -80,7 +79,7 @@ def test_timeseries_df_to_json():
     assert json_out["office-id"] == office, "Incorrect office-id in output"
     assert json_out["units"] == units, "Incorrect units in output"
     assert json_out["values"] == [
-        [dt_epoch_ms, 42.0, 0]
+        [dt.isoformat(), 42.0, 0]
     ], "Values do not match expected"
 
 
