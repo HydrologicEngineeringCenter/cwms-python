@@ -50,7 +50,7 @@ def test_store_timeseries():
         "name": TEST_TSID_STORE,
         "office-id": TEST_OFFICE,
         "units": "ft",
-        "values": [[now_epoch_ms, 99.9, 0]],
+        "values": [[now_epoch_ms, 99, 0]],
         "begin": iso_now,
         "end": iso_now,
         "version-date": iso_now,
@@ -61,7 +61,7 @@ def test_store_timeseries():
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
-    assert data["values"][0][1] == 99.9
+    assert data["values"][0][1] == 99
 
 
 def test_get_timeseries():
@@ -69,7 +69,7 @@ def test_get_timeseries():
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
-    assert data["values"][0][1] == 99.9
+    assert data["values"][0][1] == 99
 
 
 def test_timeseries_df_to_json():
@@ -77,7 +77,7 @@ def test_timeseries_df_to_json():
     df = pd.DataFrame(
         {
             "date-time": [dt],
-            "value": [42.0],
+            "value": [42],
             "quality-code": [0],
         }
     )
@@ -89,7 +89,7 @@ def test_timeseries_df_to_json():
     assert json_out["office-id"] == office, "Incorrect office-id in output"
     assert json_out["units"] == units, "Incorrect units in output"
     assert json_out["values"] == [
-        [dt.isoformat(), 42.0, 0]
+        [dt.isoformat(), 42, 0]
     ], "Values do not match expected"
 
 
@@ -99,7 +99,7 @@ def test_store_multi_timeseries_df():
     df = pd.DataFrame(
         {
             "date-time": [now, now],
-            "value": [7.89, 8.91],
+            "value": [7, 8],
             "quality-code": [0, 0],
             "ts_id": [TEST_TSID_MULTI, ts_id_rev_test],
             "units": ["ft", "ft"],
@@ -111,11 +111,11 @@ def test_store_multi_timeseries_df():
     assert data1["name"] == TEST_TSID_MULTI
     assert data1["office-id"] == TEST_OFFICE
     assert data1["units"] == "ft"
-    assert data1["values"][0][1] == 7.89
+    assert data1["values"][0][1] == 7
     assert data2["name"] == ts_id_rev_test
     assert data2["office-id"] == TEST_OFFICE
     assert data2["units"] == "ft"
-    assert data2["values"][0][1] == 8.91
+    assert data2["values"][0][1] == 8
 
 
 def test_get_multi_timeseries_df():
