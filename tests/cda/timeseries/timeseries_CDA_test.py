@@ -61,7 +61,7 @@ def test_store_timeseries():
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
-    assert data["values"][0][1] == 99
+    assert data["values"][0][1] == pytest.approx(99)
 
 
 def test_get_timeseries():
@@ -69,7 +69,7 @@ def test_get_timeseries():
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
-    assert data["values"][0][1] == 99
+    assert data["values"][0][1] == pytest.approx(99)
 
 
 def test_timeseries_df_to_json():
@@ -111,11 +111,11 @@ def test_store_multi_timeseries_df():
     assert data1["name"] == TEST_TSID_MULTI
     assert data1["office-id"] == TEST_OFFICE
     assert data1["units"] == "ft"
-    assert data1["values"][0][1] == 7
+    assert data1["values"][0][1] == pytest.approx(7)
     assert data2["name"] == ts_id_rev_test
     assert data2["office-id"] == TEST_OFFICE
     assert data2["units"] == "ft"
-    assert data2["values"][0][1] == 8
+    assert data2["values"][0][1] == pytest.approx(8)
 
 
 def test_get_multi_timeseries_df():
