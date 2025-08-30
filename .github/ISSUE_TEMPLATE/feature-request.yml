@@ -1,0 +1,22 @@
+name: CWMS-Python Feature Request
+description: Request a feature, or ask a question related to CWMS-Python
+labels: ['enhancement']
+body:
+  - type: markdown
+    id: feature_description
+    attributes:
+      label: Feature Proposal
+      description: What do you want to see added or changed?
+      placeholder: |
+        Describe the feature, its motivation, and usage examples.
+        You can include code or examples in code blocks.
+    validations:
+      required: true
+
+  - type: markdown
+    id: related_links
+    attributes:
+      label: Related Context or Links
+      description: Include any discussions, docs, or libraries relevant to the request.
+    validations:
+      required: false
