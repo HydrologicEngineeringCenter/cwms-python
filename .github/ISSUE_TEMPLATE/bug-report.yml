@@ -1,0 +1,82 @@
+name: CWMS-Python Bug Report
+description: File a bug/error related to CWMS-Python
+labels: ['bug', 'blocking', 'invalid']
+body:
+  - type: dropdown
+    id: script
+    attributes:
+      label: Run Environment
+      description: Select the script this pertains to
+      options:
+        - Solaris/T7
+        - CWBI/AWS Cloud
+        - Local Workstation (Windows 10)
+        - VM (Nebula/VMWare/Virtual Box) - List OS in Description!
+        - Other
+    validations:
+      required: false
+  - type: dropdown
+    id: script
+    attributes:
+      label: CDA Instance
+      description: Select the target CDA instance
+      options:
+        - T7 CDA
+        - TEST - CWBI
+        - DEV  - CWBI
+        - PROD - CWBI
+        - Local Docker (VM)
+        - Other (List In Description)
+    validations:
+      required: false
+  - type: dropdown
+    id: script
+    attributes:
+      label: Python Version
+      description: Select the Python version this pertains to
+      options:
+        - 3.8
+        - 3.9
+        - 3.10
+        - 3.11
+        - 3.12
+        - 3.13
+        - Other (List In Description)
+      default: 3.12
+    validations:
+      required: true
+
+  # BUG REPORT FIELDS
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: Describe the bug
+      description: What went wrong?
+      placeholder: 'A clear and concise description of the bug... Did you get different data output? Did something work but fail in other ways?'
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: REDACTED relevant log output
+      description:
+        Please copy and paste any relevant log output and/or the stack trace. Removing sensitive
+        information. This will be automatically formatted into code, so no need for
+        backticks.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide steps to reproduce the issue.
+      placeholder: |
+        1. Download version xyz
+        2. Install dependencies
+        3. Execute command with these arguments: ...
+        4. Error occurs
+    validations:
+      required: false
