@@ -1,4 +1,6 @@
+import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -6,13 +8,21 @@ import pytest
 import cwms
 import cwms.ratings.ratings as ratings
 import cwms.ratings.ratings_spec as ratings_spec
+import cwms.ratings.ratings_template as ratings_template
+
+RESOURCES = Path(__file__).parent / "resources"
 
 TEST_OFFICE = "MVP"
 TEST_RATING_ID = "pytest_rating.Stage;ft.Flow;cfs.Linear.Production"
 
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_data():
+def load_json(name):
+    with open(RESOURCES / name) as f:
+        return json.load(f)
+
+
+@pytest.fixture(scope="module")
+def setup_unit_spec():
     # Create rating spec for testing
     spec_json = {
         "office-id": TEST_OFFICE,
@@ -27,6 +37,28 @@ def setup_data():
 
     # Clean up
     ratings_spec.delete_rating_spec(TEST_RATING_ID, TEST_OFFICE)
+
+
+@pytest.fixture(scope="module")
+def setup_lifecycle_resources():
+    # Prepare resources for lifecycle tests: location, template, spec
+    location_json = load_json("location.json")
+    cwms.store_location(location_json)
+
+    template_json = load_json("template.json")
+    ratings_template.store_rating_template(template_json)
+
+    spec_json = load_json("spec.json")
+    ratings_spec.store_rating_spec(spec_json)
+
+    yield
+
+    # Cleanup lifecycle resources
+    ratings_spec.delete_rating_spec(spec_json["rating-spec-id"], spec_json["office-id"])
+    ratings_template.delete_rating_template(
+        template_json["template-id"], template_json["office-id"]
+    )
+    cwms.delete_location(location_json["location-id"], location_json["office-id"])
 
 
 @pytest.fixture(autouse=True)
@@ -101,3 +133,41 @@ def test_delete_ratings():
 
     # Should not hit
     ratings.delete_ratings(TEST_RATING_ID, TEST_OFFICE, begin, end)
+
+
+def test_full_rating_lifecycle(setup_lifecycle_resources):
+    location_json = load_json("location.json")
+    template_json = load_json("template.json")
+    spec_json = load_json("spec.json")
+    table_json = load_json("table.json")
+    updated_table_json = load_json("table_updated.json")
+
+    # Store location
+    cwms.store_location(location_json)
+
+    # Store template
+    ratings_template.store_rating_template(template_json)
+
+    # Store spec
+    ratings_spec.store_rating_spec(spec_json)
+
+    # Store rating table
+    ratings.store_rating(table_json)
+
+    # Update rating table
+    ratings.store_rating(updated_table_json)
+
+    # Delete rating table
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    begin = now - timedelta(days=1)
+    end = now + timedelta(days=1)
+    ratings.delete_ratings(
+        spec_json["rating-spec-id"], spec_json["office-id"], begin, end
+    )
+
+    # Cleanup
+    ratings_spec.delete_rating_spec(spec_json["rating-spec-id"], spec_json["office-id"])
+    ratings_template.delete_rating_template(
+        template_json["template-id"], template_json["office-id"]
+    )
+    cwms.delete_location(location_json["location-id"], location_json["office-id"])
