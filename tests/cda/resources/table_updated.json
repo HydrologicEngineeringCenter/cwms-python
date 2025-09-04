@@ -1,0 +1,18 @@
+{
+  "simple-rating": {
+    "office-id": "MVP",
+    "rating-spec-id": "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST",
+    "units-id": "ft;cfs",
+    "effective-date": "2024-01-01T00:00:00Z",
+    "transition-start-date": null,
+    "active": true,
+    "description": "Updated rating table for pytest",
+    "rating-points": {
+      "point": [
+        { "ind": 1.0, "dep": 11.0 },
+        { "ind": 2.0, "dep": 22.0 },
+        { "ind": 3.0, "dep": 33.0 }
+      ]
+    }
+  }
+}
