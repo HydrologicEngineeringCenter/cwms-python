@@ -29,8 +29,10 @@ def setup_unit_spec():
         "office-id": TEST_OFFICE,
         "rating-spec-id": TEST_RATING_ID,
         "template-id": "Linear",
-        "ind-parameter": "Stage;ft",
-        "dep-parameter": "Flow;cfs",
+        "ind-parameter": {"parameter": "Stage", "unit": "ft"},
+        "dep-parameter": {"parameter": "Flow", "unit": "cfs"},
+        "version": "pytest-version",
+        "description": "Pytest rating spec for tests",
     }
     ratings_spec.store_rating_spec(spec_json)
 
