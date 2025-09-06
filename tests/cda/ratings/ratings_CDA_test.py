@@ -10,10 +10,10 @@ import cwms.ratings.ratings as ratings
 import cwms.ratings.ratings_spec as ratings_spec
 import cwms.ratings.ratings_template as ratings_template
 
-RESOURCES = Path(__file__).parent / "resources"
+RESOURCES = Path(__file__).parent.parent / "resources"
 
 TEST_OFFICE = "MVP"
-TEST_RATING_ID = "pytest_rating.Stage;ft.Flow;cfs.Linear.Production"
+TEST_RATING_ID = "pytest_rating.Stage;ft.Flow;cfs.Linear"
 
 
 def load_json(name):
