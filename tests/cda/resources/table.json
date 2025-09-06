@@ -1,7 +1,7 @@
 {
   "simple-rating": {
     "office-id": "MVP",
-    "rating-spec-id": "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST",
+    "rating-spec-id": "pytest_rating.Stage;ft.Flow;cfs.Linear",
     "units-id": "ft;cfs",
     "effective-date": "2023-01-01T00:00:00Z",
     "transition-start-date": null,

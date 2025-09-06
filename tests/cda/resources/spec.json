@@ -1,9 +1,9 @@
 {
   "office-id": "MVP",
-  "rating-spec-id": "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST",
-  "template-id": "USGS-EXSA-TEST",
-  "ind-parameter": "Stage;ft",
-  "dep-parameter": "Flow;cfs",
+  "rating-spec-id": "pytest_rating.Stage;ft.Flow;cfs.Linear",
+  "template-id": "Linear",
+  "ind-parameter": {"parameter": "Stage", "unit": "ft"},
+  "dep-parameter": {"parameter": "Flow", "unit": "cfs"},
   "version": "pytest-version",
-  "description": "Pytest rating spec for EXSA test"
+  "description": "Pytest rating spec for tests"
 }
