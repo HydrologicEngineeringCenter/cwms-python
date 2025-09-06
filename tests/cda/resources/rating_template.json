@@ -1,18 +1,18 @@
 {
   "office-id": "MVP",
-  "id": "USGS-EXSA-TEST",
-  "version": "USGS-EXSA-TEST",
-  "description": "Expanded, Shift-Adjusted Stream Rating Template",
-  "dependent-parameter": "Flow",
+  "template-id": "Linear",
+  "description": "Linear stage-to-flow template",
+  "dependent-parameter": {
+    "parameter": "Flow",
+    "unit": "cfs"
+  },
   "independent-parameter-specs": [
     {
       "parameter": "Stage",
+      "unit": "ft",
       "in-range-method": "LINEAR",
       "out-range-low-method": "LINEAR",
       "out-range-high-method": "LINEAR"
     }
-  ],
-  "rating-ids": [
-    "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST"
   ]
 }
