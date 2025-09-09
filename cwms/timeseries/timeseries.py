@@ -1,11 +1,13 @@
 import concurrent.futures
-from datetime import datetime
-from typing import Any, Dict, Optional
+from datetime import datetime, timedelta, timezone
+import math
+from typing import Any, Optional
 
 import pandas as pd
 from pandas import DataFrame
 
 import cwms.api as api
+from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
 
 
@@ -123,73 +125,178 @@ def get_timeseries(
     page_size: Optional[int] = 300000,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
+    multithread: Optional[bool] = True,
+    max_threads: int = 20,
+    max_days_per_chunk: int = 30,
 ) -> Data:
+    
     """Retrieves time series values from a specified time series and time window.  Value date-times
-    obtained are always in UTC.
+        obtained are always in UTC.
 
-    Parameters
-    ----------
-        ts_id: string
-            Name of the time series whose data is to be included in the response.
-        office_id: string
-            The owning office of the time series.
-        unit: string, optional, default is EN
-            The unit or unit system of the response. Defaults to EN. Valid values
-            for the unit field are:
-                1. EN. English unit system.
-                2. SI. SI unit system.
-                3. Other.
-        datum: string, optional, default is None
-            The elevation datum of the response. This field affects only elevation location
-            levels. Valid values for this field are:
-                1. NAVD88.
-                2. NGVD29.
-        begin: datetime, optional, default is None
-            Start of the time window for data to be included in the response. If this field is
-            not specified, any required time window begins 24 hours prior to the specified
-            or default end time. Any timezone information should be passed within the datetime
-            object. If no timezone information is given, default will be UTC.
-        end: datetime, optional, default is None
-            End of the time window for data to be included in the response. If this field is
-            not specified, any required time window ends at the current time. Any timezone
-            information should be passed within the datetime object. If no timezone information
-            is given, default will be UTC.
-        page_size: int, optional, default is 300000: Specifies the number of records to obtain in
-            a single call.
-        version_date: datetime, optional, default is None
-            Version date of time series values being requested. If this field is not specified and
-            the timeseries is versioned, the query will return the max aggregate for the time period.
-        trim: boolean, optional, default is True
-            Specifies whether to trim missing values from the beginning and end of the retrieved values.
-    Returns
-    -------
-        cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
-    """
+        Parameters
+        ----------
+            ts_id: string
+                Name of the time series whose data is to be included in the response.
+            office_id: string
+                The owning office of the time series.
+            unit: string, optional, default is EN
+                The unit or unit system of the response. Defaults to EN. Valid values
+                for the unit field are:
+                    1. EN. English unit system.
+                    2. SI. SI unit system.
+                    3. Other.
+            datum: string, optional, default is None
+                The elevation datum of the response. This field affects only elevation location
+                levels. Valid values for this field are:
+                    1. NAVD88.
+                    2. NGVD29.
+            begin: datetime, optional, default is None
+                Start of the time window for data to be included in the response. If this field is
+                not specified, any required time window begins 24 hours prior to the specified
+                or default end time. Any timezone information should be passed within the datetime
+                object. If no timezone information is given, default will be UTC.
+            end: datetime, optional, default is None
+                End of the time window for data to be included in the response. If this field is
+                not specified, any required time window ends at the current time. Any timezone
+                information should be passed within the datetime object. If no timezone information
+                is given, default will be UTC.
+            page_size: int, optional, default is 300000: Specifies the number of records to obtain in
+                a single call.
+            version_date: datetime, optional, default is None
+                Version date of time series values being requested. If this field is not specified and
+                the timeseries is versioned, the query will return the max aggregate for the time period.
+            trim: boolean, optional, default is True
+                Specifies whether to trim missing values from the beginning and end of the retrieved values.
+            multithread: boolean, optional, default is False
+                Specifies whether to trim missing values from the beginning and end of the retrieved values.
+            max_threads: integer, default is 20
+                The maximum number of threads that will be spawned for multithreading
+            max_days_per_chunk: integer, default is 30
+                The maximum number of days that would be included in a thread
+        Returns
+        -------
+            cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
+        """
 
-    # creates the dataframe from the timeseries data
     endpoint = "timeseries"
+    selector = "values"
+
     if begin and not isinstance(begin, datetime):
         raise ValueError("begin needs to be in datetime")
     if end and not isinstance(end, datetime):
         raise ValueError("end needs to be in datetime")
     if version_date and not isinstance(version_date, datetime):
         raise ValueError("version_date needs to be in datetime")
-    params = {
-        "office": office_id,
-        "name": ts_id,
-        "unit": unit,
-        "datum": datum,
-        "begin": begin.isoformat() if begin else None,
-        "end": end.isoformat() if end else None,
-        "page-size": page_size,
-        "page": None,
-        "version-date": version_date.isoformat() if version_date else None,
-        "trim": trim,
-    }
-    selector = "values"
 
-    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=params)
-    return Data(response, selector=selector)
+    # default end to now if not provided
+    if end is None:
+        end = datetime.now(timezone.utc)
+    else:
+        end = end.replace(tzinfo=timezone.utc)
+    if begin is None:
+        # keep original behavior: default window begins 24 hours prior to end
+        begin = end - timedelta(days=1)
+    else:
+        begin = begin.replace(tzinfo=timezone.utc)
+
+    def _call_api_for_range(begin, end):
+        params = {
+            "office": office_id,
+            "name": ts_id,
+            "unit": unit,
+            "datum": datum,
+            "begin": begin.isoformat() if begin else None,
+            "end": end.isoformat() if end else None,
+            "page-size": page_size,
+            "page": None,
+            "version-date": version_date.isoformat() if version_date else None,
+            "trim": trim,
+        }
+        return api.get_with_paging(selector=selector, endpoint=endpoint, params=params)
+
+    # if multithread disabled or short range, do a single call
+    if not multithread:
+        response = _call_api_for_range(begin, end)
+        return Data(response, selector=selector)
+
+    begin_extent, end_extent, last_update = get_ts_extents(
+        ts_id=ts_id, office_id=office_id
+    )
+    print("begin", type(begin), begin)
+    print("begin_extent", type(begin_extent), begin_extent)
+    print(begin_extent, end_extent, last_update)
+    if begin.replace(tzinfo=timezone.utc) < begin_extent:
+        begin = begin_extent
+
+    total_days = (end - begin).total_seconds() / (24 * 3600)
+
+    # split into N chunks where each chunk <= max_days_per_chunk, but cap chunks to max_threads
+    required_chunks = math.ceil(total_days / max_days_per_chunk)
+    print("required_chunks=", required_chunks)
+    chunks = min(required_chunks, max_threads)
+
+    if total_days <= max_days_per_chunk:
+        response = _call_api_for_range(begin, end)
+        return Data(response, selector=selector)
+
+    # create roughly equal ranges
+    chunk_seconds = (end - begin).total_seconds() / chunks
+    ranges = []
+    for i in range(chunks):
+        b = begin + timedelta(seconds=math.floor(i * chunk_seconds))
+        e = begin + timedelta(seconds=math.floor((i + 1) * chunk_seconds))
+        if i == chunks - 1:
+            e = end
+        ranges.append((b, e))
+
+    # perform parallel requests
+    responses = [None] * len(ranges)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=chunks) as executor:
+        future_to_idx = {
+            executor.submit(_call_api_for_range, r[0], r[1]): idx
+            for idx, r in enumerate(ranges)
+        }
+        for fut in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[fut]
+            try:
+                responses[idx] = fut.result()
+            except Exception as exc:
+                # fail fast: re-raise so caller sees error (or change to continue/partial)
+                raise
+
+    # responses are now in the same order as ranges
+    sorted_responses = [resp for resp in responses if resp is not None]
+
+    # Merge JSON "values" lists (assumes top-level "values" list present)
+    merged_json = {}
+    # merge metadata from first response (you can adjust which metadata to prefer)
+    if sorted_responses:
+        merged_json.update(
+            {k: v for k, v in sorted_responses[0].items() if k != "values"}
+        )
+        merged_values = []
+        for resp in sorted_responses:
+            vals = resp.get("values") or []
+            merged_values.extend(vals)
+        # optionally deduplicate by date-time
+        try:
+            # preserve order and dedupe by date-time string
+            seen = set()
+            deduped = []
+            for v in merged_values:
+                dt = v.get("date-time")
+                if dt not in seen:
+                    seen.add(dt)
+                    deduped.append(v)
+            merged_json["values"] = deduped
+        except Exception:
+            merged_json["values"] = merged_values
+    else:
+        merged_json["values"] = []
+
+    final_data = Data(merged_json, selector=selector)
+
+    return final_data
 
 
 def timeseries_df_to_json(
