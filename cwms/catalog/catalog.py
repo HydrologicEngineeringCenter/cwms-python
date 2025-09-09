@@ -3,6 +3,8 @@ from typing import Optional
 import cwms.api as api
 from cwms.cwms_types import Data
 
+from dateutil import parser
+
 
 def get_locations_catalog(
     office_id: str,
@@ -130,3 +132,36 @@ def get_timeseries_catalog(
 
     response = api.get(endpoint=endpoint, params=params, api_version=2)
     return Data(response, selector="entries")
+
+
+def get_ts_extents(ts_id=str, office_id=str):
+    """Retrieves earliest extent, latest extent, and last update via cwms.get_timeseries_catalog
+
+    Parameters
+    ----------
+        ts_id: string
+            Timseries id to query.
+        office_id: string
+            The owning office of the timeseries group.
+
+    Returns
+    -------
+        tuple of datetime objects (earliest_time, latest_time, last_update)
+    """
+    cwms_cat = get_timeseries_catalog(
+        office_id=office_id,
+        like=ts_id,
+        timeseries_group_like=None,
+        page_size=500,
+        include_extents=True,
+    ).df
+    earliest_time = parser.isoparse(
+        cwms_cat[cwms_cat.name == ts_id].extents.values[0][0]["earliest-time"]
+    )
+    latest_time = parser.isoparse(
+        cwms_cat[cwms_cat.name == ts_id].extents.values[0][0]["latest-time"]
+    )
+    last_update = parser.isoparse(
+        cwms_cat[cwms_cat.name == ts_id].extents.values[0][0]["last-update"]
+    )
+    return earliest_time, latest_time, last_update
