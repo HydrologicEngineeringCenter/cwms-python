@@ -1,5 +1,5 @@
 {
-  "name": "USGS-EXSA-TEST",
+  "name": "TestRating",
   "office-id": "MVP",
   "latitude": 40.0,
   "longitude": -105.0,
@@ -7,8 +7,8 @@
   "horizontal-datum": "NAD83",
   "vertical-datum": "NAVD88",
   "location-type": "TESTING",
-  "public-name": "EXSA Location",
-  "long-name": "EXSA Location for Rating Tests",
+  "public-name": "Test Location",
+  "long-name": "Test Location for Rating Tests",
   "timezone-name": "America/Chicago",
   "location-kind": "SITE",
   "nation": "US"
