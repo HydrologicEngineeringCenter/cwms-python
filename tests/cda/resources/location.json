@@ -1,16 +1,15 @@
 {
   "name": "TestRating",
-  "office-id": "MVP",
-  "location-id": "pytest_template_group",
   "latitude": 40.0,
   "longitude": -105.0,
   "elevation": 1000.0,
   "horizontal-datum": "NAD83",
   "vertical-datum": "NAVD88",
+  "office-id": "MVP",
   "location-type": "TESTING",
+  "location-kind": "pytest_template_group",
   "public-name": "Test Location",
   "long-name": "Test Location for Rating Tests",
   "timezone-name": "America/Chicago",
-  "location-kind": "SITE",
   "nation": "US"
 }
