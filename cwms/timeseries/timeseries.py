@@ -1,7 +1,8 @@
 import concurrent.futures
 from datetime import datetime, timedelta, timezone
 import math
-from typing import Any, Optional
+import time
+from typing import Dict, Any, Optional
 
 import pandas as pd
 from pandas import DataFrame
@@ -418,13 +419,39 @@ def store_multi_timeseries_df(
                     store_ts_ids, ts_data, ts_id, office_id, version_date_dt
                 )
 
+def _post_chunk_with_retries(endpoint: str, chunk_json: JSON, params: dict, max_retries: int = 3, backoff: float = 0.5):
+    last_exc = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            resp = api.post(endpoint, chunk_json, params)
+            # if api.post returns a requests.Response-like object:
+            status = getattr(resp, "status_code", None)
+            body = getattr(resp, "json", lambda: None)()
+            if status is not None:
+                if 200 <= status < 300:
+                    return {"ok": True, "status": status, "body": body}
+                # treat 409/4xx specially if you want merges to proceed
+                return {"ok": False, "status": status, "body": body}
+            # otherwise assume success if no exception
+            return {"ok": True, "status": None, "body": resp}
+        except Exception as e:
+            last_exc = e
+            if attempt == max_retries:
+                raise
+            time.sleep(backoff * (2 ** (attempt - 1)))
+    raise last_exc
+
 
 def store_timeseries(
     data: JSON,
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
-) -> None:
+    multithread: bool = True,
+    max_threads: int = 20,
+    max_values_per_chunk: int = 700,
+    max_retries: int = 3,
+) ->  None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
     Parameters
@@ -458,7 +485,51 @@ def store_timeseries(
     if not isinstance(data, dict):
         raise ValueError("Cannot store a timeseries without a JSON data dictionary")
 
-    return api.post(endpoint, data, params)
+    values = data['values']
+    total = len(values)
+
+    # small payload: single post (preserve original behavior)
+    if (not multithread) or total <= max_values_per_chunk:
+        print('not multi threads***********')
+        return api.post(endpoint, data, params)
+    
+    # determine chunking
+    required_chunks = math.ceil(total / max_values_per_chunk)
+    chunks = min(required_chunks, max_threads)
+
+    # preserve metadata keys except "values"
+    meta = {k: v for k, v in data.items() if k != "values"}
+
+    # build chunk payloads (roughly equal sized)
+    chunk_payloads = []
+    for i in range(chunks):
+        start = int(math.floor(i * total / chunks))
+        end = int(math.floor((i + 1) * total / chunks)) if i < (chunks - 1) else total
+        chunk_vals = values[start:end]
+        chunk_json = dict(meta)
+        chunk_json["values"] = chunk_vals
+        chunk_payloads.append((i, chunk_json))
+
+    # post chunks in parallel and collect responses in order
+    responses = [None] * len(chunk_payloads)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=chunks) as executor:
+        future_to_idx = {
+            executor.submit(_post_chunk_with_retries, endpoint, payload, params, max_retries): idx
+            for idx, (_, payload) in enumerate(chunk_payloads)
+        }
+        for fut in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[fut]
+            responses[idx] = fut.result()  # will raise if chunk failed after retries
+
+    # after collecting responses list as above, responses is list of dicts per chunk
+    errors = []
+    for idx, result in enumerate(responses):
+        if not result or not result.get("ok"):
+            errors.append((idx, result))
+    if errors:
+        raise RuntimeError(f"Some chunks failed: {errors}")
+
+    return responses
 
 
 def delete_timeseries(
