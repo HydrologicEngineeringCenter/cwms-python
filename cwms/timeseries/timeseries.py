@@ -74,6 +74,7 @@ def get_multi_timeseries_df(
                 begin=begin,
                 end=end,
                 version_date=version_date_dt,
+                multithread=False,
             )
             result_dict = {
                 "ts_id": ts_id,
@@ -127,57 +128,56 @@ def get_timeseries(
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
-    max_threads: int = 20,
-    max_days_per_chunk: int = 30,
+    max_threads: Optional[int] = 20,
+    max_days_per_chunk: Optional[int] = 14,
 ) -> Data:
-    
     """Retrieves time series values from a specified time series and time window.  Value date-times
-        obtained are always in UTC.
+    obtained are always in UTC.
 
-        Parameters
-        ----------
-            ts_id: string
-                Name of the time series whose data is to be included in the response.
-            office_id: string
-                The owning office of the time series.
-            unit: string, optional, default is EN
-                The unit or unit system of the response. Defaults to EN. Valid values
-                for the unit field are:
-                    1. EN. English unit system.
-                    2. SI. SI unit system.
-                    3. Other.
-            datum: string, optional, default is None
-                The elevation datum of the response. This field affects only elevation location
-                levels. Valid values for this field are:
-                    1. NAVD88.
-                    2. NGVD29.
-            begin: datetime, optional, default is None
-                Start of the time window for data to be included in the response. If this field is
-                not specified, any required time window begins 24 hours prior to the specified
-                or default end time. Any timezone information should be passed within the datetime
-                object. If no timezone information is given, default will be UTC.
-            end: datetime, optional, default is None
-                End of the time window for data to be included in the response. If this field is
-                not specified, any required time window ends at the current time. Any timezone
-                information should be passed within the datetime object. If no timezone information
-                is given, default will be UTC.
-            page_size: int, optional, default is 300000: Specifies the number of records to obtain in
-                a single call.
-            version_date: datetime, optional, default is None
-                Version date of time series values being requested. If this field is not specified and
-                the timeseries is versioned, the query will return the max aggregate for the time period.
-            trim: boolean, optional, default is True
-                Specifies whether to trim missing values from the beginning and end of the retrieved values.
-            multithread: boolean, optional, default is False
-                Specifies whether to trim missing values from the beginning and end of the retrieved values.
-            max_threads: integer, default is 20
-                The maximum number of threads that will be spawned for multithreading
-            max_days_per_chunk: integer, default is 30
-                The maximum number of days that would be included in a thread
-        Returns
-        -------
-            cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
-        """
+    Parameters
+    ----------
+        ts_id: string
+            Name of the time series whose data is to be included in the response.
+        office_id: string
+            The owning office of the time series.
+        unit: string, optional, default is EN
+            The unit or unit system of the response. Defaults to EN. Valid values
+            for the unit field are:
+                1. EN. English unit system.
+                2. SI. SI unit system.
+                3. Other.
+        datum: string, optional, default is None
+            The elevation datum of the response. This field affects only elevation location
+            levels. Valid values for this field are:
+                1. NAVD88.
+                2. NGVD29.
+        begin: datetime, optional, default is None
+            Start of the time window for data to be included in the response. If this field is
+            not specified, any required time window begins 24 hours prior to the specified
+            or default end time. Any timezone information should be passed within the datetime
+            object. If no timezone information is given, default will be UTC.
+        end: datetime, optional, default is None
+            End of the time window for data to be included in the response. If this field is
+            not specified, any required time window ends at the current time. Any timezone
+            information should be passed within the datetime object. If no timezone information
+            is given, default will be UTC.
+        page_size: int, optional, default is 300000: Specifies the number of records to obtain in
+            a single call.
+        version_date: datetime, optional, default is None
+            Version date of time series values being requested. If this field is not specified and
+            the timeseries is versioned, the query will return the max aggregate for the time period.
+        trim: boolean, optional, default is True
+            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+        multithread: boolean, optional, default is False
+            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+        max_threads: integer, default is 20
+            The maximum number of threads that will be spawned for multithreading
+        max_days_per_chunk: integer, default is 30
+            The maximum number of days that would be included in a thread
+    Returns
+    -------
+        cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
+    """
 
     endpoint = "timeseries"
     selector = "values"
@@ -223,9 +223,7 @@ def get_timeseries(
     begin_extent, end_extent, last_update = get_ts_extents(
         ts_id=ts_id, office_id=office_id
     )
-    print("begin", type(begin), begin)
-    print("begin_extent", type(begin_extent), begin_extent)
-    print(begin_extent, end_extent, last_update)
+
     if begin.replace(tzinfo=timezone.utc) < begin_extent:
         begin = begin_extent
 
@@ -233,8 +231,11 @@ def get_timeseries(
 
     # split into N chunks where each chunk <= max_days_per_chunk, but cap chunks to max_threads
     required_chunks = math.ceil(total_days / max_days_per_chunk)
-    print("required_chunks=", required_chunks)
+
     chunks = min(required_chunks, max_threads)
+    print(
+        f"INFO: Getting data with {max_threads} threads. Downloading {required_chunks} required chunks."
+    )
 
     if total_days <= max_days_per_chunk:
         response = _call_api_for_range(begin, end)
@@ -388,7 +389,7 @@ def store_multi_timeseries_df(
                 office_id=office_id,
                 version_date=version_date,
             )
-            store_timeseries(data=data_json)
+            store_timeseries(data=data_json, multithread=False)
         except Exception as e:
             print(f"Error processing {ts_id}: {e}")
         return None
@@ -419,7 +420,14 @@ def store_multi_timeseries_df(
                     store_ts_ids, ts_data, ts_id, office_id, version_date_dt
                 )
 
-def _post_chunk_with_retries(endpoint: str, chunk_json: JSON, params: dict, max_retries: int = 3, backoff: float = 0.5):
+
+def _post_chunk_with_retries(
+    endpoint: str,
+    chunk_json: JSON,
+    params: dict,
+    max_retries: int = 3,
+    backoff: float = 0.5,
+):
     last_exc = None
     for attempt in range(1, max_retries + 1):
         try:
@@ -447,11 +455,11 @@ def store_timeseries(
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
-    multithread: bool = True,
-    max_threads: int = 20,
-    max_values_per_chunk: int = 700,
-    max_retries: int = 3,
-) ->  None:
+    multithread: Optional[bool] = True,
+    max_threads: Optional[int] = 20,
+    max_values_per_chunk: Optional[int] = 700,
+    max_retries: Optional[int] = 3,
+) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
     Parameters
@@ -485,17 +493,17 @@ def store_timeseries(
     if not isinstance(data, dict):
         raise ValueError("Cannot store a timeseries without a JSON data dictionary")
 
-    values = data['values']
+    values = data["values"]
     total = len(values)
 
     # small payload: single post (preserve original behavior)
     if (not multithread) or total <= max_values_per_chunk:
-        print('not multi threads***********')
         return api.post(endpoint, data, params)
-    
+
     # determine chunking
     required_chunks = math.ceil(total / max_values_per_chunk)
     chunks = min(required_chunks, max_threads)
+    print(f"INFO: Storing with {chunks} threads.")
 
     # preserve metadata keys except "values"
     meta = {k: v for k, v in data.items() if k != "values"}
@@ -514,7 +522,9 @@ def store_timeseries(
     responses = [None] * len(chunk_payloads)
     with concurrent.futures.ThreadPoolExecutor(max_workers=chunks) as executor:
         future_to_idx = {
-            executor.submit(_post_chunk_with_retries, endpoint, payload, params, max_retries): idx
+            executor.submit(
+                _post_chunk_with_retries, endpoint, payload, params, max_retries
+            ): idx
             for idx, (_, payload) in enumerate(chunk_payloads)
         }
         for fut in concurrent.futures.as_completed(future_to_idx):
