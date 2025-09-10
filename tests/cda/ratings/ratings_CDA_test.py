@@ -19,17 +19,7 @@ TEST_TEMPLATE_ID = "pytest_template.Linear"
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
-    location = {
-        "office-id": TEST_OFFICE,
-        "location-id": TEST_LOCATION_ID,
-        "location-name": "Pytest Template Location",
-        "location-type": "OTHER",
-        "latitude": 40.0,
-        "longitude": -90.0,
-        "elevation": 100.0,
-        "horizontal-datum": "NAD83",
-        "vertical-datum": "NAVD88",
-    }
+    location = json.load(open(RESOURCES / "location.json"))
     cwms.store_location(location)
     yield
     cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)

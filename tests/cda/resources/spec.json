@@ -1,6 +1,6 @@
 {
   "office-id": "MVP",
-  "rating-spec-id": "pytest_rating.Stage;ft.Flow;cfs.Linear",
+  "rating-spec-id": "pytest_rating.Stage;ft.Flow;cfs.Linear.pytest-version",
   "template-id": "Linear",
   "ind-parameter": {"parameter": "Stage", "unit": "ft"},
   "dep-parameter": {"parameter": "Flow", "unit": "cfs"},
