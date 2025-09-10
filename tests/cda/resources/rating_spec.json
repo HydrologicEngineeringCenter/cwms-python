@@ -1,7 +1,7 @@
 {
   "office-id": "MVP",
-  "rating-spec-id": "TestRating.Stage;Flow.USGS-EXSA-TEST.USGS-NWIS-TEST",
-  "template-id": "USGS-EXSA-TEST",
+  "rating-spec-id": "pytest_template_group.Stage;Flow.pytest_template.Linear.pytest-version",
+  "template-id": "pytest_template.Linear",
   "ind-parameter": "Stage;ft",
   "dep-parameter": "Flow;cfs",
   "version": "pytest-version",
