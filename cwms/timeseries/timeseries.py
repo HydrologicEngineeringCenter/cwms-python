@@ -1,8 +1,8 @@
 import concurrent.futures
-from datetime import datetime, timedelta, timezone
 import math
 import time
-from typing import Dict, Any, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
 
 import pandas as pd
 from pandas import DataFrame

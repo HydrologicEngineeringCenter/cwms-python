@@ -1,9 +1,9 @@
 from typing import Optional
 
+from dateutil import parser
+
 import cwms.api as api
 from cwms.cwms_types import Data
-
-from dateutil import parser
 
 
 def get_locations_catalog(
