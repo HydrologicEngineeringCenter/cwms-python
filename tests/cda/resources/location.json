@@ -1,6 +1,7 @@
 {
   "name": "TestRating",
   "office-id": "MVP",
+  "location-id": "pytest_template_group",
   "latitude": 40.0,
   "longitude": -105.0,
   "elevation": 1000.0,

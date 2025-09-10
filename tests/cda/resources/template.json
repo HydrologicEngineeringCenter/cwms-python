@@ -1,6 +1,6 @@
 {
   "office-id": "MVP",
-  "template-id": "Linear",
+  "template-id": "pytest_template.Linear",
   "description": "Linear stage-to-flow template",
   "dependent-parameter": {
     "parameter": "Flow",
