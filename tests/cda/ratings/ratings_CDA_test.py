@@ -31,8 +31,8 @@ def init_session():
 
 
 def test_store_template():
-    template_json = json.load(open(RESOURCES / "template.json"))
-    ratings_template.store_rating_template(template_json)
+    template_xml = (RESOURCES / "template.xml").read_text()
+    ratings_template.store_rating_template(template_xml)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched["template-id"] == TEST_TEMPLATE_ID
     assert fetched["office-id"] == TEST_OFFICE
@@ -45,11 +45,11 @@ def test_get_template():
 
 
 def test_update_template():
-    template_json = json.load(open(RESOURCES / "template.json"))
-    template_json["description"] = template_json.get("description", "") + " - updated"
-    ratings_template.store_rating_template(template_json)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched["description"].endswith(" - updated")
+    fetched["description"] = fetched.get("description", "") + " - updated"
+    ratings_template.store_rating_template(fetched)
+    updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
+    assert updated["description"].endswith(" - updated")
 
 
 def test_delete_template():
@@ -60,30 +60,49 @@ def test_delete_template():
 
 # Rating specs
 def test_store_rating_spec():
-    spec_json = json.load(open(RESOURCES / "spec.json"))
-    ratings_spec.store_rating_spec(spec_json)
-    fetched = ratings_spec.get_rating_spec(spec_json["rating-spec-id"], TEST_OFFICE)
-    assert fetched["rating-spec-id"] == spec_json["rating-spec-id"]
+    spec_xml = (RESOURCES / "spec.xml").read_text()
+    ratings_spec.store_rating_spec(spec_xml)
+    # Parse spec_xml to get rating-spec-id for fetching
+    # If spec_xml contains <rating-spec-id> element, parse it:
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(spec_xml)
+    rating_spec_id = root.findtext("rating-spec-id")
+    fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
+    assert fetched["rating-spec-id"] == rating_spec_id
     assert fetched["office-id"] == TEST_OFFICE
 
 
 def test_get_rating_spec():
-    spec_json = json.load(open(RESOURCES / "spec.json"))
-    fetched = ratings_spec.get_rating_spec(spec_json["rating-spec-id"], TEST_OFFICE)
-    assert fetched["rating-spec-id"] == spec_json["rating-spec-id"]
+    spec_xml = (RESOURCES / "spec.xml").read_text()
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(spec_xml)
+    rating_spec_id = root.findtext("rating-spec-id")
+    fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
+    assert fetched["rating-spec-id"] == rating_spec_id
     assert fetched["office-id"] == TEST_OFFICE
 
 
 def test_update_rating_spec():
-    spec_json = json.load(open(RESOURCES / "spec.json"))
-    spec_json["description"] = spec_json.get("description", "") + " - updated"
-    ratings_spec.store_rating_spec(spec_json)
-    fetched = ratings_spec.get_rating_spec(spec_json["rating-spec-id"], TEST_OFFICE)
-    assert fetched["description"].endswith(" - updated")
+    spec_xml = (RESOURCES / "spec.xml").read_text()
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(spec_xml)
+    rating_spec_id = root.findtext("rating-spec-id")
+    fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
+    fetched["description"] = fetched.get("description", "") + " - updated"
+    ratings_spec.store_rating_spec(fetched)
+    updated = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
+    assert updated["description"].endswith(" - updated")
 
 
 def test_delete_rating_spec():
-    spec_json = json.load(open(RESOURCES / "spec.json"))
-    ratings_spec.delete_rating_spec(spec_json["rating-spec-id"], TEST_OFFICE)
+    spec_xml = (RESOURCES / "spec.xml").read_text()
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(spec_xml)
+    rating_spec_id = root.findtext("rating-spec-id")
+    ratings_spec.delete_rating_spec(rating_spec_id, TEST_OFFICE)
     with pytest.raises(ApiError):
-        ratings_spec.get_rating_spec(spec_json["rating-spec-id"], TEST_OFFICE)
+        ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
