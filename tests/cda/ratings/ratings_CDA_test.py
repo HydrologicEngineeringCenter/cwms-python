@@ -37,26 +37,26 @@ def test_store_template():
     template_xml = (RESOURCES / "template.xml").read_text()
     ratings_template.store_rating_template(template_xml)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.template_id == TEST_TEMPLATE_ID
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == TEST_TEMPLATE_ID
+    assert fetched.office == TEST_OFFICE
 
 
 def test_get_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.template_id == TEST_TEMPLATE_ID
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == TEST_TEMPLATE_ID
+    assert fetched.office == TEST_OFFICE
 
 
 def test_update_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     fetched.description = (fetched.description or "") + " - updated"
-    ratings_template.store_rating_template(fetched)
+    ratings_template.store_rating_template(fetched.json)
     updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert updated.description.endswith(" - updated")
 
 
 def test_delete_template():
-    ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE")
+    ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
         ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
 
@@ -72,8 +72,8 @@ def test_store_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.rating_spec_id == rating_spec_id
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == rating_spec_id
+    assert fetched.office == TEST_OFFICE
 
 
 def test_get_rating_spec():
@@ -83,8 +83,8 @@ def test_get_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.rating_spec_id == rating_spec_id
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == rating_spec_id
+    assert fetched.office == TEST_OFFICE
 
 
 def test_update_rating_spec():
@@ -106,6 +106,6 @@ def test_delete_rating_spec():
 
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
-    ratings_spec.delete_rating_spec(rating_spec_id, TEST_OFFICE, "DELETE")
+    ratings_spec.delete_rating_spec(rating_spec_id, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
         ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
