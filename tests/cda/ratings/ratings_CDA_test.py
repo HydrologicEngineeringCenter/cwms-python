@@ -34,11 +34,8 @@ def init_session():
 
 
 def test_store_template():
-    from cwms.ratings import RatingTemplate
-
     template_xml = (RESOURCES / "template.xml").read_text()
-    template = RatingTemplate.from_xml(template_xml)
-    ratings_template.store_rating_template(template)
+    ratings_template.store_rating_template(template_xml)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched.id == TEST_TEMPLATE_ID
     assert fetched.office == TEST_OFFICE
@@ -53,7 +50,7 @@ def test_get_template():
 def test_update_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     fetched.description = (fetched.description or "") + " - updated"
-    ratings_template.store_rating_template(fetched)
+    ratings_template.store_rating_template(fetched.json)
     updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert updated.description.endswith(" - updated")
 
@@ -66,11 +63,8 @@ def test_delete_template():
 
 # Rating specs
 def test_store_rating_spec():
-    from cwms.ratings import RatingSpec
-
     spec_xml = (RESOURCES / "spec.xml").read_text()
-    spec = RatingSpec.from_xml(spec_xml)
-    ratings_spec.store_rating_spec(spec)
+    ratings_spec.store_rating_spec(spec_xml)
     # Parse spec_xml to get rating-spec-id for fetching
     # If spec_xml contains <rating-spec-id> element, parse it:
     import xml.etree.ElementTree as ET
@@ -94,8 +88,6 @@ def test_get_rating_spec():
 
 
 def test_update_rating_spec():
-    from cwms.ratings import RatingSpec
-
     spec_xml = (RESOURCES / "spec.xml").read_text()
     import xml.etree.ElementTree as ET
 
