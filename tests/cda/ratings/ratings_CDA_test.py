@@ -34,17 +34,20 @@ def init_session():
 
 
 def test_store_template():
+    from cwms.ratings import RatingTemplate
+
     template_xml = (RESOURCES / "template.xml").read_text()
-    ratings_template.store_rating_template(template_xml)
+    template = RatingTemplate.from_xml(template_xml)
+    ratings_template.store_rating_template(template)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.template_id == TEST_TEMPLATE_ID
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == TEST_TEMPLATE_ID
+    assert fetched.office == TEST_OFFICE
 
 
 def test_get_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.template_id == TEST_TEMPLATE_ID
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == TEST_TEMPLATE_ID
+    assert fetched.office == TEST_OFFICE
 
 
 def test_update_template():
@@ -56,15 +59,18 @@ def test_update_template():
 
 
 def test_delete_template():
-    ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE")
+    ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
         ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
 
 
 # Rating specs
 def test_store_rating_spec():
+    from cwms.ratings import RatingSpec
+
     spec_xml = (RESOURCES / "spec.xml").read_text()
-    ratings_spec.store_rating_spec(spec_xml)
+    spec = RatingSpec.from_xml(spec_xml)
+    ratings_spec.store_rating_spec(spec)
     # Parse spec_xml to get rating-spec-id for fetching
     # If spec_xml contains <rating-spec-id> element, parse it:
     import xml.etree.ElementTree as ET
@@ -72,8 +78,8 @@ def test_store_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.rating_spec_id == rating_spec_id
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == rating_spec_id
+    assert fetched.office == TEST_OFFICE
 
 
 def test_get_rating_spec():
@@ -83,11 +89,13 @@ def test_get_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.rating_spec_id == rating_spec_id
-    assert fetched.office_id == TEST_OFFICE
+    assert fetched.id == rating_spec_id
+    assert fetched.office == TEST_OFFICE
 
 
 def test_update_rating_spec():
+    from cwms.ratings import RatingSpec
+
     spec_xml = (RESOURCES / "spec.xml").read_text()
     import xml.etree.ElementTree as ET
 
@@ -106,6 +114,6 @@ def test_delete_rating_spec():
 
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
-    ratings_spec.delete_rating_spec(rating_spec_id, TEST_OFFICE, "DELETE")
+    ratings_spec.delete_rating_spec(rating_spec_id, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
         ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
