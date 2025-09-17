@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Tuple
 
 from dateutil import parser
 
@@ -134,7 +135,7 @@ def get_timeseries_catalog(
     return Data(response, selector="entries")
 
 
-def get_ts_extents(ts_id: str, office_id: str):
+def get_ts_extents(ts_id: str, office_id: str) -> Tuple[datetime, datetime, datetime]:
     """Retrieves earliest extent, latest extent, and last update via cwms.get_timeseries_catalog
 
     Parameters
