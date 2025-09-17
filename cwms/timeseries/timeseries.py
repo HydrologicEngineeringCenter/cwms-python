@@ -220,12 +220,18 @@ def get_timeseries(
         response = _call_api_for_range(begin, end)
         return Data(response, selector=selector)
 
-    begin_extent, end_extent, last_update = get_ts_extents(
-        ts_id=ts_id, office_id=office_id
-    )
-
-    if begin.replace(tzinfo=timezone.utc) < begin_extent:
-        begin = begin_extent
+    # Try to get extents for multithreading, fall back to single-threaded if it fails
+    try:
+        begin_extent, end_extent, last_update = get_ts_extents(
+            ts_id=ts_id, office_id=office_id
+        )
+        if begin.replace(tzinfo=timezone.utc) < begin_extent:
+            begin = begin_extent
+    except Exception as e:
+        # If getting extents fails, fall back to single-threaded mode
+        print(f"WARNING: Could not retrieve time series extents ({e}). Falling back to single-threaded mode.")
+        response = _call_api_for_range(begin, end)
+        return Data(response, selector=selector)
 
     total_days = (end - begin).total_seconds() / (24 * 3600)
 
@@ -450,13 +456,29 @@ def _post_chunk_with_retries(
     raise last_exc
 
 
+def _get_chunk_date_range(chunk_json: JSON) -> tuple:
+    """Extract start and end dates from a chunk's values"""
+    try:
+        values = chunk_json.get("values", [])
+        if not values:
+            return ("No values", "No values")
+        
+        # Get first and last date-time
+        start_date = values[0][0]
+        end_date = values[-1][0]
+        
+        return (start_date, end_date)
+    except Exception:
+        return ("Error parsing dates", "Error parsing dates")
+
+
 def store_timeseries(
     data: JSON,
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
     multithread: Optional[bool] = True,
-    max_threads: Optional[int] = 20,
+    max_threads: Optional[int] = 25,
     max_values_per_chunk: Optional[int] = 700,
     max_retries: Optional[int] = 3,
 ) -> None:
@@ -502,49 +524,108 @@ def store_timeseries(
 
     # determine chunking
     required_chunks = math.ceil(total / max_values_per_chunk)
-    chunks = min(required_chunks, max_threads)
-    print(f"INFO: Storing with {chunks} threads.")
+    
+    # process in batches of max_threads
+    print(f"INFO: Need {required_chunks} chunks of ~{max_values_per_chunk} values each")
+    # print(f"INFO: Will process in batches of {max_threads} threads")
 
     # preserve metadata keys except "values"
     meta = {k: v for k, v in data.items() if k != "values"}
 
-    # build chunk payloads (roughly equal sized)
-    chunk_payloads = []
-    for i in range(chunks):
-        start = int(math.floor(i * total / chunks))
-        end = int(math.floor((i + 1) * total / chunks)) if i < (chunks - 1) else total
+    # Build chunk payloads first
+    all_chunk_payloads = []
+    for i in range(required_chunks):
+        start = i * max_values_per_chunk
+        end = min(start + max_values_per_chunk, total)
         chunk_vals = values[start:end]
         chunk_json = dict(meta)
         chunk_json["values"] = chunk_vals
-        chunk_payloads.append((i, chunk_json))
+        all_chunk_payloads.append((i, chunk_json))
+        
+    # print(f"INFO: Created {len(all_chunk_payloads)} chunks, sizes: {[len(payload[1]['values']) for payload in all_chunk_payloads[:5]]}...")
 
-    # post chunks in parallel and collect responses in order
-    responses = [None] * len(chunk_payloads)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=chunks) as executor:
-        future_to_idx = {
-            executor.submit(
-                _post_chunk_with_retries, endpoint, payload, params, max_retries
-            ): idx
-            for idx, (_, payload) in enumerate(chunk_payloads)
-        }
-        for fut in concurrent.futures.as_completed(future_to_idx):
-            idx = future_to_idx[fut]
-            responses[idx] = fut.result()  # will raise if chunk failed after retries
+    # Process chunks in batches of max_threads
+    all_responses = [None] * len(all_chunk_payloads)
+    
+    for batch_start in range(0, len(all_chunk_payloads), max_threads):
+        batch_end = min(batch_start + max_threads, len(all_chunk_payloads))
+        batch_chunks = all_chunk_payloads[batch_start:batch_end]
+        
+        # print(f"INFO: Processing batch {batch_start//max_threads + 1}: chunks {batch_start} to {batch_end-1}")
+        
+        # Process this batch with ThreadPoolExecutor
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(batch_chunks)) as executor:
+            future_to_idx = {
+                executor.submit(
+                    _post_chunk_with_retries, endpoint, payload, params, max_retries
+                ): batch_start + local_idx
+                for local_idx, (_, payload) in enumerate(batch_chunks)
+            }
+            
+            for fut in concurrent.futures.as_completed(future_to_idx):
+                global_idx = future_to_idx[fut]
+                try:
+                    all_responses[global_idx] = fut.result()
+                except Exception as e:
+                    # Get the chunk that failed and extract date range
+                    chunk_json = all_chunk_payloads[global_idx][1]
+                    start_date, end_date = _get_chunk_date_range(chunk_json)
+                    chunk_size = len(chunk_json["values"])
+                    print(f"ERROR: Chunk {global_idx} failed (size: {chunk_size}, dates: {start_date} to {end_date}): {e}")
+                    raise
 
-    # after collecting responses list as above, responses is list of dicts per chunk
+    # Check for errors
     errors = []
-    for idx, result in enumerate(responses):
+    for idx, result in enumerate(all_responses):
         if not result or not result.get("ok"):
-            errors.append((idx, result))
+            chunk_json = all_chunk_payloads[idx][1]
+            start_date, end_date = _get_chunk_date_range(chunk_json)
+            chunk_size = len(chunk_json["values"])
+            status = result.get("status") if result else "No response"
+            
+            error_info = {
+                "chunk_index": idx,
+                "chunk_size": chunk_size,
+                "start_date": start_date,
+                "end_date": end_date,
+                "status": status,
+                "result": result
+            }
+            errors.append(error_info)
+            print(f"ERROR: Chunk {idx} failed - Size: {chunk_size}, Dates: {start_date} to {end_date}, Status: {status}")
+    
     if errors:
-        raise RuntimeError(f"Some chunks failed: {errors}")
+        error_summary = []
+        for error in errors:
+            error_summary.append(
+                f"Chunk {error['chunk_index']} (size: {error['chunk_size']}, {error['start_date']} to {error['end_date']}): Status {error['status']}"
+            )
+        
+        error_message = f"Failed chunks:\n" + "\n".join(error_summary)
+        print(f"SUMMARY: {len(errors)} chunks failed out of {len(all_chunk_payloads)} total")
+        raise RuntimeError(error_message)
+
+    print(f"INFO: Store success - All {len(all_chunk_payloads)} chunks completed successfully")
+    return all_responses
+    
+    if errors:
+        # Create a more detailed error message
+        error_summary = []
+        for error in errors:
+            error_summary.append(
+                f"Chunk {error['chunk_index']} ({error['start_date']} to {error['end_date']}): Status {error['status']}"
+            )
+        
+        error_message = f"Failed chunks:\n" + "\n".join(error_summary)
+        print(f"SUMMARY: {len(errors)} chunks failed out of {len(chunk_payloads)} total")
+        raise RuntimeError(error_message)
 
     return responses
 
 
 def delete_timeseries(
     ts_id: str,
-    office_id: str,
+    office_id: str, 
     begin: datetime,
     end: datetime,
     version_date: Optional[datetime] = None,
