@@ -159,8 +159,8 @@ def get_ts_extents(ts_id: str, office_id: str) -> Tuple[datetime, datetime, date
 
     times = cwms_cat[cwms_cat.name == ts_id].extents.values[0][0]
 
-    earliest_time = pd.to_datetime(times['earliest-time'])
-    latest_time = pd.to_datetime(times['latest-time'])
-    last_update = pd.to_datetime(times['last-update'])
+    earliest_time = pd.to_datetime(times["earliest-time"])
+    latest_time = pd.to_datetime(times["latest-time"])
+    last_update = pd.to_datetime(times["last-update"])
 
     return earliest_time, latest_time, last_update
