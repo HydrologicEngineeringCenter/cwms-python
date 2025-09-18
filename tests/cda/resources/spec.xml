@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rating-spec office-id="MVP">
   <rating-spec-id>TestRating.Stage;Flow.TEST.Spec-test</rating-spec-id>
-  <template-id>Stage;Flow.TEST</template-id>
+  <template-id>pytest_template.Linear</template-id>
   <location-id>TestRating</location-id>
   <version>Spec-test</version>
   <source-agency>USGS</source-agency>
