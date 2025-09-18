@@ -185,7 +185,11 @@ def get_timeseries(
             return None
         if not isinstance(dt, datetime):
             raise ValueError(f"Expected datetime object, got {type(dt)}")
-        return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+        return (
+            dt.replace(tzinfo=timezone.utc)
+            if dt.tzinfo is None
+            else dt.astimezone(timezone.utc)
+        )
 
     def _call_api_for_range(begin: datetime, end: datetime) -> Dict[str, Any]:
         params = {
@@ -204,7 +208,7 @@ def get_timeseries(
             selector=selector, endpoint=endpoint, params=params
         )
         return dict(response)
-    
+
     endpoint = "timeseries"
     selector = "values"
 
@@ -435,7 +439,7 @@ def store_timeseries(
     max_threads: int = 30,
     max_values_per_chunk: int = 700,
     max_retries: int = 3,
-) -> Optional[List[Dict[str, Any] | None]]:
+) -> Optional[List[Dict[str, Any]]]:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
     Parameters
@@ -462,39 +466,6 @@ def store_timeseries(
     -------
     response
     """
-    def _post_chunk_with_retries(
-        endpoint: str,
-        chunk_json: JSON,
-        params: Dict[str, Any],
-        max_retries: int = 3,
-        backoff: float = 0.5,
-    ) -> None:
-        for attempt in range(1, max_retries + 1):
-            try:
-                api.post(endpoint, chunk_json, params)
-                return
-            except Exception as e:
-                if attempt == max_retries:
-                    raise
-                time.sleep(backoff * (2 ** (attempt - 1)))
-
-
-    def _get_chunk_date_range(chunk_json: JSON) -> Tuple[str, str]:
-        """Extract start and end dates from a chunk's values to help if something fails"""
-        try:
-            values = chunk_json.get("values", [])
-            if not values:
-                return ("No values", "No values")
-
-            # Get first and last date-time
-            start_date = values[0][0]
-            end_date = values[-1][0]
-
-            return (start_date, end_date)
-        except Exception:
-            return ("Error parsing dates", "Error parsing dates")
-        
-    
     endpoint = "timeseries"
     params = {
         "create-as-lrts": create_as_ltrs,
@@ -502,113 +473,96 @@ def store_timeseries(
         "override-protection": override_protection,
     }
 
-    if not isinstance(data, dict):
-        raise ValueError("Cannot store a timeseries without a JSON data dictionary")
+    def _store_single_chunk(chunk_data: JSON, attempt: int = 1) -> Dict[str, Any]:
+        """Store a single chunk with retry logic."""
+        try:
+            api.post(endpoint, chunk_data, params)
+            return {"success": True, "attempt": attempt}
+        except Exception as e:
+            if attempt >= max_retries:
+                raise
+            time.sleep(0.5 * (2 ** (attempt - 1)))  # Exponential backoff
+            return _store_single_chunk(chunk_data, attempt + 1)
 
-    values = data["values"]
-    total = len(values)
+    def _create_chunks(values: List[Any], metadata: Dict[str, Any]) -> List[JSON]:
+        """Split values into chunks and create payloads."""
+        chunks = []
+        total_values = len(values)
 
-    # if you can just do a single post
-    if (not multithread) or total <= max_values_per_chunk:
-        api.post(endpoint, data, params)
-        return None
+        for i in range(0, total_values, max_values_per_chunk):
+            chunk_values = values[i : i + max_values_per_chunk]
+            chunk_payload = dict(metadata)
+            chunk_payload["values"] = chunk_values
+            chunks.append(chunk_payload)
 
-    # determine chunking
-    required_chunks = math.ceil(total / max_values_per_chunk)
+        return chunks
 
-    threads = min(required_chunks, max_threads)
-
-    # process in batches of max_threads
-    print(f"INFO: Downloading {required_chunks} with {threads} threads")
-
-    # preserve metadata keys except "values"
-    meta = {k: v for k, v in data.items() if k != "values"}
-
-    # Build chunk payloads first
-    all_chunk_payloads = []
-    for i in range(required_chunks):
-        start = i * max_values_per_chunk
-        end = min(start + max_values_per_chunk, total)
-        chunk_vals = values[start:end]
-        chunk_json = dict(meta)
-        chunk_json["values"] = chunk_vals
-        all_chunk_payloads.append((i, chunk_json))
-
-    # Process chunks in batches of max_threads
-    all_responses: List[Optional[Dict[str, Any]]] = [None] * len(all_chunk_payloads)
-
-    for batch_start in range(0, len(all_chunk_payloads), max_threads):
-        batch_end = min(batch_start + max_threads, len(all_chunk_payloads))
-        batch_chunks = all_chunk_payloads[batch_start:batch_end]
-
-        # print(f"INFO: Processing batch {batch_start//max_threads + 1}: chunks {batch_start} to {batch_end-1}")
-
-        # Process this batch with ThreadPoolExecutor
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=len(batch_chunks)
-        ) as executor:
-            future_to_idx = {
-                executor.submit(
-                    _post_chunk_with_retries, endpoint, payload, params, max_retries
-                ): batch_start
-                + local_idx
-                for local_idx, (_, payload) in enumerate(batch_chunks)
+    def _store_chunks_parallel(chunks: List[JSON]) -> List[Dict[str, Any]]:
+        """Store chunks using thread pool."""
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
+            # Submit all chunks
+            future_to_chunk = {
+                executor.submit(_store_single_chunk, chunk): idx
+                for idx, chunk in enumerate(chunks)
             }
 
-            for fut in concurrent.futures.as_completed(future_to_idx):
-                global_idx = future_to_idx[fut]
+            # Use a dictionary to collect results, then convert to list
+            chunk_results_dict: Dict[int, Dict[str, Any]] = {}
+
+            for future in concurrent.futures.as_completed(future_to_chunk):
+                chunk_idx = future_to_chunk[future]
                 try:
-                    result = fut.result()
-                    all_responses[global_idx] = {"ok": True, "status": 200}
+                    chunk_results_dict[chunk_idx] = future.result()
                 except Exception as e:
-                    # Get the chunk that failed and extract date range
-                    chunk_json = all_chunk_payloads[global_idx][1]
-                    start_date, end_date = _get_chunk_date_range(chunk_json)
-                    chunk_size = len(chunk_json["values"])
+                    chunk = chunks[chunk_idx]
+                    start_date, end_date = _get_date_range(chunk)
                     print(
-                        f"ERROR: Chunk {global_idx} failed (size: {chunk_size}, dates: {start_date} to {end_date}): {e}"
+                        f"ERROR: Chunk {chunk_idx} failed ({start_date} to {end_date}): {e}"
                     )
                     raise
 
-    # Check for errors
-    errors = []
-    for idx, result in enumerate(all_responses):
-        if not result or not result.get("ok"):
-            chunk_json = all_chunk_payloads[idx][1]
-            start_date, end_date = _get_chunk_date_range(chunk_json)
-            chunk_size = len(chunk_json["values"])
-            status = result.get("status") if result else "No response"
+            # Convert to ordered list
+            return [chunk_results_dict[i] for i in range(len(chunks))]
 
-            error_info = {
-                "chunk_index": idx,
-                "chunk_size": chunk_size,
-                "start_date": start_date,
-                "end_date": end_date,
-                "status": status,
-                "result": result,
-            }
-            errors.append(error_info)
-            print(
-                f"ERROR: Chunk {idx} failed - Size: {chunk_size}, Dates: {start_date} to {end_date}, Status: {status}"
-            )
+    def _get_date_range(chunk: JSON) -> Tuple[str, str]:
+        """Extract date range from chunk for error reporting."""
+        try:
+            values = chunk.get("values", [])
+            if not values:
+                return ("No values", "No values")
+            return (values[0][0], values[-1][0])
+        except Exception:
+            return ("Error parsing dates", "Error parsing dates")
 
-    if errors:
-        error_summary = []
-        for error in errors:
-            error_summary.append(
-                f"Chunk {error['chunk_index']} (size: {error['chunk_size']}, {error['start_date']} to {error['end_date']}): Status {error['status']}"
-            )
+    # Validate input
+    if not isinstance(data, dict):
+        raise ValueError("Data must be a JSON dictionary")
 
-        error_message = f"Failed chunks:\n" + "\n".join(error_summary)
-        print(
-            f"SUMMARY: {len(errors)} chunks failed out of {len(all_chunk_payloads)} total"
-        )
-        raise RuntimeError(error_message)
+    values = data.get("values", [])
+    if not values:
+        raise ValueError("No values to store")
 
-    print(
-        f"INFO: Store success - All {len(all_chunk_payloads)} chunks completed successfully"
-    )
-    return all_responses
+    # Post with one thread for small datasets
+    if not multithread or len(values) <= max_values_per_chunk:
+        api.post(endpoint, data, params)
+        return None
+
+    # Multi-thread
+    threads = min(round(len(values) / max_values_per_chunk, 1), max_threads)
+    print(f"INFO: Storing {len(values)} values with {threads} threads")
+
+    # Separate metadata from values
+    metadata = {k: v for k, v in data.items() if k != "values"}
+
+    # Create chunks
+    chunks = _create_chunks(values, metadata)
+    print(f"INFO: Created {len(chunks)} chunks, using up to {max_threads} threads")
+
+    # Store chunks in parallel
+    results = _store_chunks_parallel(chunks)
+
+    print(f"SUCCESS: All {len(chunks)} chunks stored successfully")
+    return results
 
 
 def delete_timeseries(
