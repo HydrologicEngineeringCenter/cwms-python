@@ -14,6 +14,7 @@ from cwms.api import ApiError
 RESOURCES = Path(__file__).parent.parent / "resources"
 
 TEST_OFFICE = "MVP"
+TEST_LOCATION_ID = "TestRating"
 
 # Parse template.xml to construct template ID
 template_xml = (RESOURCES / "template.xml").read_text()
@@ -38,9 +39,7 @@ def setup_data():
     cwms.store_location(location)
     yield
     try:
-        cwms.delete_location(
-            spec_root.findtext("location-id"), TEST_OFFICE, cascade_delete=True
-        )
+        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
     except ApiError:
         pass
 
