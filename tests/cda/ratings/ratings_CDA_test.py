@@ -1,4 +1,5 @@
 import json
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -13,8 +14,22 @@ from cwms.api import ApiError
 RESOURCES = Path(__file__).parent.parent / "resources"
 
 TEST_OFFICE = "MVP"
-TEST_LOCATION_ID = "pytest_template_group"
-TEST_TEMPLATE_ID = "pytest_template.Linear"
+
+# Parse template.xml to construct template ID
+template_xml = (RESOURCES / "template.xml").read_text()
+template_root = ET.fromstring(template_xml)
+parameters_id = template_root.findtext("parameters-id")
+template_version = template_root.findtext("version")
+
+TEST_TEMPLATE_ID = f"{parameters_id}.{template_version}"  # Stage;Flow.TEST
+
+# Parse spec.xml to get rating-spec-id
+spec_xml = (RESOURCES / "spec.xml").read_text()
+spec_root = ET.fromstring(spec_xml)
+
+TEST_RATING_SPEC_ID = spec_root.findtext(
+    "rating-spec-id"
+)  # TestRating.Stage;Flow.TEST.Spec-test
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -23,18 +38,19 @@ def setup_data():
     cwms.store_location(location)
     yield
     try:
-        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
+        cwms.delete_location(
+            spec_root.findtext("location-id"), TEST_OFFICE, cascade_delete=True
+        )
     except ApiError:
         pass
 
 
 @pytest.fixture(autouse=True)
 def init_session():
-    print("Initializing CWMS API session for template tests...")
+    print("Initializing CWMS API session for ratings tests...")
 
 
 def test_store_template():
-    template_xml = (RESOURCES / "template.xml").read_text()
     ratings_template.store_rating_template(template_xml)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched.json["template-id"] == TEST_TEMPLATE_ID
@@ -48,10 +64,14 @@ def test_get_template():
 
 
 def test_update_template():
-    fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    fetched_json = fetched.json
-    fetched_json["description"] = (fetched_json.get("description") or "") + " - updated"
-    ratings_template.store_rating_template(fetched_json)
+    template_root = ET.fromstring(template_xml)
+    desc = template_root.find("description")
+    if desc is None:
+        desc = ET.SubElement(template_root, "description")
+    desc.text = (desc.text or "") + " - updated"
+
+    updated_xml = ET.tostring(template_root, encoding="unicode", xml_declaration=True)
+    ratings_template.store_rating_template(updated_xml)
     updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert updated.json["description"].endswith(" - updated")
 
@@ -64,62 +84,32 @@ def test_delete_template():
 
 # Rating specs
 def test_store_rating_spec():
-    spec_xml = (RESOURCES / "spec.xml").read_text()
     ratings_spec.store_rating_spec(spec_xml)
-    # Parse spec_xml to get rating-spec-id for fetching
-    # If spec_xml contains <rating-spec-id> element, parse it:
-    import xml.etree.ElementTree as ET
-
-    root = ET.fromstring(spec_xml)
-    rating_spec_id = root.findtext("rating-spec-id")
-    fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.json["rating-spec-id"] == rating_spec_id
+    fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
+    assert fetched.json["rating-spec-id"] == TEST_RATING_SPEC_ID
     assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_get_rating_spec():
-    spec_xml = (RESOURCES / "spec.xml").read_text()
-    import xml.etree.ElementTree as ET
-
-    root = ET.fromstring(spec_xml)
-    rating_spec_id = root.findtext("rating-spec-id")
-    fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.json["rating-spec-id"] == rating_spec_id
+    fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
+    assert fetched.json["rating-spec-id"] == TEST_RATING_SPEC_ID
     assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_update_rating_spec():
-    import xml.etree.ElementTree as ET
-
-    # Parse the original spec XML
-    spec_path = RESOURCES / "spec.xml"
-    tree = ET.parse(spec_path)
-    root = tree.getroot()
-
-    # Update or create the <description> element
-    desc = root.find("description")
+    # Update description in XML
+    desc = spec_root.find("description")
     if desc is None:
-        desc = ET.SubElement(root, "description")
+        desc = ET.SubElement(spec_root, "description")
     desc.text = (desc.text or "") + " - updated"
+    updated_xml = ET.tostring(spec_root, encoding="unicode", xml_declaration=True)
 
-    # Convert tree back to string with XML declaration
-    updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
-
-    # Store the updated rating spec
     ratings_spec.store_rating_spec(updated_xml)
-
-    # Fetch and assert the description was updated
-    rating_spec_id = root.findtext("rating-spec-id")
-    fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
+    fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
     assert fetched.json["description"].endswith(" - updated")
 
 
 def test_delete_rating_spec():
-    spec_xml = (RESOURCES / "spec.xml").read_text()
-    import xml.etree.ElementTree as ET
-
-    root = ET.fromstring(spec_xml)
-    rating_spec_id = root.findtext("rating-spec-id")
-    ratings_spec.delete_rating_spec(rating_spec_id, TEST_OFFICE, "DELETE_ALL")
+    ratings_spec.delete_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
-        ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
+        ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
