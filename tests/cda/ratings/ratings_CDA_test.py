@@ -72,8 +72,8 @@ def test_store_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.id == rating_spec_id
-    assert fetched.office == TEST_OFFICE
+    assert fetched.json["rating-spec-id"] == rating_spec_id
+    assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_get_rating_spec():
@@ -83,8 +83,8 @@ def test_get_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert fetched.id == rating_spec_id
-    assert fetched.office == TEST_OFFICE
+    assert fetched.json["rating-spec-id"] == rating_spec_id
+    assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_update_rating_spec():
@@ -94,10 +94,11 @@ def test_update_rating_spec():
     root = ET.fromstring(spec_xml)
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    fetched.description = (fetched.description or "") + " - updated"
-    ratings_spec.store_rating_spec(fetched)
+    fetched_json = fetched.json
+    fetched_json["description"] = (fetched_json.get("description") or "") + " - updated"
+    ratings_spec.store_rating_spec(fetched_json)
     updated = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert updated.description.endswith(" - updated")
+    assert updated.json["description"].endswith(" - updated")
 
 
 def test_delete_rating_spec():
