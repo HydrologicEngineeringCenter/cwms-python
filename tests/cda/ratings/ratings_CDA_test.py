@@ -89,17 +89,29 @@ def test_get_rating_spec():
 
 
 def test_update_rating_spec():
-    spec_xml = (RESOURCES / "spec.xml").read_text()
     import xml.etree.ElementTree as ET
 
-    root = ET.fromstring(spec_xml)
+    # Parse the original spec XML
+    spec_path = RESOURCES / "spec.xml"
+    tree = ET.parse(spec_path)
+    root = tree.getroot()
+
+    # Update or create the <description> element
+    desc = root.find("description")
+    if desc is None:
+        desc = ET.SubElement(root, "description")
+    desc.text = (desc.text or "") + " - updated"
+
+    # Convert tree back to string with XML declaration
+    updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
+
+    # Store the updated rating spec
+    ratings_spec.store_rating_spec(updated_xml)
+
+    # Fetch and assert the description was updated
     rating_spec_id = root.findtext("rating-spec-id")
     fetched = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    fetched_json = fetched.json
-    fetched_json["description"] = (fetched_json.get("description") or "") + " - updated"
-    ratings_spec.store_rating_spec(fetched_json)
-    updated = ratings_spec.get_rating_spec(rating_spec_id, TEST_OFFICE)
-    assert updated.json["description"].endswith(" - updated")
+    assert fetched.json["description"].endswith(" - updated")
 
 
 def test_delete_rating_spec():
