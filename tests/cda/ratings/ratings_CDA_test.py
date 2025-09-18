@@ -37,22 +37,23 @@ def test_store_template():
     template_xml = (RESOURCES / "template.xml").read_text()
     ratings_template.store_rating_template(template_xml)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.id == TEST_TEMPLATE_ID
-    assert fetched.office == TEST_OFFICE
+    assert fetched.json["template-id"] == TEST_TEMPLATE_ID
+    assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_get_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.id == TEST_TEMPLATE_ID
-    assert fetched.office == TEST_OFFICE
+    assert fetched.json["template-id"] == TEST_TEMPLATE_ID
+    assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_update_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    fetched.description = (fetched.description or "") + " - updated"
-    ratings_template.store_rating_template(fetched.json)
+    fetched_json = fetched.json
+    fetched_json["description"] = (fetched_json.get("description") or "") + " - updated"
+    ratings_template.store_rating_template(fetched_json)
     updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert updated.description.endswith(" - updated")
+    assert updated.json["description"].endswith(" - updated")
 
 
 def test_delete_template():
