@@ -128,7 +128,7 @@ def get_timeseries(
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
-    max_threads: int = 20,
+    max_threads: int = 30,
     max_days_per_chunk: int = 14,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
@@ -170,7 +170,7 @@ def get_timeseries(
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         multithread: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
-        max_threads: integer, default is 20
+        max_threads: integer, default is 30
             The maximum number of threads that will be spawned for multithreading
         max_days_per_chunk: integer, default is 30
             The maximum number of days that would be included in a thread
@@ -179,26 +179,13 @@ def get_timeseries(
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
 
-    endpoint = "timeseries"
-    selector = "values"
-
-    if begin and not isinstance(begin, datetime):
-        raise ValueError("begin needs to be in datetime")
-    if end and not isinstance(end, datetime):
-        raise ValueError("end needs to be in datetime")
-    if version_date and not isinstance(version_date, datetime):
-        raise ValueError("version_date needs to be in datetime")
-
-    # default end to now if not provided
-    if end is None:
-        end = datetime.now(timezone.utc)
-    else:
-        end = end.replace(tzinfo=timezone.utc)
-    if begin is None:
-        # keep original behavior: default window begins 24 hours prior to end
-        begin = end - timedelta(days=1)
-    else:
-        begin = begin.replace(tzinfo=timezone.utc)
+    def _ensure_utc_datetime(dt: Optional[datetime]) -> Optional[datetime]:
+        """Convert datetime to UTC, preserving None values."""
+        if dt is None:
+            return None
+        if not isinstance(dt, datetime):
+            raise ValueError(f"Expected datetime object, got {type(dt)}")
+        return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
 
     def _call_api_for_range(begin: datetime, end: datetime) -> Dict[str, Any]:
         params = {
@@ -217,26 +204,30 @@ def get_timeseries(
             selector=selector, endpoint=endpoint, params=params
         )
         return dict(response)
+    
+    endpoint = "timeseries"
+    selector = "values"
 
-    # if multithread disabled or short range, do a single call
-    if not multithread:
-        response = _call_api_for_range(begin, end)
-        return Data(response, selector=selector)
+    # validate begin and end times or default to 1 day lookback
+    end = _ensure_utc_datetime(end) or datetime.now(timezone.utc)
+    begin = _ensure_utc_datetime(begin) or (end - timedelta(days=1))
+    version_date = _ensure_utc_datetime(version_date)
 
     # Try to get extents for multithreading, fall back to single-threaded if it fails
-    try:
-        begin_extent, end_extent, last_update = get_ts_extents(
-            ts_id=ts_id, office_id=office_id
-        )
-        if begin.replace(tzinfo=timezone.utc) < begin_extent:
-            begin = begin_extent
-    except Exception as e:
-        # If getting extents fails, fall back to single-threaded mode
-        print(
-            f"WARNING: Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
-        )
-        response = _call_api_for_range(begin, end)
-        return Data(response, selector=selector)
+    if multithread:
+        try:
+            begin_extent, end_extent, last_update = get_ts_extents(
+                ts_id=ts_id, office_id=office_id
+            )
+            if begin.replace(tzinfo=timezone.utc) < begin_extent:
+                begin = begin_extent
+        except Exception as e:
+            # If getting extents fails, fall back to single-threaded mode
+            print(
+                f"WARNING: Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
+            )
+            response = _call_api_for_range(begin, end)
+            return Data(response, selector=selector)
 
     total_days = (end - begin).total_seconds() / (24 * 3600)
 
@@ -244,13 +235,15 @@ def get_timeseries(
     required_chunks = math.ceil(total_days / max_days_per_chunk)
 
     chunks = min(required_chunks, max_threads)
-    print(
-        f"INFO: Getting data with {max_threads} threads. Downloading {required_chunks} required chunks."
-    )
 
-    if total_days <= max_days_per_chunk:
+    # if multithread is off or if you can get the data in just one chunk, use single thread
+    if chunks == 1 or not multithread:
         response = _call_api_for_range(begin, end)
         return Data(response, selector=selector)
+
+    print(
+        f"INFO: Getting data with {chunks} threads. Downloading {required_chunks} required chunks."
+    )
 
     # create roughly equal ranges
     chunk_seconds = (end - begin).total_seconds() / chunks
@@ -282,7 +275,7 @@ def get_timeseries(
 
     # Merge JSON "values" lists (assumes top-level "values" list present)
     merged_json: Dict[str, Any] = {}
-    # merge metadata from first response (you can adjust which metadata to prefer)
+    # merge metadata from first response
     if sorted_responses:
         merged_json.update(
             {k: v for k, v in sorted_responses[0].items() if k != "values"}
@@ -291,7 +284,7 @@ def get_timeseries(
         for resp in sorted_responses:
             vals = resp.get("values") or []
             merged_values.extend(vals)
-        # optionally deduplicate by date-time
+        # try and deduplicate by date-time
         try:
             # preserve order and dedupe by date-time string
             seen = set()
@@ -303,6 +296,7 @@ def get_timeseries(
                     deduped.append(v)
             merged_json["values"] = deduped
         except Exception:
+            # in case the dedup fails, just try and store it all
             merged_json["values"] = merged_values
     else:
         merged_json["values"] = []
@@ -432,46 +426,13 @@ def store_multi_timeseries_df(
                 )
 
 
-def _post_chunk_with_retries(
-    endpoint: str,
-    chunk_json: JSON,
-    params: Dict[str, Any],
-    max_retries: int = 3,
-    backoff: float = 0.5,
-) -> None:
-    for attempt in range(1, max_retries + 1):
-        try:
-            api.post(endpoint, chunk_json, params)
-            return
-        except Exception as e:
-            if attempt == max_retries:
-                raise
-            time.sleep(backoff * (2 ** (attempt - 1)))
-
-
-def _get_chunk_date_range(chunk_json: JSON) -> Tuple[str, str]:
-    """Extract start and end dates from a chunk's values"""
-    try:
-        values = chunk_json.get("values", [])
-        if not values:
-            return ("No values", "No values")
-
-        # Get first and last date-time
-        start_date = values[0][0]
-        end_date = values[-1][0]
-
-        return (start_date, end_date)
-    except Exception:
-        return ("Error parsing dates", "Error parsing dates")
-
-
 def store_timeseries(
     data: JSON,
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
     multithread: Optional[bool] = True,
-    max_threads: int = 20,
+    max_threads: int = 30,
     max_values_per_chunk: int = 700,
     max_retries: int = 3,
 ) -> Optional[List[Dict[str, Any] | None]]:
@@ -501,7 +462,39 @@ def store_timeseries(
     -------
     response
     """
+    def _post_chunk_with_retries(
+        endpoint: str,
+        chunk_json: JSON,
+        params: Dict[str, Any],
+        max_retries: int = 3,
+        backoff: float = 0.5,
+    ) -> None:
+        for attempt in range(1, max_retries + 1):
+            try:
+                api.post(endpoint, chunk_json, params)
+                return
+            except Exception as e:
+                if attempt == max_retries:
+                    raise
+                time.sleep(backoff * (2 ** (attempt - 1)))
 
+
+    def _get_chunk_date_range(chunk_json: JSON) -> Tuple[str, str]:
+        """Extract start and end dates from a chunk's values to help if something fails"""
+        try:
+            values = chunk_json.get("values", [])
+            if not values:
+                return ("No values", "No values")
+
+            # Get first and last date-time
+            start_date = values[0][0]
+            end_date = values[-1][0]
+
+            return (start_date, end_date)
+        except Exception:
+            return ("Error parsing dates", "Error parsing dates")
+        
+    
     endpoint = "timeseries"
     params = {
         "create-as-lrts": create_as_ltrs,
@@ -515,7 +508,7 @@ def store_timeseries(
     values = data["values"]
     total = len(values)
 
-    # small payload: single post
+    # if you can just do a single post
     if (not multithread) or total <= max_values_per_chunk:
         api.post(endpoint, data, params)
         return None
@@ -523,9 +516,10 @@ def store_timeseries(
     # determine chunking
     required_chunks = math.ceil(total / max_values_per_chunk)
 
+    threads = min(required_chunks, max_threads)
+
     # process in batches of max_threads
-    print(f"INFO: Need {required_chunks} chunks of ~{max_values_per_chunk} values each")
-    # print(f"INFO: Will process in batches of {max_threads} threads")
+    print(f"INFO: Downloading {required_chunks} with {threads} threads")
 
     # preserve metadata keys except "values"
     meta = {k: v for k, v in data.items() if k != "values"}
@@ -539,8 +533,6 @@ def store_timeseries(
         chunk_json = dict(meta)
         chunk_json["values"] = chunk_vals
         all_chunk_payloads.append((i, chunk_json))
-
-    # print(f"INFO: Created {len(all_chunk_payloads)} chunks, sizes: {[len(payload[1]['values']) for payload in all_chunk_payloads[:5]]}...")
 
     # Process chunks in batches of max_threads
     all_responses: List[Optional[Dict[str, Any]]] = [None] * len(all_chunk_payloads)
