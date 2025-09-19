@@ -238,30 +238,33 @@ def get_timeseries(
     # split into N chunks where each chunk <= max_days_per_chunk, but cap chunks to max_threads
     required_chunks = math.ceil(total_days / max_days_per_chunk)
 
-    chunks = min(required_chunks, max_threads)
+    # Limit the number of threads to max_threads
+    actual_threads = min(required_chunks, max_threads)
 
     # if multithread is off or if you can get the data in just one chunk, use single thread
-    if chunks == 1 or not multithread:
+    if required_chunks == 1 or not multithread:
         response = _call_api_for_range(begin, end)
         return Data(response, selector=selector)
 
     print(
-        f"INFO: Getting data with {chunks} threads. Downloading {required_chunks} required chunks."
+        f"INFO: Getting data with {actual_threads} threads. Downloading {required_chunks} required chunks."
     )
 
-    # create roughly equal ranges
-    chunk_seconds = (end - begin).total_seconds() / chunks
+    # Create time ranges based on max_days_per_chunk (not number of threads)
     ranges: List[Tuple[datetime, datetime]] = []
-    for i in range(chunks):
-        b_chunk = begin + timedelta(seconds=math.floor(i * chunk_seconds))
-        e_chunk = begin + timedelta(seconds=math.floor((i + 1) * chunk_seconds))
-        if i == chunks - 1:
-            e_chunk = end
-        ranges.append((b_chunk, e_chunk))
+    current_begin = begin
+
+    for i in range(required_chunks):
+        current_end = min(current_begin + timedelta(days=max_days_per_chunk), end)
+        ranges.append((current_begin, current_end))
+        current_begin = current_end
+
+        if current_begin >= end:
+            break
 
     # perform parallel requests
     responses: List[Optional[Dict[str, Any]]] = [None] * len(ranges)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=chunks) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=actual_threads) as executor:
         future_to_idx = {
             executor.submit(_call_api_for_range, r[0], r[1]): idx
             for idx, r in enumerate(ranges)
