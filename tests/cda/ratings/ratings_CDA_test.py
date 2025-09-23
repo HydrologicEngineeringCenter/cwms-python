@@ -1,6 +1,5 @@
 import json
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -52,13 +51,13 @@ def init_session():
 def test_store_template():
     ratings_template.store_rating_template(template_xml)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.json["template-id"] == TEST_TEMPLATE_ID
+    assert fetched.json["id"] == TEST_TEMPLATE_ID
     assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_get_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-    assert fetched.json["template-id"] == TEST_TEMPLATE_ID
+    assert fetched.json["id"] == TEST_TEMPLATE_ID
     assert fetched.json["office-id"] == TEST_OFFICE
 
 
@@ -85,13 +84,13 @@ def test_delete_template():
 def test_store_rating_spec():
     ratings_spec.store_rating_spec(spec_xml)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    assert fetched.json["rating-spec-id"] == TEST_RATING_SPEC_ID
+    assert fetched.json["id"] == TEST_RATING_SPEC_ID
     assert fetched.json["office-id"] == TEST_OFFICE
 
 
 def test_get_rating_spec():
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    assert fetched.json["rating-spec-id"] == TEST_RATING_SPEC_ID
+    assert fetched.json["id"] == TEST_RATING_SPEC_ID
     assert fetched.json["office-id"] == TEST_OFFICE
 
 
