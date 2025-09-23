@@ -69,7 +69,7 @@ def test_update_template():
     desc.text = (desc.text or "") + " - updated"
 
     updated_xml = ET.tostring(template_root, encoding="unicode", xml_declaration=True)
-    ratings_template.store_rating_template(updated_xml)
+    ratings_template.store_rating_template(updated_xml, fail_if_exists=False)
     updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert updated.json["description"].endswith(" - updated")
 
@@ -102,7 +102,7 @@ def test_update_rating_spec():
     desc.text = (desc.text or "") + " - updated"
     updated_xml = ET.tostring(spec_root, encoding="unicode", xml_declaration=True)
 
-    ratings_spec.store_rating_spec(updated_xml)
+    ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
     assert fetched.json["description"].endswith(" - updated")
 
