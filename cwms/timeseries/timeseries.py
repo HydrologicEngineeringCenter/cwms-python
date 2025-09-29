@@ -1,6 +1,6 @@
 import concurrent.futures
-from datetime import datetime
-from typing import Any, Dict, Optional
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pandas import DataFrame
@@ -71,6 +71,7 @@ def get_multi_timeseries_df(
                 begin=begin,
                 end=end,
                 version_date=version_date_dt,
+                multithread=False,
             )
             result_dict = {
                 "ts_id": ts_id,
@@ -113,6 +114,132 @@ def get_multi_timeseries_df(
     return data
 
 
+def chunk_ts_time_range(begin, end, chunk_size) -> List:
+    chunks = []
+    current = begin
+    while current < end:
+        next_chunk = min(current + chunk_size, end)
+        chunks.append((current, next_chunk))
+        current = next_chunk
+    return chunks
+
+
+def fetch_ts_chunks(
+    chunks, ts_id, office_id, unit, datum, page_size, version_date, trim, max_workers
+):
+    # Initialize an empty list to store results
+    results = []
+
+    # Create a ThreadPoolExecutor to manage multithreading
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit tasks for each chunk to the api
+        future_to_chunk = {
+            executor.submit(
+                get_timeseries_chunk,
+                ts_id,
+                office_id,
+                unit,
+                datum,
+                chunk_start,
+                chunk_end,
+                page_size,
+                version_date,
+                trim,
+            ): (chunk_start, chunk_end)
+            for chunk_start, chunk_end in chunks
+        }
+
+        # Process completed threads as they finish
+        for future in concurrent.futures.as_completed(future_to_chunk):
+            try:
+                # Retrieve the result of the completed future
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                # Log or handle any errors that occur during execution
+                chunk_start, chunk_end = future_to_chunk[future]
+    return results
+
+
+def get_timeseries_chunk(
+    ts_id: str,
+    office_id: str,
+    unit: Optional[str] = "EN",
+    datum: Optional[str] = None,
+    begin: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    page_size: Optional[int] = 300000,
+    version_date: Optional[datetime] = None,
+    trim: Optional[bool] = True,
+) -> Data:
+
+    # creates the dataframe from the timeseries data
+    endpoint = "timeseries"
+    if begin and not isinstance(begin, datetime):
+        raise ValueError("begin needs to be in datetime")
+    if end and not isinstance(end, datetime):
+        raise ValueError("end needs to be in datetime")
+    if version_date and not isinstance(version_date, datetime):
+        raise ValueError("version_date needs to be in datetime")
+    params = {
+        "office": office_id,
+        "name": ts_id,
+        "unit": unit,
+        "datum": datum,
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
+        "page-size": page_size,
+        "page": None,
+        "version-date": version_date.isoformat() if version_date else None,
+        "trim": trim,
+    }
+    selector = "values"
+
+    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=params)
+    return Data(response, selector=selector)
+
+
+def combine_ts_results(results):
+    """
+    Combines the results from multiple chunks into a single cwms Data object.
+
+    Parameters
+    ----------
+    results : list
+        List of cwms Data objects returned from the executor.
+
+    Returns
+    -------
+    cwms Data
+        Combined cwms Data object with merged DataFrame and updated JSON metadata.
+    """
+    # Extract DataFrames from each cwms Data object
+    dataframes = [result.df for result in results]
+    
+    # Combine all DataFrames into one
+    combined_df = pd.concat(dataframes, ignore_index=True)
+
+    # Sort the combined DataFrame by 'date-time'
+    combined_df.sort_values(by="date-time", inplace=True)
+
+    # Drop duplicate rows based on 'date-time' (if necessary)
+    combined_df.drop_duplicates(subset="date-time", inplace=True)
+
+    # Extract metadata from the first result (assuming all chunks share the same metadata)
+    combined_json = results[0].json
+
+    # Update metadata to reflect the combined time range
+    combined_json["begin"] = combined_df["date-time"].min().isoformat()
+    combined_json["end"] = combined_df["date-time"].max().isoformat()
+    combined_json["total"] = len(combined_df)
+
+    # Update the "values" key in the JSON to include the combined data
+    combined_json["values"] = combined_df.to_dict(orient="records")
+
+    # Return a new cwms Data object with the combined DataFrame and updated metadata
+    return Data(combined_json, selector="values")
+
+
 def get_timeseries(
     ts_id: str,
     office_id: str,
@@ -123,6 +250,9 @@ def get_timeseries(
     page_size: Optional[int] = 300000,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
+    multithread: Optional[bool] = True,
+    max_workers: int = 15,
+    max_days_per_chunk: int = 14,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -161,6 +291,12 @@ def get_timeseries(
             the timeseries is versioned, the query will return the max aggregate for the time period.
         trim: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
+        multithread: boolean, optional, default is True
+            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+        max_workers: integer, default is 15
+            The maximum number of worker threads that will be spawned for multithreading
+        max_days_per_chunk: integer, default is 14
+            The maximum number of days that would be included in a thread
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
@@ -186,10 +322,41 @@ def get_timeseries(
         "version-date": version_date.isoformat() if version_date else None,
         "trim": trim,
     }
-    selector = "values"
 
-    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=params)
-    return Data(response, selector=selector)
+    # divide the time range into chunks
+    chunks = chunk_ts_time_range(begin, end, timedelta(days=max_days_per_chunk))
+
+    # find max worker thread
+    max_workers = min(len(chunks), max_workers)
+
+    # if not multithread
+    if max_workers == 1 or not multithread:
+        selector = "values"
+        response = api.get_with_paging(
+            selector=selector, endpoint="timeseries", params=params
+        )
+        return Data(response, selector=selector)
+    else:
+        print(
+            f"INFO: Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
+        )
+        # fetch the data
+        result_list = fetch_ts_chunks(
+            chunks,
+            ts_id,
+            office_id,
+            unit,
+            datum,
+            page_size,
+            version_date,
+            trim,
+            max_workers,
+        )
+
+        # combine the results
+        results = combine_ts_results(result_list)
+
+        return results
 
 
 def timeseries_df_to_json(
