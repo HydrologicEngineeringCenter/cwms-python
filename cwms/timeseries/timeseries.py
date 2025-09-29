@@ -1,6 +1,6 @@
 import concurrent.futures
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame
@@ -114,7 +114,26 @@ def get_multi_timeseries_df(
     return data
 
 
-def chunk_timeseries_time_range(begin, end, chunk_size) -> List:
+def chunk_timeseries_time_range(
+    begin: datetime, end: datetime, chunk_size: timedelta
+) -> List[Tuple[datetime, datetime]]:
+    """
+    Splits a time range into smaller chunks.
+
+    Parameters
+    ----------
+    begin : datetime
+        The start of the time range.
+    end : datetime
+        The end of the time range.
+    chunk_size : timedelta
+        The size of each chunk.
+
+    Returns
+    -------
+    List[Tuple[datetime, datetime]]
+        A list of tuples, where each tuple represents the start and end of a chunk.
+    """
     chunks = []
     current = begin
     while current < end:
@@ -125,8 +144,16 @@ def chunk_timeseries_time_range(begin, end, chunk_size) -> List:
 
 
 def fetch_timeseries_chunks(
-    chunks, ts_id, office_id, unit, datum, page_size, version_date, trim, max_workers
-):
+    chunks: List[Tuple[datetime, datetime]],
+    ts_id: str,
+    office_id: str,
+    unit: str | None,
+    datum: Optional[str],
+    page_size: int | None,
+    version_date: Optional[datetime],
+    trim: bool | None,
+    max_workers: int,
+) -> List[Data]:
     # Initialize an empty list to store results
     results = []
 
@@ -199,7 +226,7 @@ def get_timeseries_chunk(
     return Data(response, selector=selector)
 
 
-def combine_timeseries_results(results):
+def combine_timeseries_results(results: List[Data]) -> Data:
     """
     Combines the results from multiple chunks into a single cwms Data object.
 
@@ -304,12 +331,9 @@ def get_timeseries(
 
     # creates the dataframe from the timeseries data
     endpoint = "timeseries"
-    if begin and not isinstance(begin, datetime):
-        raise ValueError("begin needs to be in datetime")
-    if end and not isinstance(end, datetime):
-        raise ValueError("end needs to be in datetime")
-    if version_date and not isinstance(version_date, datetime):
-        raise ValueError("version_date needs to be in datetime")
+    # Ensure `begin` and `end` are valid datetime objects
+    begin = begin or datetime.now() - timedelta(days=1)  # Default to 24 hours ago
+    end = end or datetime.now()
     params = {
         "office": office_id,
         "name": ts_id,
@@ -437,7 +461,7 @@ def store_multi_timeseries_df(
         ts_id: str,
         office_id: str,
         version_date: Optional[datetime] = None,
-        multithread=False,
+        multithread: bool = False,
     ) -> None:
         try:
             units = data["units"].iloc[0]
@@ -480,9 +504,9 @@ def store_multi_timeseries_df(
                 )
 
 
-def chunk_timeseries_data(data, chunk_size):
-    import json
-
+def chunk_timeseries_data(
+    data: Dict[str, Any], chunk_size: int
+) -> List[Dict[str, Any]]:
     """
     Splits the time series values into smaller chunks.
 
@@ -514,7 +538,12 @@ def chunk_timeseries_data(data, chunk_size):
     return chunk_list
 
 
-def store_timeseries_chunk(data, create_as_ltrs, store_rule, override_protection):
+def store_timeseries_chunk(
+    data: JSON,
+    create_as_ltrs: Optional[bool] = False,
+    store_rule: Optional[str] = None,
+    override_protection: Optional[bool] = False,
+) -> None:
     """
     Stores a single chunk of time series data.
 
@@ -577,7 +606,7 @@ def store_timeseries(
 
     Returns
     -------
-    response
+    None
     """
 
     endpoint = "timeseries"
@@ -602,7 +631,7 @@ def store_timeseries(
     )
 
     # Store chunks concurrently
-    responses = []
+    responses: List[Dict[str, Any]] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Initialize an empty list to store futures
         futures = []
@@ -619,14 +648,14 @@ def store_timeseries(
 
         for future in concurrent.futures.as_completed(futures):
             try:
-                responses.append(future.result())
+                responses.append({"success:": future.result()})
             except Exception as e:
                 start_time = chunk["values"][0][0]
                 end_time = chunk["values"][-1][0]
                 print(f"Error storing chunk from {start_time} to {end_time}: {e}")
                 responses.append({"error": str(e)})
 
-    return responses
+    return
 
 
 def delete_timeseries(
