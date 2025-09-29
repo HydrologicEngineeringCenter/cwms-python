@@ -114,7 +114,7 @@ def get_multi_timeseries_df(
     return data
 
 
-def chunk_ts_time_range(begin, end, chunk_size) -> List:
+def chunk_timeseries_time_range(begin, end, chunk_size) -> List:
     chunks = []
     current = begin
     while current < end:
@@ -124,7 +124,7 @@ def chunk_ts_time_range(begin, end, chunk_size) -> List:
     return chunks
 
 
-def fetch_ts_chunks(
+def fetch_timeseries_chunks(
     chunks, ts_id, office_id, unit, datum, page_size, version_date, trim, max_workers
 ):
     # Initialize an empty list to store results
@@ -199,7 +199,7 @@ def get_timeseries_chunk(
     return Data(response, selector=selector)
 
 
-def combine_ts_results(results):
+def combine_timeseries_results(results):
     """
     Combines the results from multiple chunks into a single cwms Data object.
 
@@ -213,9 +213,9 @@ def combine_ts_results(results):
     cwms Data
         Combined cwms Data object with merged DataFrame and updated JSON metadata.
     """
-    # Extract DataFrames from each cwms Data object
+    # Extract DataFrames from each cwms data object
     dataframes = [result.df for result in results]
-    
+
     # Combine all DataFrames into one
     combined_df = pd.concat(dataframes, ignore_index=True)
 
@@ -324,7 +324,7 @@ def get_timeseries(
     }
 
     # divide the time range into chunks
-    chunks = chunk_ts_time_range(begin, end, timedelta(days=max_days_per_chunk))
+    chunks = chunk_timeseries_time_range(begin, end, timedelta(days=max_days_per_chunk))
 
     # find max worker thread
     max_workers = min(len(chunks), max_workers)
@@ -341,7 +341,7 @@ def get_timeseries(
             f"INFO: Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
         )
         # fetch the data
-        result_list = fetch_ts_chunks(
+        result_list = fetch_timeseries_chunks(
             chunks,
             ts_id,
             office_id,
@@ -354,7 +354,7 @@ def get_timeseries(
         )
 
         # combine the results
-        results = combine_ts_results(result_list)
+        results = combine_timeseries_results(result_list)
 
         return results
 
@@ -437,6 +437,7 @@ def store_multi_timeseries_df(
         ts_id: str,
         office_id: str,
         version_date: Optional[datetime] = None,
+        multithread=False,
     ) -> None:
         try:
             units = data["units"].iloc[0]
@@ -479,11 +480,79 @@ def store_multi_timeseries_df(
                 )
 
 
+def chunk_timeseries_data(data, chunk_size):
+    import json
+
+    """
+    Splits the time series values into smaller chunks.
+
+    Parameters
+    ----------
+    values : list
+        List of time series values to be stored.
+    chunk_size : int
+        Maximum number of values per chunk.
+
+    Returns
+    -------
+    list
+        List of chunks, where each chunk is a subset of the values.
+    """
+    values = data["values"]
+    chunk_list = []
+    for i in range(0, len(values), chunk_size):
+        chunk = values[i : i + chunk_size]
+        chunked_data = {
+            "name": data["name"],
+            "office-id": data["office-id"],
+            "units": data["units"],
+            "values": chunk,
+            "version-date": data.get("version-date"),
+        }
+
+        chunk_list.append(chunked_data)
+    return chunk_list
+
+
+def store_timeseries_chunk(data, create_as_ltrs, store_rule, override_protection):
+    """
+    Stores a single chunk of time series data.
+
+    Parameters
+    ----------
+    chunk : list
+        A subset of time series values to be stored.
+    create_as_ltrs : bool
+        Flag indicating if timeseries should be created as Local Regular Time Series.
+    store_rule : str
+        The business rule to use when merging the incoming with existing data.
+    override_protection : bool
+        A flag to ignore the protected data quality when storing data.
+
+    Returns
+    -------
+    response
+        API response for the chunk storage.
+    """
+    endpoint = "timeseries"
+    params = {
+        "create-as-lrts": create_as_ltrs,
+        "store-rule": store_rule,
+        "override-protection": override_protection,
+    }
+
+    # Make the API call
+    return api.post(endpoint, data, params)
+
+
 def store_timeseries(
     data: JSON,
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
+    multithread: Optional[bool] = True,
+    max_workers: int = 30,
+    chunk_size: int = 2 * 7 * 24 * 4,  # two weeks of 15 min data
 ) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
@@ -502,6 +571,9 @@ def store_timeseries(
                 DELETE_INSERT.
         override_protection: str, optional, default is False
             A flag to ignore the protected data quality when storing data.
+        multithread: bool, default is true
+        max_workers: int, maximum numbers of worker threads
+        chunk_size: int, maximum values that will be saved by a thread
 
     Returns
     -------
@@ -518,7 +590,43 @@ def store_timeseries(
     if not isinstance(data, dict):
         raise ValueError("Cannot store a timeseries without a JSON data dictionary")
 
-    return api.post(endpoint, data, params)
+    # Chunk the data
+    chunks = chunk_timeseries_data(data, chunk_size)
+
+    # if multi-threaded not needed
+    if len(chunks) == 1 or not multithread:
+        return api.post(endpoint, data, params)
+
+    print(
+        f"INFO: Storing {len(chunks)} chunks of timeseries data with {max_workers} threads"
+    )
+
+    # Store chunks concurrently
+    responses = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Initialize an empty list to store futures
+        futures = []
+        # Submit each chunk as a separate task to the executor
+        for chunk in chunks:
+            future = executor.submit(
+                store_timeseries_chunk,  # The function to execute
+                chunk,  # The chunk of data to store
+                create_as_ltrs,  # Whether to create as LRTS
+                store_rule,  # The store rule to use
+                override_protection,  # Whether to override protection
+            )
+            futures.append(future)  # Add the future to the list
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                responses.append(future.result())
+            except Exception as e:
+                start_time = chunk["values"][0][0]
+                end_time = chunk["values"][-1][0]
+                print(f"Error storing chunk from {start_time} to {end_time}: {e}")
+                responses.append({"error": str(e)})
+
+    return responses
 
 
 def delete_timeseries(
