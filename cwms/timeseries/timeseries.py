@@ -183,10 +183,12 @@ def fetch_timeseries_chunks(
                 # Retrieve the result of the completed future
                 result = future.result()
                 results.append(result)
-            except Exception:
+            except Exception as e:
                 # Log or handle any errors that occur during execution
                 chunk_start, chunk_end = future_to_chunk[future]
-                print(f'ERROR: Failed to fetch data from {chunk_start} to {chunk_end}')
+                print(
+                    f"ERROR: Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
+                )
     return results
 
 
