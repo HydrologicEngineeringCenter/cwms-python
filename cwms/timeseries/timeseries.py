@@ -183,9 +183,10 @@ def fetch_timeseries_chunks(
                 # Retrieve the result of the completed future
                 result = future.result()
                 results.append(result)
-            except Exception as e:
+            except Exception:
                 # Log or handle any errors that occur during execution
                 chunk_start, chunk_end = future_to_chunk[future]
+                print(f'ERROR: Failed to fetch data from {chunk_start} to {chunk_end}')
     return results
 
 
@@ -344,7 +345,6 @@ def get_timeseries(
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
 
-    endpoint = "timeseries"
     selector = "values"
 
     params = {

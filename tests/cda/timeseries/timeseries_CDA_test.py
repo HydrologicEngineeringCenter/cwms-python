@@ -187,8 +187,6 @@ def test_read_timeseries_multi_chunk_ts():
     # Define parameters
     start_date = datetime(2025, 9, 8, 0, 0, tzinfo=timezone.utc)  # Start date
     end_date = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)  # End date
-    ts_id = TEST_TSID_CHUNK_MULTI
-    office = TEST_OFFICE
 
     # Capture the log output
     with patch("builtins.print") as mock_print:
