@@ -97,3 +97,23 @@ def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     endpoint = "blobs"
     params = {"fail-if-exists": fail_if_exists}
     return api.post(endpoint, data, params, api_version=1)
+
+
+def delete_blob(blob_id: str, office_id: str) -> None:
+    """Delete a single BLOB.
+
+    Parameters
+        ----------
+            blob_id: string
+                Specifies the id of the blob. ALL blob ids are UPPERCASE.
+            office_id: string
+                Specifies the office of the blob.
+
+        Returns
+        -------
+            None
+    """
+
+    endpoint = f"blobs/{blob_id}"
+    params = {"office": office_id}
+    return api.delete(endpoint, params, api_version=1)
