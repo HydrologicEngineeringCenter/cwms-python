@@ -1,11 +1,12 @@
 import concurrent.futures
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame
 
 import cwms.api as api
+from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
 
 
@@ -267,6 +268,20 @@ def combine_timeseries_results(results: List[Data]) -> Data:
     return Data(combined_json, selector="values")
 
 
+def validate_dates(
+    begin: Optional[datetime] = None, end: Optional[datetime] = None
+) -> Tuple[datetime, datetime]:
+    # Ensure `begin` and `end` are valid datetime objects
+    begin = begin or datetime.now(tz=timezone.utc) - timedelta(
+        days=1
+    )  # Default to 24 hours ago
+    end = end or datetime.now(tz=timezone.utc)
+    # assign UTC tz
+    begin = begin.replace(tzinfo=timezone.utc)
+    end = end.replace(tzinfo=timezone.utc)
+    return begin, end
+
+
 def get_timeseries(
     ts_id: str,
     office_id: str,
@@ -278,7 +293,7 @@ def get_timeseries(
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
-    max_workers: int = 15,
+    max_workers: int = 20,
     max_days_per_chunk: int = 14,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
@@ -320,7 +335,7 @@ def get_timeseries(
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         multithread: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
-        max_workers: integer, default is 15
+        max_workers: integer
             The maximum number of worker threads that will be spawned for multithreading
         max_days_per_chunk: integer, default is 14
             The maximum number of days that would be included in a thread
@@ -329,11 +344,9 @@ def get_timeseries(
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
 
-    # creates the dataframe from the timeseries data
     endpoint = "timeseries"
-    # Ensure `begin` and `end` are valid datetime objects
-    begin = begin or datetime.now() - timedelta(days=1)  # Default to 24 hours ago
-    end = end or datetime.now()
+    selector = "values"
+
     params = {
         "office": office_id,
         "name": ts_id,
@@ -347,6 +360,29 @@ def get_timeseries(
         "trim": trim,
     }
 
+    begin, end = validate_dates(begin=begin, end=end)
+
+    # grab extents if begin is before CWMS DB were implemented to prevent empty queries outside of extents
+    if begin < datetime(2014, 1, 1, tzinfo=timezone.utc) and multithread:
+        try:
+            begin_extent, _, _ = get_ts_extents(ts_id=ts_id, office_id=office_id)
+            # replace begin with begin extent if outside extents
+            if begin < begin_extent:
+                begin = begin_extent
+                print(
+                    f"INFO: Requested begin was before any data in this timeseries. Reseting to {begin}"
+                )
+        except Exception as e:
+            # If getting extents fails, fall back to single-threaded mode
+            print(
+                f"WARNING: Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
+            )
+
+            response = api.get_with_paging(
+                selector=selector, endpoint="timeseries", params=params
+            )
+            return Data(response, selector=selector)
+
     # divide the time range into chunks
     chunks = chunk_timeseries_time_range(begin, end, timedelta(days=max_days_per_chunk))
 
@@ -355,7 +391,6 @@ def get_timeseries(
 
     # if not multithread
     if max_workers == 1 or not multithread:
-        selector = "values"
         response = api.get_with_paging(
             selector=selector, endpoint="timeseries", params=params
         )
@@ -580,7 +615,7 @@ def store_timeseries(
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
     multithread: Optional[bool] = True,
-    max_workers: int = 30,
+    max_workers: int = 20,
     chunk_size: int = 2 * 7 * 24 * 4,  # two weeks of 15 min data
 ) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
