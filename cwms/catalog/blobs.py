@@ -138,7 +138,7 @@ def update_blob(data: JSON, fail_if_not_exists: Optional[bool] = True) -> None:
         None
     """
 
-    if not isinstance(data, JSON):
+    if not data:
         raise ValueError(
             f"Cannot update a Blob without a JSON data dictionary:\n{STORE_DICT}"
         )
