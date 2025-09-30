@@ -117,3 +117,42 @@ def delete_blob(blob_id: str, office_id: str) -> None:
     endpoint = f"blobs/{blob_id}"
     params = {"office": office_id}
     return api.delete(endpoint, params, api_version=1)
+
+
+def update_blob(data: JSON, fail_if_not_exists: Optional[bool] = True) -> None:
+    f"""Update Existing Blob
+
+    Parameters
+    ----------
+        **Note**: The "id" field is automatically cast to uppercase.
+
+        Data: JSON dictionary
+            JSON containing information of Blob to be updated.
+
+            {STORE_DICT}
+        fail_if_not_exists: Boolean
+            Update will fail if the provided ID does not already exist. Default: True
+
+    Returns
+    -------
+        None
+    """
+
+    if not isinstance(data, JSON):
+        raise ValueError(
+            f"Cannot update a Blob without a JSON data dictionary:\n{STORE_DICT}"
+        )
+
+    if "id" not in data:
+        raise ValueError(f"Cannot update a Blob without an 'id' field:\n{STORE_DICT}")
+
+    # Encode value if it's not already Base64-encoded
+    if "value" in data and not is_base64(data["value"]):
+        # Encode to bytes, then Base64, then decode to string for storing
+        data["value"] = base64.b64encode(data["value"].encode("utf-8")).decode("utf-8")
+
+    blob_id = data.get("id", "").upper()
+
+    endpoint = f"blobs/{blob_id}"
+    params = {"fail-if-not-exists": fail_if_not_exists}
+    return api.patch(endpoint, data, params, api_version=1)
