@@ -74,12 +74,6 @@ def test_update_template():
     assert updated.json["description"].endswith(" - updated")
 
 
-def test_delete_template():
-    ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE_ALL")
-    with pytest.raises(ApiError):
-        ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
-
-
 # Rating specs
 def test_store_rating_spec():
     ratings_spec.store_rating_spec(spec_xml)
@@ -111,3 +105,9 @@ def test_delete_rating_spec():
     ratings_spec.delete_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
         ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
+
+
+def test_delete_template():
+    ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE_ALL")
+    with pytest.raises(ApiError):
+        ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
