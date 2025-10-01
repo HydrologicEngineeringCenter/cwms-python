@@ -10,6 +10,14 @@ import cwms.ratings.ratings_spec as ratings_spec
 import cwms.ratings.ratings_template as ratings_template
 from cwms.api import ApiError
 
+
+def get_xml_text(root, tag):
+    elem = root.find(tag)
+    if elem is None:
+        raise AssertionError(f"Missing <{tag}> in XML response")
+    return elem.text
+
+
 RESOURCES = Path(__file__).parent.parent / "resources"
 
 TEST_OFFICE = "MVP"
@@ -78,14 +86,16 @@ def test_update_template():
 def test_store_rating_spec():
     ratings_spec.store_rating_spec(spec_xml)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    assert fetched.json["id"] == TEST_RATING_SPEC_ID
-    assert fetched.json["office-id"] == TEST_OFFICE
+    root = ET.fromstring(fetched.text)
+    assert get_xml_text(root, "rating-spec-id") == TEST_RATING_SPEC_ID
+    assert root.get("office-id") == TEST_OFFICE
 
 
 def test_get_rating_spec():
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    assert fetched.json["id"] == TEST_RATING_SPEC_ID
-    assert fetched.json["office-id"] == TEST_OFFICE
+    root = ET.fromstring(fetched.text)
+    assert get_xml_text(root, "rating-spec-id") == TEST_RATING_SPEC_ID
+    assert root.get("office-id") == TEST_OFFICE
 
 
 def test_update_rating_spec():
@@ -98,7 +108,8 @@ def test_update_rating_spec():
 
     ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    assert fetched.json["description"].endswith(" - updated")
+    root = ET.fromstring(fetched.text)
+    assert get_xml_text(root, "description").endswith(" - updated")
 
 
 def test_delete_rating_spec():
