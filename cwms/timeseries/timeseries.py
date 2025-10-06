@@ -662,9 +662,10 @@ def store_timeseries(
     # if multi-threaded not needed
     if len(chunks) == 1 or not multithread:
         return api.post(endpoint, data, params)
-
+    
+    actual_workers = min(max_workers, len(chunks))
     print(
-        f"INFO: Storing {len(chunks)} chunks of timeseries data with {max_workers} threads"
+        f"INFO: Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
     )
 
     # Store chunks concurrently
