@@ -23,6 +23,11 @@ TEST_DT_VALUES_CHUNK_MULTI = [
     (datetime(2025, 9, 15, 5, 15, tzinfo=timezone.utc), 3.14159 * 3),
     (datetime(2025, 9, 30, 6, 45, tzinfo=timezone.utc), 3.14159 * 4),
 ]
+# Generate 15-minute interval timestamps
+DT_CHUNK_MULTI = pd.date_range(
+    start=START_DATE_CHUNK_MULTI, end=END_DATE_CHUNK_MULTI, freq="15min", tz="UTC"
+)
+NUMBER_OF_VAL_CHUNK_MULTI = len(DT_CHUNK_MULTI)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -148,19 +153,14 @@ def test_store_timeseries_multi_chunk_ts():
     office = TEST_OFFICE
     units = "m"
 
-    # Generate 15-minute interval timestamps
-    dt = pd.date_range(
-        start=START_DATE_CHUNK_MULTI, end=END_DATE_CHUNK_MULTI, freq="15min", tz="UTC"
-    )
-
     # Generate random values and quality codes
-    values = [86.57 + (i % 10) * 0.01 for i in range(len(dt))]
-    quality_codes = [0] * len(dt)
+    values = [86.57 + (i % 10) * 0.01 for i in range(NUMBER_OF_VAL_CHUNK_MULTI)]
+    quality_codes = [0] * NUMBER_OF_VAL_CHUNK_MULTI
 
     # Create DataFrame
     df = pd.DataFrame(
         {
-            "date-time": dt,
+            "date-time": DT_CHUNK_MULTI,
             "value": values,
             "quality-code": quality_codes,
         }
@@ -226,6 +226,17 @@ def test_read_timeseries_multi_chunk_ts():
 
     # check values
     df = data_multithread.df.copy()
+
+    # check length of data
+    assert (
+        len(df) == NUMBER_OF_VAL_CHUNK_MULTI
+    ), f"Expected {NUMBER_OF_VAL_CHUNK_MULTI} values, but got {len(df)}"
+    # check to make sure no nan were stored
+    df_cleaned = df.dropna(subset=["value"])
+    assert (
+        len(df_cleaned) == NUMBER_OF_VAL_CHUNK_MULTI
+    ), f"Expected {NUMBER_OF_VAL_CHUNK_MULTI} non-null values, but got {len(df_cleaned)}"
+
     # assign specific values in different chunks for testing
     for dt, value in TEST_DT_VALUES_CHUNK_MULTI:
         test_value = df.loc[df["date-time"] == dt, "value"].values[0]
