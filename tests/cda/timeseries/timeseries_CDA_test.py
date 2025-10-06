@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 import pandas as pd
+import pandas.testing as pdt
 import pytest
 
 import cwms
@@ -11,7 +13,25 @@ TEST_LOCATION_ID = "pytest_group"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Test"
 TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
+TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
+# Generate 15-minute interval timestamps
+START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)
+END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)
+DT_CHUNK_MULTI = pd.date_range(
+    start=START_DATE_CHUNK_MULTI,
+    end=END_DATE_CHUNK_MULTI,
+    freq="15min",
+    tz="UTC",
+)
+# Create DataFrame
+DF_CHUNK_MULTI = pd.DataFrame(
+    {
+        "date-time": DT_CHUNK_MULTI,
+        "value": [86.57 + (i % 10) * 0.01 for i in range(len(DT_CHUNK_MULTI))],
+        "quality-code": [0] * len(DT_CHUNK_MULTI),
+    }
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -129,6 +149,80 @@ def test_get_multi_timeseries_df():
     assert any(
         ts_id_rev_test in str(col) for col in df.columns
     ), f"{ts_id_rev_test} not found in DataFrame columns"
+
+
+def test_store_timeseries_multi_chunk_ts():
+    # Define parameters
+    ts_id = TEST_TSID_CHUNK_MULTI
+    office = TEST_OFFICE
+    units = "m"
+
+    # Convert DataFrame to JSON format
+    ts_json = ts.timeseries_df_to_json(DF_CHUNK_MULTI, ts_id, units, office)
+
+    # Capture the log output
+    with patch("builtins.print") as mock_print:
+        ts.store_timeseries(ts_json, multithread=True, chunk_size=2 * 7 * 24 * 4)
+
+        # Extract the log messages
+        log_messages = [call.args[0] for call in mock_print.call_args_list]
+
+    # Find the relevant log message
+    store_log = next((msg for msg in log_messages if "INFO: Storing" in msg), None)
+    assert store_log is not None, "Expected log message not found"
+
+    # Parse the number of chunks and threads
+    chunks = int(store_log.split("chunks")[0].split()[-1])
+    threads = int(store_log.split("with")[1].split()[0])
+
+    # Assert the expected values
+    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
+    assert threads == 5, f"Expected 5 threads, but got {threads}"
+
+
+def test_read_timeseries_multi_chunk_ts():
+
+    # Capture the log output
+    with patch("builtins.print") as mock_print:
+        data_multithread = ts.get_timeseries(
+            ts_id=TEST_TSID_CHUNK_MULTI,
+            office_id=TEST_OFFICE,
+            begin=START_DATE_CHUNK_MULTI,
+            end=END_DATE_CHUNK_MULTI,
+            max_days_per_chunk=14,
+            unit="SI",
+        )
+
+        # Extract the log messages
+        log_messages = [call.args[0] for call in mock_print.call_args_list]
+
+    # Find the relevant log message
+    read_log = next((msg for msg in log_messages if "INFO: Fetching" in msg), None)
+    assert read_log is not None, "Expected log message not found"
+
+    # Parse the number of chunks and threads
+    chunks = int(read_log.split("chunks")[0].split()[-1])
+    threads = int(read_log.split("with")[1].split()[0])
+
+    # Assert the expected values
+    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
+    assert threads == 5, f"Expected 5 threads, but got {threads}"
+
+    # Check metadata for multithreaded read
+    data_json = data_multithread.json
+
+    # check df values
+    df = data_multithread.df.copy()
+
+    # make sure the dataframe matches stored dataframe
+    pdt.assert_frame_equal(
+        df, DF_CHUNK_MULTI
+    ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
+
+    # Check metadata
+    assert data_json["name"] == TEST_TSID_CHUNK_MULTI
+    assert data_json["office-id"] == TEST_OFFICE
+    assert data_json["units"] == "m"
 
 
 def test_delete_timeseries():
