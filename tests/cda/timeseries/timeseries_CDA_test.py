@@ -15,6 +15,14 @@ TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
+START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)  # Start date
+END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)  # End date
+TEST_DT_VALUES_CHUNK_MULTI = [
+    (datetime(2025, 8, 1, 15, 15, tzinfo=timezone.utc), 3.14159),
+    (datetime(2025, 8, 20, 20, 00, tzinfo=timezone.utc), 3.14159 * 2),
+    (datetime(2025, 9, 15, 5, 15, tzinfo=timezone.utc), 3.14159 * 3),
+    (datetime(2025, 9, 30, 6, 45, tzinfo=timezone.utc), 3.14159 * 4),
+]
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -136,14 +144,14 @@ def test_get_multi_timeseries_df():
 
 def test_store_timeseries_multi_chunk_ts():
     # Define parameters
-    start_date = datetime(2025, 9, 8, 0, 0, tzinfo=timezone.utc)  # Start date
-    end_date = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)  # End date
     ts_id = TEST_TSID_CHUNK_MULTI
     office = TEST_OFFICE
-    units = "ft"
+    units = "m"
 
     # Generate 15-minute interval timestamps
-    dt = pd.date_range(start=start_date, end=end_date, freq="15T", tz="UTC")
+    dt = pd.date_range(
+        start=START_DATE_CHUNK_MULTI, end=END_DATE_CHUNK_MULTI, freq="15T", tz="UTC"
+    )
 
     # Generate random values and quality codes
     values = [86.57 + (i % 10) * 0.01 for i in range(len(dt))]
@@ -158,14 +166,16 @@ def test_store_timeseries_multi_chunk_ts():
         }
     )
 
+    # assign specific values in different chunks for testing
+    for dt, value in TEST_DT_VALUES_CHUNK_MULTI:
+        df.loc[df["date-time"] == dt, "value"] = value
+
     # Convert DataFrame to JSON format
     ts_json = ts.timeseries_df_to_json(df, ts_id, units, office)
 
     # Capture the log output
     with patch("builtins.print") as mock_print:
-        ts.store_timeseries(
-            ts_json, multithread=True, max_workers=2, chunk_size=2 * 7 * 24 * 4
-        )
+        ts.store_timeseries(ts_json, multithread=True, chunk_size=2 * 7 * 24 * 4)
 
         # Extract the log messages
         log_messages = [call.args[0] for call in mock_print.call_args_list]
@@ -179,25 +189,21 @@ def test_store_timeseries_multi_chunk_ts():
     threads = int(store_log.split("with")[1].split()[0])
 
     # Assert the expected values
-    assert chunks == 2, f"Expected 2 chunks, but got {chunks}"
-    assert threads == 2, f"Expected 2 threads, but got {threads}"
+    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
+    assert threads == 5, f"Expected 5 threads, but got {threads}"
 
 
 def test_read_timeseries_multi_chunk_ts():
-    # Define parameters
-    start_date = datetime(2025, 9, 8, 0, 0, tzinfo=timezone.utc)  # Start date
-    end_date = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)  # End date
 
     # Capture the log output
     with patch("builtins.print") as mock_print:
         data_multithread = ts.get_timeseries(
             ts_id=TEST_TSID_CHUNK_MULTI,
             office_id=TEST_OFFICE,
-            begin=start_date,
-            end=end_date,
-            multithread=True,
-            max_workers=2,
+            begin=START_DATE_CHUNK_MULTI,
+            end=END_DATE_CHUNK_MULTI,
             max_days_per_chunk=14,
+            unit="SI",
         )
 
         # Extract the log messages
@@ -212,16 +218,25 @@ def test_read_timeseries_multi_chunk_ts():
     threads = int(read_log.split("with")[1].split()[0])
 
     # Assert the expected values
-    assert chunks == 2, f"Expected 2 chunks, but got {chunks}"
-    assert threads == 2, f"Expected 2 threads, but got {threads}"
+    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
+    assert threads == 5, f"Expected 5 threads, but got {threads}"
 
     # Check metadata for multithreaded read
     data_json = data_multithread.json
 
+    # check values
+    df = data_multithread.df.copy()
+    # assign specific values in different chunks for testing
+    for dt, value in TEST_DT_VALUES_CHUNK_MULTI:
+        test_value = df.loc[df["date-time"] == dt, "value"].values[0]
+        assert (
+            test_value == value
+        ), f"Expected value at {dt} to equal {value}, but got {test_value}"
+
     # Check metadata
     assert data_json["name"] == TEST_TSID_CHUNK_MULTI
     assert data_json["office-id"] == TEST_OFFICE
-    assert data_json["units"] == "ft"
+    assert data_json["units"] == "m"
 
 
 def test_delete_timeseries():
