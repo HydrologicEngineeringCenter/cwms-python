@@ -9,7 +9,7 @@ STORE_DICT = """data = {
     "office-id": "SWT",
     "id": "MYFILE_OR_BLOB_ID.TXT",
     "description": "Your description here",
-    "media-type-id": "application/octet-stream",
+    "media-type-id": "text/plain",
     "value": "STRING of content or BASE64_ENCODED_STRING"
 }
 """
@@ -19,16 +19,14 @@ def get_blob(blob_id: str, office_id: str) -> str:
     """Get a single BLOB (Binary Large Object).
 
     Parameters
-        ----------
-            blob_id: string
-                Specifies the id of the blob. ALL blob ids are UPPERCASE.
-            office_id: string
-                Specifies the office of the blob.
+        blob_id: string
+            Specifies the id of the blob. ALL blob ids are UPPERCASE.
+        office_id: string
+            Specifies the office of the blob.
 
 
-        Returns
-        -------
-            str: the value returned based on the content-type it was stored with as a string
+    Returns
+        str: the value returned based on the content-type it was stored with as a string
     """
 
     endpoint = f"blobs/{blob_id}"
@@ -44,18 +42,16 @@ def get_blobs(
 ) -> Data:
     """Get a subset of Blobs
 
-    Parameters
-        ----------
-            office_id: Optional[string]
-                Specifies the office of the blob.
-            page_sie: Optional[Integer]
-                How many entries per page returned. Default 100.
-            blob_id_like: Optional[string]
-                Posix regular expression matching against the clob id
+    Parameters:
+        office_id: Optional[string]
+            Specifies the office of the blob.
+        page_sie: Optional[Integer]
+            How many entries per page returned. Default 100.
+        blob_id_like: Optional[string]
+            Posix regular expression matching against the clob id
 
-        Returns
-        -------
-            cwms data type.  data.json will return the JSON output and data.df will return a dataframe
+    Returns:
+        cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
     endpoint = "blobs"
@@ -66,21 +62,18 @@ def get_blobs(
 
 
 def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
-    f"""Create New Blob
+    """Create New Blob
 
-    Parameters
-    ----------
+    Parameters:
         **Note**: The "id" field is automatically cast to uppercase.
 
         Data: JSON dictionary
             JSON containing information of Blob to be updated.
 
-            {STORE_DICT}
         fail_if_exists: Boolean
             Create will fail if the provided ID already exists. Default: True
 
-    Returns
-    -------
+    Returns:
         None
     """
 
@@ -103,15 +96,15 @@ def delete_blob(blob_id: str, office_id: str) -> None:
     """Delete a single BLOB.
 
     Parameters
-        ----------
-            blob_id: string
-                Specifies the id of the blob. ALL blob ids are UPPERCASE.
-            office_id: string
-                Specifies the office of the blob.
+    ----------
+        blob_id: string
+            Specifies the id of the blob. ALL blob ids are UPPERCASE.
+        office_id: string
+            Specifies the office of the blob.
 
-        Returns
-        -------
-            None
+    Returns
+    -------
+        None
     """
 
     endpoint = f"blobs/{blob_id}"
@@ -120,21 +113,18 @@ def delete_blob(blob_id: str, office_id: str) -> None:
 
 
 def update_blob(data: JSON, fail_if_not_exists: Optional[bool] = True) -> None:
-    f"""Update Existing Blob
+    """Update Existing Blob
 
-    Parameters
-    ----------
+    Parameters:
         **Note**: The "id" field is automatically cast to uppercase.
 
         Data: JSON dictionary
             JSON containing information of Blob to be updated.
 
-            {STORE_DICT}
         fail_if_not_exists: Boolean
             Update will fail if the provided ID does not already exist. Default: True
 
-    Returns
-    -------
+    Returns:
         None
     """
 
