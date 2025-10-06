@@ -338,10 +338,10 @@ def get_timeseries(
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         multithread: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
-        max_workers: integer
-            The maximum number of worker threads that will be spawned for multithreading
+        max_workers: integer, default is 20
+            The maximum number of worker threads that will be spawned for multithreading, If calling more than 3 years of 15 minute data, consider using 30 max_workers
         max_days_per_chunk: integer, default is 14
-            The maximum number of days that would be included in a thread
+            The maximum number of days that would be included in a thread. If calling more than 1 year of 15 minute data, consider using 30 days
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
@@ -638,8 +638,11 @@ def store_timeseries(
         override_protection: str, optional, default is False
             A flag to ignore the protected data quality when storing data.
         multithread: bool, default is true
-        max_workers: int, maximum numbers of worker threads
-        chunk_size: int, maximum values that will be saved by a thread
+        max_workers: int, default is 20, maximum numbers of worker threads,
+            if saving more than 3 years of 15 minute data, consider using 30
+        chunk_size: int, default is 2 * 7 * 24 * 4 (two weeks of 15 minute data),
+            maximum values that will be saved by a thread, if saving more than 3 years of 15 minute data,
+            consider using 30 days of 15 minute data
 
     Returns
     -------
