@@ -150,7 +150,7 @@ def test_store_timeseries_multi_chunk_ts():
 
     # Generate 15-minute interval timestamps
     dt = pd.date_range(
-        start=START_DATE_CHUNK_MULTI, end=END_DATE_CHUNK_MULTI, freq="15T", tz="UTC"
+        start=START_DATE_CHUNK_MULTI, end=END_DATE_CHUNK_MULTI, freq="15min", tz="UTC"
     )
 
     # Generate random values and quality codes
