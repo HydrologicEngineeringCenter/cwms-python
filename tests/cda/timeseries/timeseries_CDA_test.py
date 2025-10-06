@@ -15,19 +15,23 @@ TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
-START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)  # Start date
-END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)  # End date
-TEST_DT_VALUES_CHUNK_MULTI = [
-    (datetime(2025, 8, 1, 15, 15, tzinfo=timezone.utc), 3.14159),
-    (datetime(2025, 8, 20, 20, 00, tzinfo=timezone.utc), 3.14159 * 2),
-    (datetime(2025, 9, 15, 5, 15, tzinfo=timezone.utc), 3.14159 * 3),
-    (datetime(2025, 9, 30, 6, 45, tzinfo=timezone.utc), 3.14159 * 4),
-]
 # Generate 15-minute interval timestamps
+START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)
+END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)
 DT_CHUNK_MULTI = pd.date_range(
-    start=START_DATE_CHUNK_MULTI, end=END_DATE_CHUNK_MULTI, freq="15min", tz="UTC"
+    start=START_DATE_CHUNK_MULTI,
+    end=END_DATE_CHUNK_MULTI,
+    freq="15min",
+    tz="UTC",
 )
-NUMBER_OF_VAL_CHUNK_MULTI = len(DT_CHUNK_MULTI)
+# Create DataFrame
+DF_CHUNK_MULTI = pd.DataFrame(
+    {
+        "date-time": DT_CHUNK_MULTI,
+        "value": [86.57 + (i % 10) * 0.01 for i in range(len(DT_CHUNK_MULTI))],
+        "quality-code": [0] * len(DT_CHUNK_MULTI),
+    }
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -153,25 +157,8 @@ def test_store_timeseries_multi_chunk_ts():
     office = TEST_OFFICE
     units = "m"
 
-    # Generate random values and quality codes
-    values = [86.57 + (i % 10) * 0.01 for i in range(NUMBER_OF_VAL_CHUNK_MULTI)]
-    quality_codes = [0] * NUMBER_OF_VAL_CHUNK_MULTI
-
-    # Create DataFrame
-    df = pd.DataFrame(
-        {
-            "date-time": DT_CHUNK_MULTI,
-            "value": values,
-            "quality-code": quality_codes,
-        }
-    )
-
-    # assign specific values in different chunks for testing
-    for dt, value in TEST_DT_VALUES_CHUNK_MULTI:
-        df.loc[df["date-time"] == dt, "value"] = value
-
     # Convert DataFrame to JSON format
-    ts_json = ts.timeseries_df_to_json(df, ts_id, units, office)
+    ts_json = ts.timeseries_df_to_json(DF_CHUNK_MULTI, ts_id, units, office)
 
     # Capture the log output
     with patch("builtins.print") as mock_print:
@@ -224,25 +211,13 @@ def test_read_timeseries_multi_chunk_ts():
     # Check metadata for multithreaded read
     data_json = data_multithread.json
 
-    # check values
+    # check df values
     df = data_multithread.df.copy()
 
-    # check length of data
-    assert (
-        len(df) == NUMBER_OF_VAL_CHUNK_MULTI
-    ), f"Expected {NUMBER_OF_VAL_CHUNK_MULTI} values, but got {len(df)}"
-    # check to make sure no nan were stored
-    df_cleaned = df.dropna(subset=["value"])
-    assert (
-        len(df_cleaned) == NUMBER_OF_VAL_CHUNK_MULTI
-    ), f"Expected {NUMBER_OF_VAL_CHUNK_MULTI} non-null values, but got {len(df_cleaned)}"
-
-    # assign specific values in different chunks for testing
-    for dt, value in TEST_DT_VALUES_CHUNK_MULTI:
-        test_value = df.loc[df["date-time"] == dt, "value"].values[0]
-        assert (
-            test_value == value
-        ), f"Expected value at {dt} to equal {value}, but got {test_value}"
+    # make sure the dataframe matches stored dataframe
+    pdt.assert_frame_equal(
+        df, DF_CHUNK_MULTI
+    ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
 
     # Check metadata
     assert data_json["name"] == TEST_TSID_CHUNK_MULTI
