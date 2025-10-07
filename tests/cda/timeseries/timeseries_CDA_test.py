@@ -170,10 +170,10 @@ def test_store_timeseries_multi_chunk_ts():
         max_days_per_chunk=14,
         unit="SI",
     )
-
+    df = data_multithread.df
     # make sure the dataframe matches stored dataframe
     pdt.assert_frame_equal(
-        data_multithread.df, DF_CHUNK_MULTI
+        df, DF_CHUNK_MULTI
     ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
 
 
