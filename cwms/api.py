@@ -305,6 +305,25 @@ def get_with_paging(
     return response
 
 
+def _post_function(
+    endpoint: str,
+    data: Any,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> Any:
+
+    # post requires different headers than get for
+    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+    if isinstance(data, dict) or isinstance(data, list):
+        data = json.dumps(data)
+    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
+        if not response.ok:
+            logging.error(f"CDA Error: response={response}")
+            raise ApiError(response)
+        return response
+
+
 def post(
     endpoint: str,
     data: Any,
@@ -329,11 +348,7 @@ def post(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
-    post_with_returned_data(
-        endpoint=endpoint, data=data, params=params, api_version=api_version
-    )
-    return None
+    _post_function(endpoint=endpoint, data=data, params=params, api_version=api_version)
 
 
 def post_with_returned_data(
@@ -361,17 +376,10 @@ def post_with_returned_data(
         ApiError: If an error response is return by the API.
     """
 
-    # post requires different headers than get for
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-
-    if isinstance(data, dict) or isinstance(data, list):
-        data = json.dumps(data)
-
-    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
-        return _process_response(response)
+    response = _post_function(
+        endpoint=endpoint, data=data, params=params, api_version=api_version
+    )
+    return _process_response(response)
 
 
 def patch(

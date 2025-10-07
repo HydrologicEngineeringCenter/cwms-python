@@ -160,59 +160,41 @@ def test_store_timeseries_multi_chunk_ts():
     # Convert DataFrame to JSON format
     ts_json = ts.timeseries_df_to_json(DF_CHUNK_MULTI, ts_id, units, office)
 
-    # Capture the log output
-    with patch("builtins.print") as mock_print:
-        ts.store_timeseries(ts_json, multithread=True, chunk_size=2 * 7 * 24 * 4)
+    ts.store_timeseries(ts_json, multithread=True, chunk_size=2 * 7 * 24 * 4)
 
-        # Extract the log messages
-        log_messages = [call.args[0] for call in mock_print.call_args_list]
+    data_multithread = ts.get_timeseries(
+        ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    )
 
-    # Find the relevant log message
-    store_log = next((msg for msg in log_messages if "INFO: Storing" in msg), None)
-    assert store_log is not None, "Expected log message not found"
-
-    # Parse the number of chunks and threads
-    chunks = int(store_log.split("chunks")[0].split()[-1])
-    threads = int(store_log.split("with")[1].split()[0])
-
-    # Assert the expected values
-    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
-    assert threads == 5, f"Expected 5 threads, but got {threads}"
+    # make sure the dataframe matches stored dataframe
+    pdt.assert_frame_equal(
+        data_multithread.df, DF_CHUNK_MULTI
+    ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
 
 
 def test_read_timeseries_multi_chunk_ts():
 
     # Capture the log output
-    with patch("builtins.print") as mock_print:
-        data_multithread = ts.get_timeseries(
-            ts_id=TEST_TSID_CHUNK_MULTI,
-            office_id=TEST_OFFICE,
-            begin=START_DATE_CHUNK_MULTI,
-            end=END_DATE_CHUNK_MULTI,
-            max_days_per_chunk=14,
-            unit="SI",
-        )
-
-        # Extract the log messages
-        log_messages = [call.args[0] for call in mock_print.call_args_list]
-
-    # Find the relevant log message
-    read_log = next((msg for msg in log_messages if "INFO: Fetching" in msg), None)
-    assert read_log is not None, "Expected log message not found"
-
-    # Parse the number of chunks and threads
-    chunks = int(read_log.split("chunks")[0].split()[-1])
-    threads = int(read_log.split("with")[1].split()[0])
-
-    # Assert the expected values
-    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
-    assert threads == 5, f"Expected 5 threads, but got {threads}"
+    data_multithread = ts.get_timeseries(
+        ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    )
 
     # Check metadata for multithreaded read
     data_json = data_multithread.json
 
-    # check df values
     df = data_multithread.df.copy()
+    assert df is not None, "Returned DataFrame is None"
+    assert not df.empty, "Returned DataFrame is empty"
 
     # make sure the dataframe matches stored dataframe
     pdt.assert_frame_equal(

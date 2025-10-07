@@ -1,4 +1,5 @@
 import concurrent.futures
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -82,7 +83,7 @@ def get_multi_timeseries_df(
             }
             return result_dict
         except Exception as e:
-            print(f"Error processing {ts_id}: {e}")
+            logging.error(f"Error processing {ts_id}: {e}")
             return None
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -186,7 +187,7 @@ def fetch_timeseries_chunks(
             except Exception as e:
                 # Log or handle any errors that occur during execution
                 chunk_start, chunk_end = future_to_chunk[future]
-                print(
+                logging.error(
                     f"ERROR: Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
                 )
     return results
@@ -371,13 +372,13 @@ def get_timeseries(
             # replace begin with begin extent if outside extents
             if begin < begin_extent:
                 begin = begin_extent
-                print(
-                    f"INFO: Requested begin was before any data in this timeseries. Reseting to {begin}"
+                logging.debug(
+                    f"Requested begin was before any data in this timeseries. Reseting to {begin}"
                 )
         except Exception as e:
             # If getting extents fails, fall back to single-threaded mode
-            print(
-                f"WARNING: Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
+            logging.debug(
+                f"Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
             )
 
             response = api.get_with_paging(
@@ -398,8 +399,8 @@ def get_timeseries(
         )
         return Data(response, selector=selector)
     else:
-        print(
-            f"INFO: Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
+        logging.debug(
+            f"Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
         )
         # fetch the data
         result_list = fetch_timeseries_chunks(
@@ -667,7 +668,7 @@ def store_timeseries(
         return api.post(endpoint, data, params)
 
     actual_workers = min(max_workers, len(chunks))
-    print(
+    logging.debug(
         f"INFO: Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
     )
 
@@ -693,7 +694,9 @@ def store_timeseries(
             except Exception as e:
                 start_time = chunk["values"][0][0]
                 end_time = chunk["values"][-1][0]
-                print(f"Error storing chunk from {start_time} to {end_time}: {e}")
+                logging.error(
+                    f"Error storing chunk from {start_time} to {end_time}: {e}"
+                )
                 responses.append({"error": str(e)})
 
     return
