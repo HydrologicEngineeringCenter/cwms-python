@@ -32,9 +32,7 @@ def init_session_if_env():
     """
     api_root = os.getenv("CDA_API_ROOT")
     api_key = os.getenv("CDA_API_KEY")
-    print(
-        f"init_session_if_env: api_root={api_root} api_key={'set' if api_key else 'not set'}"
-    )
+    
     if api_root and api_key:
         cwms.api.init_session(api_root=api_root, api_key="apikey " + api_key)
     yield
