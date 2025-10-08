@@ -12,6 +12,8 @@ TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Test"
 TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
+TEST_TSID_MULTI1 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-1"
+TEST_TSID_MULTI2 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-2"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
@@ -32,6 +34,28 @@ DF_CHUNK_MULTI = pd.DataFrame(
         "quality-code": [0] * len(DT_CHUNK_MULTI),
     }
 )
+
+DF_MULTI_TIMESERIES1 = pd.DataFrame(
+    {
+        "date-time": DT_CHUNK_MULTI,
+        "value": [86.57 + (i % 10) * 0.01 for i in range(len(DT_CHUNK_MULTI))],
+        "quality-code": [0] * len(DT_CHUNK_MULTI),
+        "ts_id": [TEST_TSID_MULTI1] * len(DT_CHUNK_MULTI),
+        "units": ["ft"] * len(DT_CHUNK_MULTI),
+    }
+)
+
+DF_MULTI_TIMESERIES2 = pd.DataFrame(
+    {
+        "date-time": DT_CHUNK_MULTI,
+        "value": [86.57 + (i % 10) * 0.01 for i in range(len(DT_CHUNK_MULTI))],
+        "quality-code": [0] * len(DT_CHUNK_MULTI),
+        "ts_id": [TEST_TSID_MULTI2] * len(DT_CHUNK_MULTI),
+        "units": ["ft"] * len(DT_CHUNK_MULTI),
+    }
+)
+
+DF_MULTI_TIMESERIES = pd.concat([DF_MULTI_TIMESERIES1, DF_MULTI_TIMESERIES2])
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -138,6 +162,52 @@ def test_store_multi_timeseries_df():
     assert data2["values"][0][1] == pytest.approx(8)
 
 
+def test_store_multi_timeseries_chunks_df():
+    # test getting multi timeseries while using the chunk method as well
+    ts.store_multi_timeseries_df(data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE)
+    data1 = ts.get_timeseries(
+        ts_id=TEST_TSID_MULTI1,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+    ).df
+    data2 = ts.get_timeseries(
+        ts_id=TEST_TSID_MULTI2,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+    ).df
+
+    pdt.assert_frame_equal(
+        data1, DF_MULTI_TIMESERIES1
+    ), f"Data frames do not match: original = {DF_MULTI_TIMESERIES1.describe()}, stored = {data1.describe()}"
+
+    pdt.assert_frame_equal(
+        data2, DF_MULTI_TIMESERIES2
+    ), f"Data frames do not match: original = {DF_MULTI_TIMESERIES2.describe()}, stored = {data2.describe()}"
+
+
+def test_get_multi_timeseries_chunk_df():
+    df = ts.get_multi_timeseries_df(
+        ts_ids=[TEST_TSID_MULTI1, TEST_TSID_MULTI2],
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+    )
+    assert df is not None, "Returned DataFrame is None"
+    assert not df.empty, "Returned DataFrame is empty"
+    assert any(
+        TEST_TSID_MULTI1 in str(col) for col in df.columns
+    ), f"{TEST_TSID_MULTI1} not found in DataFrame columns"
+    assert any(
+        TEST_TSID_MULTI2 in str(col) for col in df.columns
+    ), f"{TEST_TSID_MULTI2} not found in DataFrame columns"
+
+    pdt.assert_frame_equal(
+        df, DF_MULTI_TIMESERIES
+    ), f"Data frames do not match: original = {DF_MULTI_TIMESERIES.describe()}, stored = {df.describe()}"
+
+
 def test_get_multi_timeseries_df():
     ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     df = ts.get_multi_timeseries_df([TEST_TSID_MULTI, ts_id_rev_test], TEST_OFFICE)
@@ -151,7 +221,7 @@ def test_get_multi_timeseries_df():
     ), f"{ts_id_rev_test} not found in DataFrame columns"
 
 
-def test_store_timeseries_multi_chunk_ts():
+def test_store_timeseries_chunk_ts():
     # Define parameters
     ts_id = TEST_TSID_CHUNK_MULTI
     office = TEST_OFFICE
@@ -177,7 +247,7 @@ def test_store_timeseries_multi_chunk_ts():
     ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
 
 
-def test_read_timeseries_multi_chunk_ts():
+def test_read_timeseries_chunk_ts():
 
     # Capture the log output
     data_multithread = ts.get_timeseries(

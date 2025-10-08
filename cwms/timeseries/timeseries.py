@@ -147,13 +147,9 @@ def chunk_timeseries_time_range(
 
 def fetch_timeseries_chunks(
     chunks: List[Tuple[datetime, datetime]],
-    ts_id: str,
-    office_id: str,
-    unit: Optional[str],
-    datum: Optional[str],
-    page_size: Optional[int],
-    version_date: Optional[datetime],
-    trim: Optional[bool],
+    params: dict,
+    selector: str,
+    endpoint: str,
     max_workers: int,
 ) -> List[Data]:
     # Initialize an empty list to store results
@@ -162,28 +158,19 @@ def fetch_timeseries_chunks(
     # Create a ThreadPoolExecutor to manage multithreading
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit tasks for each chunk to the api
-        future_to_chunk = {
-            executor.submit(
-                get_timeseries_chunk,
-                ts_id,
-                office_id,
-                unit,
-                datum,
-                chunk_start,
-                chunk_end,
-                page_size,
-                version_date,
-                trim,
-            ): (chunk_start, chunk_end)
-            for chunk_start, chunk_end in chunks
-        }
+        for chunk_start, chunk_end in chunks:
+            params["begin"] = chunk_start.isoformat() if chunk_start else None
+            params["end"] = chunk_end.isoformat() if chunk_end else None
+            future_to_chunk = {
+                executor.submit(api.get_with_paging, selector, endpoint, params)
+            }
 
         # Process completed threads as they finish
         for future in concurrent.futures.as_completed(future_to_chunk):
             try:
                 # Retrieve the result of the completed future
-                result = future.result()
-                results.append(result)
+                response = future.result()
+                results.append(Data(response, selector=selector))
             except Exception as e:
                 # Log or handle any errors that occur during execution
                 chunk_start, chunk_end = future_to_chunk[future]
@@ -191,44 +178,6 @@ def fetch_timeseries_chunks(
                     f"ERROR: Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
                 )
     return results
-
-
-def get_timeseries_chunk(
-    ts_id: str,
-    office_id: str,
-    unit: Optional[str] = "EN",
-    datum: Optional[str] = None,
-    begin: Optional[datetime] = None,
-    end: Optional[datetime] = None,
-    page_size: Optional[int] = 300000,
-    version_date: Optional[datetime] = None,
-    trim: Optional[bool] = True,
-) -> Data:
-
-    # creates the dataframe from the timeseries data
-    endpoint = "timeseries"
-    if begin and not isinstance(begin, datetime):
-        raise ValueError("begin needs to be in datetime")
-    if end and not isinstance(end, datetime):
-        raise ValueError("end needs to be in datetime")
-    if version_date and not isinstance(version_date, datetime):
-        raise ValueError("version_date needs to be in datetime")
-    params = {
-        "office": office_id,
-        "name": ts_id,
-        "unit": unit,
-        "datum": datum,
-        "begin": begin.isoformat() if begin else None,
-        "end": end.isoformat() if end else None,
-        "page-size": page_size,
-        "page": None,
-        "version-date": version_date.isoformat() if version_date else None,
-        "trim": trim,
-    }
-    selector = "values"
-
-    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=params)
-    return Data(response, selector=selector)
 
 
 def combine_timeseries_results(results: List[Data]) -> Data:
@@ -349,7 +298,7 @@ def get_timeseries(
     """
 
     selector = "values"
-
+    endpoint = "timeseries"
     params = {
         "office": office_id,
         "name": ts_id,
@@ -382,7 +331,7 @@ def get_timeseries(
             )
 
             response = api.get_with_paging(
-                selector=selector, endpoint="timeseries", params=params
+                selector=selector, endpoint=endpoint, params=params
             )
             return Data(response, selector=selector)
 
@@ -405,13 +354,9 @@ def get_timeseries(
         # fetch the data
         result_list = fetch_timeseries_chunks(
             chunks,
-            ts_id,
-            office_id,
-            unit,
-            datum,
-            page_size,
-            version_date,
-            trim,
+            params,
+            selector,
+            endpoint,
             max_workers,
         )
 
@@ -576,42 +521,6 @@ def chunk_timeseries_data(
     return chunk_list
 
 
-def store_timeseries_chunk(
-    data: JSON,
-    create_as_ltrs: Optional[bool] = False,
-    store_rule: Optional[str] = None,
-    override_protection: Optional[bool] = False,
-) -> None:
-    """
-    Stores a single chunk of time series data.
-
-    Parameters
-    ----------
-    chunk : list
-        A subset of time series values to be stored.
-    create_as_ltrs : bool
-        Flag indicating if timeseries should be created as Local Regular Time Series.
-    store_rule : str
-        The business rule to use when merging the incoming with existing data.
-    override_protection : bool
-        A flag to ignore the protected data quality when storing data.
-
-    Returns
-    -------
-    response
-        API response for the chunk storage.
-    """
-    endpoint = "timeseries"
-    params = {
-        "create-as-lrts": create_as_ltrs,
-        "store-rule": store_rule,
-        "override-protection": override_protection,
-    }
-
-    # Make the API call
-    return api.post(endpoint, data, params)
-
-
 def store_timeseries(
     data: JSON,
     create_as_ltrs: Optional[bool] = False,
@@ -669,7 +578,7 @@ def store_timeseries(
 
     actual_workers = min(max_workers, len(chunks))
     logging.debug(
-        f"INFO: Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
+        f"Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
     )
 
     # Store chunks concurrently
@@ -680,11 +589,10 @@ def store_timeseries(
         # Submit each chunk as a separate task to the executor
         for chunk in chunks:
             future = executor.submit(
-                store_timeseries_chunk,  # The function to execute
-                chunk,  # The chunk of data to store
-                create_as_ltrs,  # Whether to create as LRTS
-                store_rule,  # The store rule to use
-                override_protection,  # Whether to override protection
+                api.post,  # The function to execute
+                endpoint,  # The chunk of data to store
+                data,
+                params,
             )
             futures.append(future)  # Add the future to the list
 
