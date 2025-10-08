@@ -149,11 +149,11 @@ def fetch_timeseries_chunks(
     chunks: List[Tuple[datetime, datetime]],
     ts_id: str,
     office_id: str,
-    unit: str | None,
+    unit: Optional[str],
     datum: Optional[str],
-    page_size: int | None,
+    page_size: Optional[None],
     version_date: Optional[datetime],
-    trim: bool | None,
+    trim: Optional[bool],
     max_workers: int,
 ) -> List[Data]:
     # Initialize an empty list to store results
@@ -390,7 +390,7 @@ def get_timeseries(
     chunks = chunk_timeseries_time_range(begin, end, timedelta(days=max_days_per_chunk))
 
     # find max worker thread
-    max_workers = min(len(chunks), max_workers)
+    max_workers = max(min(len(chunks), max_workers), 1)
 
     # if not multithread
     if max_workers == 1 or not multithread:

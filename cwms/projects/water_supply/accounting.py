@@ -4,6 +4,7 @@
 #  Source may not be released without written approval from HEC
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
+from typing import Union
 
 
 def get_pump_accounting(
@@ -74,7 +75,7 @@ def get_pump_accounting(
 
     endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}/contracts/{contract_name}/accounting"
 
-    params: dict[str, str | int] = {
+    params: dict[str, Union[str,int]] = {
         "start": start,
         "end": end,
         "timezone": timezone,
