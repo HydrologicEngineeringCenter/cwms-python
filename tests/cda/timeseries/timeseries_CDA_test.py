@@ -179,8 +179,8 @@ def test_store_multi_timeseries_chunks_df():
         end=END_DATE_CHUNK_MULTI,
         multithread=False,
     ).df
-    df_multi1 = DF_MULTI_TIMESERIES1[["date-time", "value", "quality_code"]]
-    df_multi2 = DF_MULTI_TIMESERIES2[["date-time", "value", "quality_code"]]
+    df_multi1 = DF_MULTI_TIMESERIES1[["date-time", "value", "quality-code"]]
+    df_multi2 = DF_MULTI_TIMESERIES2[["date-time", "value", "quality-code"]]
     pdt.assert_frame_equal(
         data1, df_multi1
     ), f"Data frames do not match: original = {df_multi1.describe()}, stored = {data1.describe()}"
