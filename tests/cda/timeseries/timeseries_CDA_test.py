@@ -179,14 +179,15 @@ def test_store_multi_timeseries_chunks_df():
         end=END_DATE_CHUNK_MULTI,
         multithread=False,
     ).df
+    df_multi1 = DF_MULTI_TIMESERIES1[["date-time", "value", "quality_code"]]
+    df_multi2 = DF_MULTI_TIMESERIES2[["date-time", "value", "quality_code"]]
+    pdt.assert_frame_equal(
+        data1, df_multi1
+    ), f"Data frames do not match: original = {df_multi1.describe()}, stored = {data1.describe()}"
 
     pdt.assert_frame_equal(
-        data1, DF_MULTI_TIMESERIES1
-    ), f"Data frames do not match: original = {DF_MULTI_TIMESERIES1.describe()}, stored = {data1.describe()}"
-
-    pdt.assert_frame_equal(
-        data2, DF_MULTI_TIMESERIES2
-    ), f"Data frames do not match: original = {DF_MULTI_TIMESERIES2.describe()}, stored = {data2.describe()}"
+        data2, df_multi2
+    ), f"Data frames do not match: original = {df_multi2.describe()}, stored = {data2.describe()}"
 
 
 def test_get_multi_timeseries_chunk_df():
@@ -195,6 +196,7 @@ def test_get_multi_timeseries_chunk_df():
         office_id=TEST_OFFICE,
         begin=START_DATE_CHUNK_MULTI,
         end=END_DATE_CHUNK_MULTI,
+        melted=True,
     )
     assert df is not None, "Returned DataFrame is None"
     assert not df.empty, "Returned DataFrame is empty"
