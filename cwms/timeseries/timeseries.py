@@ -145,6 +145,16 @@ def chunk_timeseries_time_range(
     return chunks
 
 
+def get_timeseries_chunk(
+    selector: str, endpoint: str, param: Dict[str, Any], begin: datetime, end: datetime
+) -> Data:
+
+    param["begin"] = begin.isoformat() if begin else None
+    param["end"] = end.isoformat() if end else None
+    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=param)
+    return Data(response, selector=selector)
+
+
 def fetch_timeseries_chunks(
     chunks: List[Tuple[datetime, datetime]],
     params: Dict[str, Any],
@@ -152,28 +162,37 @@ def fetch_timeseries_chunks(
     endpoint: str,
     max_workers: int,
 ) -> List[Data]:
+
     # Initialize an empty list to store results
     results = []
 
     # Create a ThreadPoolExecutor to manage multithreading
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit tasks for each chunk to the api
-        for chunk_start, chunk_end in chunks:
-            params["begin"] = chunk_start.isoformat() if chunk_start else None
-            params["end"] = chunk_end.isoformat() if chunk_end else None
-            future_to_chunk = {
-                executor.submit(api.get_with_paging, selector, endpoint, params)
-            }
+        future_to_chunk = {
+            executor.submit(
+                get_timeseries_chunk,
+                selector,
+                endpoint,
+                params.copy(),
+                chunk_start,
+                chunk_end,
+            ): (chunk_start, chunk_end)
+            for chunk_start, chunk_end in chunks
+        }
 
         # Process completed threads as they finish
         for future in concurrent.futures.as_completed(future_to_chunk):
             try:
                 # Retrieve the result of the completed future
-                response = future.result()
-                results.append(Data(response, selector=selector))
+                result = future.result()
+                results.append(result)
             except Exception as e:
+                chunk_start, chunk_end = future_to_chunk[future]
                 # Log or handle any errors that occur during execution
-                logging.error(f"ERROR: Failed to fetch chunk of data from: {e}")
+                logging.error(
+                    f"ERROR: Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
+                )
     return results
 
 
@@ -434,7 +453,9 @@ def timeseries_df_to_json(
 
 
 def store_multi_timeseries_df(
-    data: pd.DataFrame, office_id: str, max_workers: Optional[int] = 30
+    data: pd.DataFrame,
+    office_id: str,
+    max_workers: Optional[int] = 30,
 ) -> None:
     def store_ts_ids(
         data: pd.DataFrame,
@@ -452,7 +473,7 @@ def store_multi_timeseries_df(
                 office_id=office_id,
                 version_date=version_date,
             )
-            store_timeseries(data=data_json)
+            store_timeseries(data=data_json, multithread=multithread)
         except Exception as e:
             print(f"Error processing {ts_id}: {e}")
         return None

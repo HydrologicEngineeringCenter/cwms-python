@@ -150,8 +150,8 @@ def test_store_multi_timeseries_df():
         }
     )
     ts.store_multi_timeseries_df(df, TEST_OFFICE)
-    data1 = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE).json
-    data2 = ts.get_timeseries(ts_id_rev_test, TEST_OFFICE).json
+    data1 = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE, multithread=False).json
+    data2 = ts.get_timeseries(ts_id_rev_test, TEST_OFFICE, multithread=False).json
     assert data1["name"] == TEST_TSID_MULTI
     assert data1["office-id"] == TEST_OFFICE
     assert data1["units"] == "ft"
@@ -164,18 +164,22 @@ def test_store_multi_timeseries_df():
 
 def test_store_multi_timeseries_chunks_df():
     # test getting multi timeseries while using the chunk method as well
-    ts.store_multi_timeseries_df(data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE)
+    ts.store_multi_timeseries_df(
+        data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE, store_multithread=True
+    )
     data1 = ts.get_timeseries(
         ts_id=TEST_TSID_MULTI1,
         office_id=TEST_OFFICE,
         begin=START_DATE_CHUNK_MULTI,
         end=END_DATE_CHUNK_MULTI,
+        multithread=False,
     ).df
     data2 = ts.get_timeseries(
         ts_id=TEST_TSID_MULTI2,
         office_id=TEST_OFFICE,
         begin=START_DATE_CHUNK_MULTI,
         end=END_DATE_CHUNK_MULTI,
+        multithread=False,
     ).df
 
     pdt.assert_frame_equal(
