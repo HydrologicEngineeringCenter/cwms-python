@@ -5,10 +5,11 @@ import pandas as pd
 import pandas.testing as pdt
 import pytest
 
+import os
 import cwms
 import cwms.timeseries.timeseries as ts
 
-TEST_OFFICE = "MVP"
+TEST_OFFICE = os.getenv("OFFICE", "MVP")
 TEST_LOCATION_ID = "pytest_group"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Test"
 TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"

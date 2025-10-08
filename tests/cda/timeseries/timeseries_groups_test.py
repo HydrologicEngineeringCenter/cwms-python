@@ -1,10 +1,11 @@
 import pandas as pd
 import pytest
 
+import os
 import cwms
 import cwms.timeseries.timeseries_group as tg
 
-TEST_OFFICE = "MVP"
+TEST_OFFICE = os.getenv("OFFICE", "MVP")
 TEST_LOCATION_ID = "pytest_group"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.test1"
 

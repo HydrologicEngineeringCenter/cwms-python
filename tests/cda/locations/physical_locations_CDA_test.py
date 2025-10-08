@@ -1,8 +1,9 @@
+import os
 import pytest
 
 import cwms.locations.physical_locations as locations
 
-TEST_OFFICE = "SPK"
+TEST_OFFICE = os.getenv("OFFICE", "SPK")
 TEST_LOCATION_ID = "pytest-loc-123"
 TEST_LATITUDE = 44.0
 TEST_LONGITUDE = -93.0

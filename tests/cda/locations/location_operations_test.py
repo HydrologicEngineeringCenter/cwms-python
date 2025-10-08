@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+import os
 import cwms
 import cwms.api
 
@@ -14,16 +15,16 @@ def test_get_location_operations():
     """
     Test the retrieval of location operations from the CWMS API.
     """
-    TEST_OFFICE = "SPK"
+    TEST_OFFICE = os.getenv("OFFICE", "SPK")
     TEST_LOCATION_ID = "pytest-loc-123"
     TEST_LATITUDE = 44.0
     TEST_LONGITUDE = -93.0
 
-    loc_cat = cwms.get_locations_catalog(office_id="SPK")
+    loc_cat = cwms.get_locations_catalog(office_id=TEST_OFFICE)
 
     assert (
         len(loc_cat.df) == 0
-    )  # Assuming no locations are present for SPK office in the test environment
+    )  # Assuming no locations are present for office in the test environment
     print(len(loc_cat.df))
     print(loc_cat.df)
 
@@ -45,8 +46,8 @@ def test_get_location_operations():
         }
     )
 
-    loc_cat = cwms.get_locations_catalog(office_id="SPK")
+    loc_cat = cwms.get_locations_catalog(office_id=TEST_OFFICE)
 
-    # assert(len(loc_cat.df)==0)  # Assuming no locations are present for SPK office in the test environment
+    # assert(len(loc_cat.df)==0)  # Assuming no locations are present for office in the test environment
     print(len(loc_cat.df))
     print(loc_cat.df)
