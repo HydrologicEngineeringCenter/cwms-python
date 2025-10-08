@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 import cwms.locations.physical_locations as locations

@@ -1,7 +1,8 @@
+import os
+
 import pandas as pd
 import pytest
 
-import os
 import cwms
 import cwms.timeseries.timeseries_group as tg
 

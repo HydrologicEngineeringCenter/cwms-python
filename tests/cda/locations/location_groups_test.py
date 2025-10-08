@@ -1,7 +1,8 @@
+import os
+
 import pandas as pd
 import pytest
 
-import os
 import cwms
 import cwms.locations.location_groups as lg
 
