@@ -151,7 +151,7 @@ def fetch_timeseries_chunks(
     office_id: str,
     unit: Optional[str],
     datum: Optional[str],
-    page_size: Optional[None],
+    page_size: Optional[int],
     version_date: Optional[datetime],
     trim: Optional[bool],
     max_workers: int,
