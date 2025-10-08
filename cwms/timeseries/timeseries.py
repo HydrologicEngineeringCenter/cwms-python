@@ -147,7 +147,7 @@ def chunk_timeseries_time_range(
 
 def fetch_timeseries_chunks(
     chunks: List[Tuple[datetime, datetime]],
-    params: dict,
+    params: Dict[str, Any],
     selector: str,
     endpoint: str,
     max_workers: int,
@@ -173,10 +173,7 @@ def fetch_timeseries_chunks(
                 results.append(Data(response, selector=selector))
             except Exception as e:
                 # Log or handle any errors that occur during execution
-                chunk_start, chunk_end = future_to_chunk[future]
-                logging.error(
-                    f"ERROR: Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
-                )
+                logging.error(f"ERROR: Failed to fetch chunk of data from: {e}")
     return results
 
 
