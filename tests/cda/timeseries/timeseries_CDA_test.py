@@ -200,12 +200,6 @@ def test_get_multi_timeseries_chunk_df():
     )
     assert df is not None, "Returned DataFrame is None"
     assert not df.empty, "Returned DataFrame is empty"
-    assert any(
-        TEST_TSID_MULTI1 in str(col) for col in df.columns
-    ), f"{TEST_TSID_MULTI1} not found in DataFrame columns"
-    assert any(
-        TEST_TSID_MULTI2 in str(col) for col in df.columns
-    ), f"{TEST_TSID_MULTI2} not found in DataFrame columns"
 
     pdt.assert_frame_equal(
         df, DF_MULTI_TIMESERIES
