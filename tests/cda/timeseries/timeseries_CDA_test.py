@@ -164,9 +164,7 @@ def test_store_multi_timeseries_df():
 
 def test_store_multi_timeseries_chunks_df():
     # test getting multi timeseries while using the chunk method as well
-    ts.store_multi_timeseries_df(
-        data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE, store_multithread=True
-    )
+    ts.store_multi_timeseries_df(data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE)
     data1 = ts.get_timeseries(
         ts_id=TEST_TSID_MULTI1,
         office_id=TEST_OFFICE,
