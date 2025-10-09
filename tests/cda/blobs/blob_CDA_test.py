@@ -1,8 +1,6 @@
 # tests/test_blob.py
 from __future__ import annotations
 
-import base64
-import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -11,8 +9,7 @@ import pytest
 
 import cwms
 
-# Default to MVP office if not otherwise specified
-TEST_OFFICE = os.getenv("OFFICE", "MVP")
+TEST_OFFICE = "MVP"
 TEST_BLOB_ID = "PYTEST_BLOB_ALPHA"
 TEST_BLOB_UPDATED_ID = TEST_BLOB_ID  # keeping same id; update modifies fields
 TEST_MEDIA_TYPE = "text/plain"
@@ -22,20 +19,6 @@ TEST_TEXT = "Hello from pytest @ " + datetime.now(timezone.utc).isoformat(
     timespec="seconds"
 )
 TEST_TEXT_UPDATED = TEST_TEXT + " (edited)"
-
-
-@pytest.fixture(scope="module", autouse=True)
-def init_session_if_env():
-    """
-    If the environment provides credentials, initialize a CWMS API session.
-    Tests will still call cwms.* regardless; this just helps local runs.
-    """
-    api_root = os.getenv("CDA_API_ROOT")
-    api_key = os.getenv("CDA_API_KEY")
-    
-    if api_root and api_key:
-        cwms.api.init_session(api_root=api_root, api_key="apikey " + api_key)
-    yield
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -53,7 +36,7 @@ def ensure_clean_slate():
 
 
 @pytest.fixture(autouse=True)
-def announce():
+def init_session(request):
     print("Initializing CWMS API session for blob tests...")
 
 
