@@ -148,7 +148,6 @@ def chunk_timeseries_time_range(
 def get_timeseries_chunk(
     selector: str, endpoint: str, param: Dict[str, Any], begin: datetime, end: datetime
 ) -> Data:
-
     param["begin"] = begin.isoformat() if begin else None
     param["end"] = end.isoformat() if end else None
     response = api.get_with_paging(selector=selector, endpoint=endpoint, params=param)
@@ -162,7 +161,6 @@ def fetch_timeseries_chunks(
     endpoint: str,
     max_workers: int,
 ) -> List[Data]:
-
     # Initialize an empty list to store results
     results = []
 
@@ -191,7 +189,7 @@ def fetch_timeseries_chunks(
                 chunk_start, chunk_end = future_to_chunk[future]
                 # Log or handle any errors that occur during execution
                 logging.error(
-                    f"ERROR: Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
+                    f"Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
                 )
     return results
 
