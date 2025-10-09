@@ -6,7 +6,7 @@ import pytest
 import cwms
 import cwms.locations.location_groups as lg
 
-TEST_OFFICE = os.getenv("OFFICE", "MVP")
+TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group"
 
 
