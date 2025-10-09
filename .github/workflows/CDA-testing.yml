@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, githubAction-testing ]
+    branches: [main, githubAction-testing]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: '3.9.X'
 
       # Unlike the code-check workflow, this job requires the dev dependencies to be
       # installed to make sure we have the necessary, tools, stub files, etc.

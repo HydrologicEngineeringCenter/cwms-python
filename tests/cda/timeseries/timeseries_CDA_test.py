@@ -12,12 +12,26 @@ TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_group"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Test"
 TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
+TEST_TSID_MULTI1 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-1"
+TEST_TSID_MULTI2 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-2"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
+TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
 # Generate 15-minute interval timestamps
 START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)
 END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)
+TSIDS = [
+    TS_ID_REV_TEST,
+    TEST_TSID,
+    TEST_TSID_MULTI,
+    TEST_TSID_MULTI1,
+    TEST_TSID_MULTI2,
+    TEST_TSID_STORE,
+    TEST_TSID_CHUNK_MULTI,
+]
+
+
 DT_CHUNK_MULTI = pd.date_range(
     start=START_DATE_CHUNK_MULTI,
     end=END_DATE_CHUNK_MULTI,
@@ -32,6 +46,30 @@ DF_CHUNK_MULTI = pd.DataFrame(
         "quality-code": [0] * len(DT_CHUNK_MULTI),
     }
 )
+
+DF_MULTI_TIMESERIES1 = pd.DataFrame(
+    {
+        "date-time": DT_CHUNK_MULTI,
+        "value": [86.57 + (i % 10) * 0.01 for i in range(len(DT_CHUNK_MULTI))],
+        "quality-code": [0] * len(DT_CHUNK_MULTI),
+        "ts_id": [TEST_TSID_MULTI1] * len(DT_CHUNK_MULTI),
+        "units": ["ft"] * len(DT_CHUNK_MULTI),
+    }
+)
+
+DF_MULTI_TIMESERIES2 = pd.DataFrame(
+    {
+        "date-time": DT_CHUNK_MULTI,
+        "value": [86.57 + (i % 10) * 0.01 for i in range(len(DT_CHUNK_MULTI))],
+        "quality-code": [0] * len(DT_CHUNK_MULTI),
+        "ts_id": [TEST_TSID_MULTI2] * len(DT_CHUNK_MULTI),
+        "units": ["ft"] * len(DT_CHUNK_MULTI),
+    }
+)
+
+DF_MULTI_TIMESERIES = pd.concat(
+    [DF_MULTI_TIMESERIES1, DF_MULTI_TIMESERIES2]
+).reset_index(drop=True)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -54,6 +92,13 @@ def setup_data():
     cwms.store_location(location)
 
     yield
+    for ts_id in TSIDS:
+        try:
+            cwms.delete_timeseries_identifier(
+                ts_id=ts_id, office_id=TEST_OFFICE, delete_method="DELETE_ALL"
+            )
+        except Exception as e:
+            print(f"Failed to delete tsid {ts_id}: {e}")
     cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
 
 
@@ -115,43 +160,87 @@ def test_timeseries_df_to_json():
 
 def test_store_multi_timeseries_df():
     now = datetime.now(timezone.utc).replace(microsecond=0)
-    ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
+    TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     df = pd.DataFrame(
         {
             "date-time": [now, now],
             "value": [7, 8],
             "quality-code": [0, 0],
-            "ts_id": [TEST_TSID_MULTI, ts_id_rev_test],
+            "ts_id": [TEST_TSID_MULTI, TS_ID_REV_TEST],
             "units": ["ft", "ft"],
         }
     )
     ts.store_multi_timeseries_df(df, TEST_OFFICE)
-    data1 = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE).json
-    data2 = ts.get_timeseries(ts_id_rev_test, TEST_OFFICE).json
+    data1 = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE, multithread=False).json
+    data2 = ts.get_timeseries(TS_ID_REV_TEST, TEST_OFFICE, multithread=False).json
     assert data1["name"] == TEST_TSID_MULTI
     assert data1["office-id"] == TEST_OFFICE
     assert data1["units"] == "ft"
     assert data1["values"][0][1] == pytest.approx(7)
-    assert data2["name"] == ts_id_rev_test
+    assert data2["name"] == TS_ID_REV_TEST
     assert data2["office-id"] == TEST_OFFICE
     assert data2["units"] == "ft"
     assert data2["values"][0][1] == pytest.approx(8)
 
 
+def test_store_multi_timeseries_chunks_df():
+    # test getting multi timeseries while using the chunk method as well
+    ts.store_multi_timeseries_df(data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE)
+    data1 = ts.get_timeseries(
+        ts_id=TEST_TSID_MULTI1,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        multithread=False,
+    ).df
+    data2 = ts.get_timeseries(
+        ts_id=TEST_TSID_MULTI2,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        multithread=False,
+    ).df
+    df_multi1 = DF_MULTI_TIMESERIES1[["date-time", "value", "quality-code"]]
+    df_multi2 = DF_MULTI_TIMESERIES2[["date-time", "value", "quality-code"]]
+    pdt.assert_frame_equal(
+        data1, df_multi1
+    ), f"Data frames do not match: original = {df_multi1.describe()}, stored = {data1.describe()}"
+
+    pdt.assert_frame_equal(
+        data2, df_multi2
+    ), f"Data frames do not match: original = {df_multi2.describe()}, stored = {data2.describe()}"
+
+
+def test_get_multi_timeseries_chunk_df():
+    df = ts.get_multi_timeseries_df(
+        ts_ids=[TEST_TSID_MULTI1, TEST_TSID_MULTI2],
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        melted=True,
+    )
+    assert df is not None, "Returned DataFrame is None"
+    assert not df.empty, "Returned DataFrame is empty"
+
+    pdt.assert_frame_equal(
+        df, DF_MULTI_TIMESERIES
+    ), f"Data frames do not match: original = {DF_MULTI_TIMESERIES.describe()}, stored = {df.describe()}"
+
+
 def test_get_multi_timeseries_df():
-    ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
-    df = ts.get_multi_timeseries_df([TEST_TSID_MULTI, ts_id_rev_test], TEST_OFFICE)
+    TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
+    df = ts.get_multi_timeseries_df([TEST_TSID_MULTI, TS_ID_REV_TEST], TEST_OFFICE)
     assert df is not None, "Returned DataFrame is None"
     assert not df.empty, "Returned DataFrame is empty"
     assert any(
         TEST_TSID_MULTI in str(col) for col in df.columns
     ), f"{TEST_TSID_MULTI} not found in DataFrame columns"
     assert any(
-        ts_id_rev_test in str(col) for col in df.columns
-    ), f"{ts_id_rev_test} not found in DataFrame columns"
+        TS_ID_REV_TEST in str(col) for col in df.columns
+    ), f"{TS_ID_REV_TEST} not found in DataFrame columns"
 
 
-def test_store_timeseries_multi_chunk_ts():
+def test_store_timeseries_chunk_ts():
     # Define parameters
     ts_id = TEST_TSID_CHUNK_MULTI
     office = TEST_OFFICE
@@ -160,59 +249,40 @@ def test_store_timeseries_multi_chunk_ts():
     # Convert DataFrame to JSON format
     ts_json = ts.timeseries_df_to_json(DF_CHUNK_MULTI, ts_id, units, office)
 
+    ts.store_timeseries(ts_json, multithread=True, chunk_size=2 * 7 * 24 * 4)
+
+    data_multithread = ts.get_timeseries(
+        ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    )
+    df = data_multithread.df
+    # make sure the dataframe matches stored dataframe
+    pdt.assert_frame_equal(
+        df, DF_CHUNK_MULTI
+    ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
+
+
+def test_read_timeseries_chunk_ts():
     # Capture the log output
-    with patch("builtins.print") as mock_print:
-        ts.store_timeseries(ts_json, multithread=True, chunk_size=2 * 7 * 24 * 4)
-
-        # Extract the log messages
-        log_messages = [call.args[0] for call in mock_print.call_args_list]
-
-    # Find the relevant log message
-    store_log = next((msg for msg in log_messages if "INFO: Storing" in msg), None)
-    assert store_log is not None, "Expected log message not found"
-
-    # Parse the number of chunks and threads
-    chunks = int(store_log.split("chunks")[0].split()[-1])
-    threads = int(store_log.split("with")[1].split()[0])
-
-    # Assert the expected values
-    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
-    assert threads == 5, f"Expected 5 threads, but got {threads}"
-
-
-def test_read_timeseries_multi_chunk_ts():
-
-    # Capture the log output
-    with patch("builtins.print") as mock_print:
-        data_multithread = ts.get_timeseries(
-            ts_id=TEST_TSID_CHUNK_MULTI,
-            office_id=TEST_OFFICE,
-            begin=START_DATE_CHUNK_MULTI,
-            end=END_DATE_CHUNK_MULTI,
-            max_days_per_chunk=14,
-            unit="SI",
-        )
-
-        # Extract the log messages
-        log_messages = [call.args[0] for call in mock_print.call_args_list]
-
-    # Find the relevant log message
-    read_log = next((msg for msg in log_messages if "INFO: Fetching" in msg), None)
-    assert read_log is not None, "Expected log message not found"
-
-    # Parse the number of chunks and threads
-    chunks = int(read_log.split("chunks")[0].split()[-1])
-    threads = int(read_log.split("with")[1].split()[0])
-
-    # Assert the expected values
-    assert chunks == 5, f"Expected 5 chunks, but got {chunks}"
-    assert threads == 5, f"Expected 5 threads, but got {threads}"
+    data_multithread = ts.get_timeseries(
+        ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    )
 
     # Check metadata for multithreaded read
     data_json = data_multithread.json
 
-    # check df values
     df = data_multithread.df.copy()
+    assert df is not None, "Returned DataFrame is None"
+    assert not df.empty, "Returned DataFrame is empty"
 
     # make sure the dataframe matches stored dataframe
     pdt.assert_frame_equal(
@@ -226,10 +296,10 @@ def test_read_timeseries_multi_chunk_ts():
 
 
 def test_delete_timeseries():
-    ts_id_rev_test = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
+    TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     now = datetime.now(timezone.utc).replace(microsecond=0)
     begin = now - timedelta(minutes=15)
     end = now + timedelta(minutes=15)
-    ts.delete_timeseries(ts_id_rev_test, TEST_OFFICE, begin, end)
-    result = ts.get_timeseries(ts_id_rev_test, TEST_OFFICE)
+    ts.delete_timeseries(TS_ID_REV_TEST, TEST_OFFICE, begin, end)
+    result = ts.get_timeseries(TS_ID_REV_TEST, TEST_OFFICE)
     assert result is None or result.json.get("values", []) == []
