@@ -132,6 +132,8 @@ def init_session(
 
     global SESSION
     if api_root:
+        # Ensure the API_ROOT ends with a single slash
+        api_root = api_root.rstrip("/") + "/"
         logging.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
         adapter = adapters.HTTPAdapter(
