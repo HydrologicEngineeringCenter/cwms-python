@@ -61,45 +61,54 @@ def test_store_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched.json["id"] == TEST_TEMPLATE_ID
     assert fetched.json["office-id"] == TEST_OFFICE
+    assert TEST_TEMPLATE_ID in fetched.df["id"].values
+    assert TEST_OFFICE in fetched.df["office-id"].values
 
 
 def test_get_template():
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched.json["id"] == TEST_TEMPLATE_ID
     assert fetched.json["office-id"] == TEST_OFFICE
+    assert TEST_TEMPLATE_ID in fetched.df["id"].values
+    assert TEST_OFFICE in fetched.df["office-id"].values
 
 
 def test_update_template():
-    template_root = ET.fromstring(template_xml)
-    desc = template_root.find("description")
+    root = ET.fromstring(template_xml)
+    desc = root.find("description")
     if desc is None:
-        desc = ET.SubElement(template_root, "description")
+        desc = ET.SubElement(root, "description")
     desc.text = (desc.text or "") + " - updated"
 
-    updated_xml = ET.tostring(template_root, encoding="unicode", xml_declaration=True)
+    updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
     ratings_template.store_rating_template(updated_xml, fail_if_exists=False)
     updated = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert updated.json["description"].endswith(" - updated")
+    assert updated.df["description"].iloc[0].endswith(" - updated")
 
 
-# Rating specs
 def test_store_rating_spec():
     ratings_spec.store_rating_spec(spec_xml)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    data = fetched.json
-    assert data["rating-id"] == TEST_RATING_SPEC_ID
-    assert data["office-id"] == TEST_OFFICE
+    data_json = fetched.json
+    data_df = fetched.df
+    assert data_json["rating-id"] == TEST_RATING_SPEC_ID
+    assert data_json["office-id"] == TEST_OFFICE
+    assert TEST_RATING_SPEC_ID in data_df["rating-id"].values
+    assert TEST_OFFICE in data_df["office-id"].values
 
 
 def test_get_rating_spec():
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    data = fetched.json
-    assert data["rating-id"] == TEST_RATING_SPEC_ID
-    assert data["office-id"] == TEST_OFFICE
+    data_json = fetched.json
+    data_df = fetched.df
+    assert data_json["rating-id"] == TEST_RATING_SPEC_ID
+    assert data_json["office-id"] == TEST_OFFICE
+    assert TEST_RATING_SPEC_ID in data_df["rating-id"].values
+    assert TEST_OFFICE in data_df["office-id"].values
 
 
 def test_update_rating_spec():
-    # Update description in XML
     desc = spec_root.find("description")
     if desc is None:
         desc = ET.SubElement(spec_root, "description")
@@ -108,8 +117,10 @@ def test_update_rating_spec():
 
     ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    data = fetched.json
-    assert data["description"].endswith(" - updated")
+    data_json = fetched.json
+    data_df = fetched.df
+    assert data_json["description"].endswith(" - updated")
+    assert data_df["description"].iloc[0].endswith(" - updated")
 
 
 def test_delete_rating_spec():
