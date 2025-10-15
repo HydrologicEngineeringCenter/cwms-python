@@ -86,21 +86,16 @@ def test_update_template():
 def test_store_rating_spec():
     ratings_spec.store_rating_spec(spec_xml)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    # Parse XML from the Data object
-    xml_string = getattr(fetched, "raw", None) or getattr(fetched, "body", None)
-    assert xml_string, "Could not find XML string in fetched Data object"
-    root = ET.fromstring(xml_string)
-    assert get_xml_text(root, "rating-spec-id") == TEST_RATING_SPEC_ID
-    assert root.get("office-id") == TEST_OFFICE
+    data = fetched.json
+    assert data["rating-id"] == TEST_RATING_SPEC_ID
+    assert data["office-id"] == TEST_OFFICE
 
 
 def test_get_rating_spec():
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    xml_string = getattr(fetched, "raw", None) or getattr(fetched, "body", None)
-    assert xml_string, "Could not find XML string in fetched Data object"
-    root = ET.fromstring(xml_string)
-    assert get_xml_text(root, "rating-spec-id") == TEST_RATING_SPEC_ID
-    assert root.get("office-id") == TEST_OFFICE
+    data = fetched.json
+    assert data["rating-id"] == TEST_RATING_SPEC_ID
+    assert data["office-id"] == TEST_OFFICE
 
 
 def test_update_rating_spec():
@@ -113,10 +108,8 @@ def test_update_rating_spec():
 
     ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
-    xml_string = getattr(fetched, "raw", None) or getattr(fetched, "body", None)
-    assert xml_string, "Could not find XML string in fetched Data object"
-    root = ET.fromstring(xml_string)
-    assert get_xml_text(root, "description").endswith(" - updated")
+    data = fetched.json
+    assert data["description"].endswith(" - updated")
 
 
 def test_delete_rating_spec():
