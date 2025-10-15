@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -106,9 +107,8 @@ def test_location_group_df_to_json():
         {
             "location-id": TEST_LOCATION_ID,
             "office-id": TEST_OFFICE,
-            "alias-id": "",
-            "attribute": "",
-            "ref-location-id": "",
+            "alias-id": np.nan,
+            "attribute": np.nan,
         }
     )
 
