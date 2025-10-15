@@ -22,10 +22,15 @@ def test_session_init_api_root():
     """Verify that the root URL for the session can be set."""
 
     # Initialize the session with an alternate root URL.
-    session = init_session(api_root="https://example.com")
+    session = init_session(api_root="https://example.com/cwms-data")
 
-    # The URL should be set on the session.
-    assert session.base_url == "https://example.com"
+    # Confirm that if a user does not specify a trailing slash, that one is added.
+    assert session.base_url == "https://example.com/cwms-data/"
+    assert "Authorization" not in session.headers
+
+    # Confirm if a user adds too many trailing slashes, that only one is kept.
+    session = init_session(api_root="https://example.com/cwms-data//")
+    assert session.base_url == "https://example.com/cwms-data/"
     assert "Authorization" not in session.headers
 
 
@@ -33,10 +38,10 @@ def test_session_init_api_key():
     """Verify that the authentication key for the session can be set."""
 
     # Initialize a session with both an alternate root URL and an authentication key.
-    session = init_session(api_root="https://example.com", api_key="API_AUTH_KEY")
+    session = init_session(api_root="https://example.com/", api_key="API_AUTH_KEY")
 
     # Both the URL and the auth key should be set on the session.
-    assert session.base_url == "https://example.com"
+    assert session.base_url == "https://example.com/"
     assert session.headers["Authorization"] == "apikey API_AUTH_KEY"
 
 
