@@ -136,7 +136,7 @@ def timeseries_group_df_to_json(
     # Replace NaN with None for optional columns
     for column in optional_columns:
         if column in df.columns:
-            data[column] = df[column].where(pd.notnull(df[column]), None)
+            df[column] = df[column].where(pd.notnull(df[column]), None)
 
     # Build the list of time-series entries
     assigned_time_series = df.apply(
