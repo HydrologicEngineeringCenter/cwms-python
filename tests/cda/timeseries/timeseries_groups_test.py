@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -98,7 +99,14 @@ def test_get_timeseries_groups():
 
 def test_timeseries_group_df_to_json():
     data = []
-    data.append({"timeseries-id": TEST_TSID, "office-id": TEST_OFFICE, "alias": ""})
+    data.append(
+        {
+            "timeseries-id": TEST_TSID,
+            "office-id": TEST_OFFICE,
+            "alias-id": np.nan,
+            "attribute": np.nan,
+        }
+    )
 
     # Create the pandas DataFrame
     df = pd.DataFrame(data)
