@@ -13,7 +13,7 @@ from cwms.cwms_types import JSON, Data
 
 
 def get_location_levels(
-    level_id_mask: str = "*",
+    level_id_mask: Optional[str] = None,
     office_id: Optional[str] = None,
     unit: Optional[str] = None,
     datum: Optional[str] = None,
@@ -58,13 +58,13 @@ def get_location_levels(
         "level-id-mask": level_id_mask,
         "unit": unit,
         "datum": datum,
-        "begin": begin.isoformat() if begin else "",
-        "end": end.isoformat() if end else "",
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
         "page": page,
         "page-size": page_size,
     }
-    response = api.get(endpoint, params)
-    return Data(response)
+    response = api.get(endpoint=endpoint, params=params)
+    return Data(json=response, selector="levels")
 
 
 def get_location_level(

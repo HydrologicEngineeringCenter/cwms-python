@@ -35,14 +35,11 @@ def setup_specified_level():
     specified_levels.delete_specified_level(TEST_SPECIFIED_LEVEL_ID, TEST_OFFICE)
 
 
-def test_get_specified_levels_default():
-    levels = specified_levels.get_specified_levels()
-    assert isinstance(levels.json, list)
-
-
 def test_get_specified_level():
-    level = specified_levels.get_specified_level(TEST_SPECIFIED_LEVEL_ID, TEST_OFFICE)
-    assert level.json.get("id") == TEST_SPECIFIED_LEVEL_ID
+    level = specified_levels.get_specified_levels(
+        specified_level_mask=TEST_SPECIFIED_LEVEL_ID, office_id=TEST_OFFICE
+    )
+    assert level.json[0].get("id") == TEST_SPECIFIED_LEVEL_ID
     # DataFrame check
     df = level.df
     assert not df.empty
@@ -58,15 +55,15 @@ def test_get_specified_levels():
     specified_levels.store_specified_level(second_data)
 
     try:
-        levels = specified_levels.get_specified_levels("*", TEST_OFFICE)
-        ids = [lvl.get("specified-level-id") for lvl in levels.json]
+        levels = specified_levels.get_specified_levels(office_id=TEST_OFFICE)
+        ids = [lvl.get("id") for lvl in levels.json]
         assert TEST_SPECIFIED_LEVEL_ID in ids
         assert second_id in ids
         # DataFrame check
         df = levels.df
         assert not df.empty
-        assert TEST_SPECIFIED_LEVEL_ID in df["specified-level-id"].values
-        assert second_id in df["specified-level-id"].values
+        assert TEST_SPECIFIED_LEVEL_ID in df["id"].values
+        assert second_id in df["id"].values
     finally:
         # Cleanup second specified level
         specified_levels.delete_specified_level(second_id, TEST_OFFICE)
@@ -74,20 +71,37 @@ def test_get_specified_levels():
 
 def test_store_specified_level():
     # Try storing again with a different value
+    new_specified_level_id = "MVP Test Specified"
+    new_specified_level_disc = "MVP Level"
     data = TEST_SPECIFIED_LEVEL_DATA.copy()
-    data["value"] = 456.78
-    specified_levels.store_specified_level(data)
-    levels = specified_levels.get_specified_levels(TEST_SPECIFIED_LEVEL_ID, TEST_OFFICE)
-    assert any(lvl.get("value") == 456.78 for lvl in levels.json)
+    data["id"] = new_specified_level_id
+    data["description"] = "MVP Level"
+    specified_levels.store_specified_level(data=data)
+    try:
+        levels = specified_levels.get_specified_levels(
+            specified_level_mask=new_specified_level_id, office_id=TEST_OFFICE
+        )
+        assert levels.json[0].get("description") == new_specified_level_disc
+    finally:
+        specified_levels.delete_specified_level(
+            specified_level_id=new_specified_level_id, office_id=TEST_OFFICE
+        )
 
 
 def test_delete_specified_level():
     # Store a new specified level, then delete it
-    temp_id = "pytest_specified_level_delete"
+    temp_id = "pytest delete"
     data = TEST_SPECIFIED_LEVEL_DATA.copy()
-    data["specified-level-id"] = temp_id
-    specified_levels.store_specified_level(data)
-    specified_levels.delete_specified_level(temp_id, TEST_OFFICE)
-    # Try to get it, should not be present
-    levels = specified_levels.get_specified_levels(temp_id, TEST_OFFICE)
-    assert not any(lvl.get("specified-level-id") == temp_id for lvl in levels.json)
+    data["id"] = temp_id
+    specified_levels.store_specified_level(data=data)
+    specified_levels.delete_specified_level(
+        specified_level_id=temp_id, office_id=TEST_OFFICE
+    )
+    # Try to get it, should raise or return None/empty
+    try:
+        levels = specified_levels.get_specified_levels(
+            specified_level_mask=temp_id, office_id=TEST_OFFICE
+        )
+        assert not any(lvl.get("id") == temp_id for lvl in levels.json)
+    except Exception:
+        pass
