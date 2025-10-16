@@ -23,7 +23,6 @@ TEST_OFFICE = TEST_LEVEL_DATA["office-id"]
 TEST_UNIT = "SI"
 TEST_DATUM = "NAVD88"
 TEST_EFFECTIVE_DATE = pd.to_datetime(TEST_LEVEL_DATA["level-date"])
-# datetime.now(timezone.utc)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -77,8 +76,6 @@ def test_get_loc_level():
 
 
 def test_get_loc_levels():
-    # begin = TEST_EFFECTIVE_DATE - timedelta(days=1)
-    # end = TEST_EFFECTIVE_DATE + timedelta(days=1)
     levels = location_levels.get_location_levels(
         office_id=TEST_OFFICE,
     )
