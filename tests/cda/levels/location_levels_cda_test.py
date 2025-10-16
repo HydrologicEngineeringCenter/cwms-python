@@ -66,7 +66,6 @@ def test_get_loc_level():
         level_id=TEST_LEVEL_ID,
         office_id=TEST_OFFICE,
         effective_date=TEST_EFFECTIVE_DATE,
-        # unit=TEST_UNIT
     )
     assert level.json.get("location-level-id") == TEST_LEVEL_ID
     # Test DataFrame output
