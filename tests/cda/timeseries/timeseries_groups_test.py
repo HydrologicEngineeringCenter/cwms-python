@@ -71,8 +71,8 @@ def setup_data():
 
 
 @pytest.fixture(autouse=True)
-def init_session(request):
-    print("Initializing CWMS API session for locations operations test...")
+def init_session():
+    print("Initializing CWMS API session for timeseries groups tests...")
 
 
 def test_store_timeseries_group():
