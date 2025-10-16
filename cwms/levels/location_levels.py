@@ -169,6 +169,35 @@ def delete_location_level(
     return api.delete(endpoint, params)
 
 
+def update_location_level(
+    data: JSON, level_id: str, effective_date: Optional[datetime] = None
+) -> None:
+    """
+    Parameters
+    ----------
+    data : dict
+        The JSON data dictionary containing the updated location level information.
+    level_id : str
+        The ID of the location level to be updated.
+    effective_date : datetime, optional
+        The effective date of the location level to be updated.
+        If the datetime has a timezone it will be used, otherwise it is assumed to be in UTC.
+
+    """
+    if data is None:
+        raise ValueError(
+            "Cannot update a location level without a JSON data dictionary"
+        )
+    if level_id is None:
+        raise ValueError("Cannot update a location level without an id")
+    endpoint = f"levels/{level_id}"
+
+    params = {
+        "effective-date": (effective_date.isoformat() if effective_date else None),
+    }
+    return api.patch(endpoint, data, params)
+
+
 def get_level_as_timeseries(
     location_level_id: str,
     office_id: str,
