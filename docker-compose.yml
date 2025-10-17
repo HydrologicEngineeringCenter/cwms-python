@@ -108,6 +108,7 @@ services:
       - KC_PROXY=none
       - KC_HTTP_ENABLED=true
       - KC_HTTP_RELATIVE_PATH=/auth
+      - KC_HOSTNAME=localhost
       - KC_LOG_LEVEL=DEBUG
     volumes:
       - ./compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
