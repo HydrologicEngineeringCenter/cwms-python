@@ -58,26 +58,26 @@ def _find_blob_row(office: str, blob_id: str) -> Optional[pd.Series]:
     return match.iloc[0] if not match.empty else None
 
 
-def test_store_blob_xcel():
+def test_store_blob_excel():
     excel_file_path = Path(__file__).parent.parent / "resources" / "blob_test.xlsx"
     with open(excel_file_path, "rb") as f:
         file_data = f.read()
     mime_type, _ = mimetypes.guess_type(excel_file_path)
-    xcel_blob_id = "TEST_BLOB_XCEL"
+    excel_blob_id = "TEST_BLOB_EXCEL"
     payload = {
         "office-id": TEST_OFFICE,
-        "id": xcel_blob_id,
+        "id": excel_blob_id,
         "description": "testing excel file",
         "media-type-id": mime_type,
         "value": base64.b64encode(file_data).decode("utf-8"),
     }
     blobs.store_blobs(data=payload)
     try:
-        row = _find_blob_row(TEST_OFFICE, xcel_blob_id)
+        row = _find_blob_row(TEST_OFFICE, excel_blob_id)
         assert row is not None, "Stored blob not found in listing"
     finally:
-        # Cleanup second specified level
-        blobs.delete_blob(blob_id=xcel_blob_id, office_id=TEST_OFFICE)
+        # Cleanup excel
+        blobs.delete_blob(blob_id=excel_blob_id, office_id=TEST_OFFICE)
 
 
 def test_store_blob():
