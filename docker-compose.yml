@@ -89,7 +89,7 @@ services:
       - "traefik.http.routers.data-api.entryPoints=web"
 
   auth:
-    image: quay.io/keycloak/keycloak:19.0.1
+    image: quay.io/keycloak/keycloak:25.0.1
     command: ["start-dev", "--features-disabled=admin2","--import-realm"]
     healthcheck:
       test: "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit 1"
