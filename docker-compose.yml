@@ -90,9 +90,12 @@ services:
 
   auth:
     image: quay.io/keycloak/keycloak:19.0.1
-    command: ["start-dev", "--features-disabled=admin2","--import-realm"]
+    command: 
+      - "/opt/keycloak/bin/kc.sh"
+      - "start-dev"
+      - "--import-realm"
     healthcheck:
-      test: "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit 1"
+      test: ["CMD-SHELL", "/usr/bin/curl -If localhost:${APP_PORT:-8081}/auth/health/ready || exit 1"]
       interval: 5s
       timeout: 1s
       retries: 100
@@ -110,6 +113,7 @@ services:
       - KC_HTTP_RELATIVE_PATH=/auth
       - KC_HOSTNAME=localhost
       - KC_LOG_LEVEL=DEBUG
+      - KC_DB=dev-file
     volumes:
       - ./compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
     labels:
