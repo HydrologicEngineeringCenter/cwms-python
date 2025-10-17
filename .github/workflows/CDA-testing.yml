@@ -19,7 +19,7 @@ jobs:
         
       - name: Capture auth servivce logs on failure
         if: failure()
-        run: docker-compose logs auth
+        run: docker compose logs auth
         
       - name: Set Up Python
         uses: actions/setup-python@v6
