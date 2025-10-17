@@ -16,7 +16,10 @@ jobs:
 
       - name: set up backend
         run: docker compose up --build -d
-
+        
+      - name: Capture auth servivce logs
+        run: docker-compose logs auth || true
+        
       - name: Set Up Python
         uses: actions/setup-python@v6
         with:
