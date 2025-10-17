@@ -1,13 +1,16 @@
 # tests/test_blob.py
 from __future__ import annotations
 
+import base64
+import mimetypes
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 import pytest
 
-import cwms
+import cwms.catalog.blobs as blobs
 
 TEST_OFFICE = "MVP"
 TEST_BLOB_ID = "PYTEST_BLOB_ALPHA"
@@ -25,12 +28,12 @@ TEST_TEXT_UPDATED = TEST_TEXT + " (edited)"
 def ensure_clean_slate():
     """Delete the test blob (if it exists) before/after running this module."""
     try:
-        cwms.delete_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
+        blobs.delete_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
     except Exception:
         pass
     yield
     try:
-        cwms.delete_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
+        blobs.delete_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
     except Exception:
         pass
 
@@ -44,7 +47,7 @@ def _find_blob_row(office: str, blob_id: str) -> Optional[pd.Series]:
     """
     Helper: return the row for blob_id from cwms.get_blobs(...).df if present.
     """
-    res = cwms.get_blobs(office_id=office, blob_id_like=blob_id)
+    res = blobs.get_blobs(office_id=office, blob_id_like=blob_id)
     df = res if isinstance(res, pd.DataFrame) else getattr(res, "df", None)
     if df is None or df.empty:
         return None
@@ -53,6 +56,28 @@ def _find_blob_row(office: str, blob_id: str) -> Optional[pd.Series]:
         df = df.rename(columns={"blob-id": "id"})
     match = df[df["id"].str.upper() == blob_id.upper()]
     return match.iloc[0] if not match.empty else None
+
+
+def test_store_blob_excel():
+    excel_file_path = Path(__file__).parent.parent / "resources" / "blob_test.xlsx"
+    with open(excel_file_path, "rb") as f:
+        file_data = f.read()
+    mime_type, _ = mimetypes.guess_type(excel_file_path)
+    excel_blob_id = "TEST_BLOB_EXCEL"
+    payload = {
+        "office-id": TEST_OFFICE,
+        "id": excel_blob_id,
+        "description": "testing excel file",
+        "media-type-id": mime_type,
+        "value": base64.b64encode(file_data).decode("utf-8"),
+    }
+    blobs.store_blobs(data=payload)
+    try:
+        row = _find_blob_row(TEST_OFFICE, excel_blob_id)
+        assert row is not None, "Stored blob not found in listing"
+    finally:
+        # Cleanup excel
+        blobs.delete_blob(blob_id=excel_blob_id, office_id=TEST_OFFICE)
 
 
 def test_store_blob():
@@ -64,7 +89,7 @@ def test_store_blob():
         "media-type-id": TEST_MEDIA_TYPE,
         "value": TEST_TEXT,
     }
-    cwms.store_blobs(payload, fail_if_exists=True)
+    blobs.store_blobs(payload, fail_if_exists=True)
 
     # Verify via listing metadata
     row = _find_blob_row(TEST_OFFICE, TEST_BLOB_ID)
@@ -76,14 +101,14 @@ def test_store_blob():
         assert TEST_DESC in str(row["description"])
 
     # Verify content by downloading
-    content = cwms.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
+    content = blobs.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
     assert isinstance(content, str) and content, "Empty blob content"
     assert TEST_TEXT in content
 
 
 def test_get_blob():
     # Do a simple read of the blob created in test_store_blob
-    content = cwms.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
+    content = blobs.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
     assert TEST_TEXT in content
     assert len(content) >= len(TEST_TEXT)
 
@@ -97,7 +122,7 @@ def test_update_blob():
         "media-type-id": TEST_MEDIA_TYPE,
         "value": TEST_TEXT_UPDATED,
     }
-    cwms.update_blob(update, fail_if_not_exists=True)
+    blobs.update_blob(update, fail_if_not_exists=True)
 
     # Confirm updated metadata
     row = _find_blob_row(TEST_OFFICE, TEST_BLOB_UPDATED_ID)
@@ -106,5 +131,5 @@ def test_update_blob():
         assert TEST_DESC_UPDATED in str(row["description"])
 
     # Verify new content
-    content = cwms.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_UPDATED_ID)
+    content = blobs.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_UPDATED_ID)
     assert TEST_TEXT_UPDATED in content
