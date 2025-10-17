@@ -33,7 +33,7 @@ jobs:
           
       - name: Capture auth servivce logs on failure
         if: failure()
-        run: docker compose logs auth
+        run: docker compose logs -t --tail 100 auth
         
       - name: Archive and save images to cache
         if: steps.cache-docker-images.outputs.cache-hit != 'true'
