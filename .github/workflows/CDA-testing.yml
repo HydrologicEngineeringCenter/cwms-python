@@ -30,19 +30,13 @@ jobs:
         run: |
           docker compose pull
           docker compose up --build -d
-          
-      - name: Capture auth servivce logs on failure
-        if: failure()
-        run: docker compose logs -t --tail 100 auth
         
       - name: Archive and save images to cache
         if: steps.cache-docker-images.outputs.cache-hit != 'true'
         run: |
           mkdir -p /tmp/.docker-images
-          docker image save $(docker-compose config --services | xargs docker-compose images -q) --output /tmp/.docker-images/images.tar
-          
-
-        
+          docker image save $(docker compose config --services | xargs docker compose images -q) --output /tmp/.docker-images/images.tar
+                 
       - name: Set Up Python
         uses: actions/setup-python@v6
         with:
