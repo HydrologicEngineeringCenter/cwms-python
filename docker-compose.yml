@@ -10,10 +10,9 @@ services:
       - CWMS_PASSWORD=simplecwmspasswD1
       - OFFICE_ID=HQ
       - OFFICE_EROC=s0
-    ports:
-      - "1526:1521"
+    ports: ["1526:1521"]
     healthcheck:
-      test: ["CMD","tnsping", "FREEPDB1"]
+      test: ["CMD", "tnsping", "FREEPDB1"]
       interval: 30s
       timeout: 50s
       retries: 50
@@ -32,9 +31,9 @@ services:
       - INSTALLONCE=1
       - QUIET=1
     command: >
-      sh -xc "sqlplus CWMS_20/$$CWMS_PASSWORD@$$DB_HOST_PORT$$DB_NAME @/setup_sql/users $$OFFICE_EROC"
-    volumes:
-      - ./compose_files/sql:/setup_sql:ro
+      sh -xc "sqlplus CWMS_20/$$CWMS_PASSWORD@$$DB_HOST_PORT$$DB_NAME @/setup_sql/users
+      $$OFFICE_EROC"
+    volumes: [./compose_files/sql:/setup_sql:ro]
     depends_on:
       db:
         condition: service_healthy
@@ -42,7 +41,6 @@ services:
         condition: service_healthy
       traefik:
         condition: service_healthy
-
 
   data-api:
     depends_on:
@@ -75,10 +73,9 @@ services:
       - cwms.dataapi.access.openid.altAuthUrl=http://localhost:${APP_PORT:-8082}
       - cwms.dataapi.access.openid.useAltWellKnown=true
       - cwms.dataapi.access.openid.issuer=http://localhost:${APP_PORT:-8082}/auth/realms/cwms
-    expose:
-      - 7000
+    expose: [7000]
     healthcheck:
-      test: ["CMD","/usr/bin/curl", "-I","localhost:7000/cwms-data/offices/HEC"]
+      test: ["CMD", "/usr/bin/curl", "-I", "localhost:7000/cwms-data/offices/HEC"]
       interval: 5s
       timeout: 1s
       retries: 100
@@ -90,11 +87,12 @@ services:
 
   auth:
     image: quay.io/keycloak/keycloak:19.0.1
-    command: 
-      - "start-dev"
-      - "--import-realm"
+    command: ["start-dev", "--import-realm"]
     healthcheck:
-      test: ["CMD-SHELL", "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit 1"]
+      test:
+        - "CMD-SHELL"
+        - "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit\
+          \ 1"
       interval: 5s
       timeout: 1s
       retries: 100
@@ -111,7 +109,6 @@ services:
       - KC_HTTP_ENABLED=true
       - KC_HTTP_RELATIVE_PATH=/auth
       - KC_HOSTNAME=localhost
-      - KC_LOG_LEVEL=DEBUG
       - KC_DB=dev-file
     volumes:
       - ./compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
@@ -124,17 +121,12 @@ services:
       traefik:
         condition: service_healthy
 
-
-
   # Proxy for HTTPS for OpenID
   traefik:
     image: traefik:v3.3.3
-    ports:
-      - "${APP_PORT:-8082}:80"
-    expose:
-      - "8080"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    ports: ["${APP_PORT:-8082}:80"]
+    expose: ["8080"]
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"]
     healthcheck:
       test: traefik healthcheck --ping
     command:

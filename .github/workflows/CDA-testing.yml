@@ -13,29 +13,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-      
-      # Docker image caching steps
-      - name: Cache Docker Images
-        id: cache-docker-images
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.docker-images
-          key: ${{ runner.os }}-docker-${{ hashFiles('docker-compose.yml') }}
 
-      - name: Load images from cache
-        if: steps.cache-docker-images.outputs.cache-hit == 'true'
-        run: docker load --input /tmp/.docker-images/images.tar
+      # Docker Buildx caching steps
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and cache Docker images with Buildx
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: set up backend
         run: |
           docker compose pull
           docker compose up --build -d
-        
-      - name: Archive and save images to cache
-        if: steps.cache-docker-images.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p /tmp/.docker-images
-          docker image save $(docker compose config --services | xargs docker compose images -q) --output /tmp/.docker-images/images.tar
                  
       - name: Set Up Python
         uses: actions/setup-python@v6
@@ -48,7 +46,6 @@ jobs:
         with:
           python-version: '3.9.X'
           # Poetry will handle installation and caching
-      
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
