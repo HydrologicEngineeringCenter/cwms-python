@@ -14,43 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # --- Disk Space Management ---
-      # Create a writable directory in /mnt for Docker's temporary files
-      - name: Create writable /mnt directory
-        run: |
-          sudo mkdir -p /mnt/docker-tmp
-          sudo chown -R runner:runner /mnt/docker-tmp
-
-      # --- Docker Image Caching with Compression ---
-      - name: Cache Docker images
-        id: cache-docker-images
-        uses: actions/cache@v4
-        with:
-          # Cache to the new writable directory in /mnt
-          path: /mnt/docker-tmp/docker-image-cache.tar.gz
-          key: ${{ runner.os }}-docker-images-${{ hashFiles('docker-compose.yml')
-            }}
-
-      - name: Load compressed images from cache (on cache hit)
-        if: steps.cache-docker-images.outputs.cache-hit == 'true'
-        env:
-          DOCKER_TMPDIR: /mnt/docker-tmp
-        run: |
-          gzip -dc /mnt/docker-tmp/docker-image-cache.tar.gz | docker load
-
-      - name: Pull and save compressed images (on cache miss)
-        if: steps.cache-docker-images.outputs.cache-hit != 'true'
-        env:
-          # Use the new writable directory for Docker's temporary operations
-          DOCKER_TMPDIR: /mnt/docker-tmp
-        run: |
-          docker compose pull
-          images=$(docker compose config --images)
-          docker save $images | gzip -9 > /mnt/docker-tmp/docker-image-cache.tar.gz
-
       - name: Set up backend
         run: |
-          # The images are already pulled or loaded from cache
+          docker compose pull
           docker compose up -d
 
       - name: Set Up Python
