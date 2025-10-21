@@ -34,9 +34,15 @@ jobs:
           # Poetry will handle installation and caching
       - name: Cache Python dependencies
         uses: actions/cache@v4
+        id: cache-poetry-venv
         with:
-          path: ~/.cache/pypoetry/artifacts
+          path: .venv
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+      # Install dependencies only if cache is missed
+      - name: Install dependencies
+        if: steps.cache-poetry-venv.outputs.cache-hit != 'true'
+        run: poetry install --no-root
 
       - name: Build services (docker compose)
         env:
@@ -48,12 +54,11 @@ jobs:
       - name: Per-service Buildx caching (execute Python script)
         env:
           DOCKER_BUILDKIT: 1
-        working-directory: .github/workflow_utils
         run: |
           # Install PyYAML to parse the compose file
           python -m pip install pyyaml
           # Execute the script
-          python buildx_services.py
+          python .github/workflow_utils/buildx_services.py
 
       - name: set up backend
         run: |
