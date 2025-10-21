@@ -15,41 +15,38 @@ jobs:
       - uses: actions/checkout@v5
 
       # --- Disk Space Management ---
-      # Check disk space before any operations
-      - name: Pre-cleanup disk space check
-        run: df -h
-
-      # Free up disk space to prevent "no space left" errors
-      - name: Free up disk space on runner
-        run: docker system prune -af
-
-      # Check disk space after cleanup
-      - name: Post-cleanup disk space check
-        run: df -h
+      # Create a writable directory in /mnt for Docker's temporary files
+      - name: Create writable /mnt directory
+        run: |
+          sudo mkdir -p /mnt/docker-tmp
+          sudo chown -R runner:runner /mnt/docker-tmp
 
       # --- Docker Image Caching with Compression ---
       - name: Cache Docker images
         id: cache-docker-images
         uses: actions/cache@v4
         with:
-          path: /mnt/docker-image-cache.tar.gz
+          # Cache to the new writable directory in /mnt
+          path: /mnt/docker-tmp/docker-image-cache.tar.gz
           key: ${{ runner.os }}-docker-images-${{ hashFiles('docker-compose.yml')
             }}
 
       - name: Load compressed images from cache (on cache hit)
         if: steps.cache-docker-images.outputs.cache-hit == 'true'
+        env:
+          DOCKER_TMPDIR: /mnt/docker-tmp
         run: |
-          gzip -dc /mnt/docker-image-cache.tar.gz | docker load
+          gzip -dc /mnt/docker-tmp/docker-image-cache.tar.gz | docker load
 
       - name: Pull and save compressed images (on cache miss)
         if: steps.cache-docker-images.outputs.cache-hit != 'true'
         env:
-          # Use /mnt for Docker's temporary operations
-          DOCKER_TMPDIR: /mnt
+          # Use the new writable directory for Docker's temporary operations
+          DOCKER_TMPDIR: /mnt/docker-tmp
         run: |
           docker compose pull
           images=$(docker compose config --images)
-          docker save $images | gzip -9 > /mnt/docker-image-cache.tar.gz
+          docker save $images | gzip -9 > /mnt/docker-tmp/docker-image-cache.tar.gz
 
       - name: Set up backend
         run: |
