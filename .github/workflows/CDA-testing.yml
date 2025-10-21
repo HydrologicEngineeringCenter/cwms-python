@@ -15,28 +15,30 @@ jobs:
       - uses: actions/checkout@v5
 
       # --- Docker Image Caching with Compression ---
-      - name: Pull and Cache Docker images (on cache miss)
+      - name: Pull and tag images
+        id: pull-images
+        run: |
+          # Pull images and generate cache key from their digests
+          docker compose pull
+          images_digests=$(docker compose images --quiet | sort | xargs docker inspect --format='{{.RepoDigests}}' | sort | xargs)
+          echo "cache_key=${{ runner.os }}-docker-images-$(echo "$images_digests" | md5sum | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Restore Docker images from cache
         id: cache-docker-images
         uses: actions/cache@v4
         with:
           path: docker-image-cache.tar.gz
-          key: ${{ runner.os }}-docker-images-${{ hashFiles('docker-compose.yml')
-            }}
+          key: ${{ steps.pull-images.outputs.cache_key }}
 
-      # On cache hit, load the images from the compressed cache
-      - name: Load compressed images from cache (on cache hit)
+      - name: Load compressed images (on cache hit)
         if: steps.cache-docker-images.outputs.cache-hit == 'true'
         run: |
           gzip -dc docker-image-cache.tar.gz | docker load
 
-      - name: Pull and save compressed images (on cache miss)
+      - name: Save compressed images to cache (on cache miss)
         if: steps.cache-docker-images.outputs.cache-hit != 'true'
         run: |
-          # Use docker compose pull to get images
-          docker compose pull
-          # Get the image names and save them as a single compressed tarball
           images=$(docker compose config --images)
-          echo "Saving images: $images"
           docker save $images | gzip -9 > docker-image-cache.tar.gz
 
       - name: Set up backend
