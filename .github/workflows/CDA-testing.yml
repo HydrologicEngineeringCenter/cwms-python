@@ -36,6 +36,9 @@ jobs:
             }}
 
       - name: Pull and load/save compressed images
+        env:
+          # Set Docker's temporary directory to a location with more space
+          DOCKER_TMPDIR: /mnt
         run: |
           if [ "${{ steps.cache-docker-images.outputs.cache-hit }}" == "true" ]; then
             echo "Cache hit, loading images..."
