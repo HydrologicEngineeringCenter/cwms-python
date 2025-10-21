@@ -27,28 +27,29 @@ jobs:
       - name: Post-cleanup disk space check
         run: df -h
 
-      - name: Pull and Cache Docker images
+      # --- Docker Image Caching with Compression ---
+      - name: Cache Docker images
         id: cache-docker-images
         uses: actions/cache@v4
         with:
-          path: /tmp/docker-image-cache.tar.gz
+          path: /mnt/docker-image-cache.tar.gz
           key: ${{ runner.os }}-docker-images-${{ hashFiles('docker-compose.yml')
             }}
 
-      - name: Pull and load/save compressed images
+      - name: Load compressed images from cache (on cache hit)
+        if: steps.cache-docker-images.outputs.cache-hit == 'true'
+        run: |
+          gzip -dc /mnt/docker-image-cache.tar.gz | docker load
+
+      - name: Pull and save compressed images (on cache miss)
+        if: steps.cache-docker-images.outputs.cache-hit != 'true'
         env:
-          # Set Docker's temporary directory to a location with more space
+          # Use /mnt for Docker's temporary operations
           DOCKER_TMPDIR: /mnt
         run: |
-          if [ "${{ steps.cache-docker-images.outputs.cache-hit }}" == "true" ]; then
-            echo "Cache hit, loading images..."
-            gzip -dc /tmp/docker-image-cache.tar.gz | docker load
-          else
-            echo "Cache miss, pulling and saving images..."
-            docker compose pull
-            images=$(docker compose config --images)
-            docker save $images | gzip -9 > /tmp/docker-image-cache.tar.gz
-          fi
+          docker compose pull
+          images=$(docker compose config --images)
+          docker save $images | gzip -9 > /mnt/docker-image-cache.tar.gz
 
       - name: Set up backend
         run: |
