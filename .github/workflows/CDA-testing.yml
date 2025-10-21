@@ -14,16 +14,35 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Cache Docker images
-        uses: ScribeMD/docker-cache@0.5.0
+      # --- Docker Image Caching with Compression ---
+      - name: Pull and Cache Docker images (on cache miss)
+        id: cache-docker-images
+        uses: actions/cache@v4
         with:
-          key: docker-images-${{ runner.os }}-${{ hashFiles('docker-compose.yml')
+          path: docker-image-cache.tar.gz
+          key: ${{ runner.os }}-docker-images-${{ hashFiles('docker-compose.yml')
             }}
 
-      - name: set up backend
+      # On cache hit, load the images from the compressed cache
+      - name: Load compressed images from cache (on cache hit)
+        if: steps.cache-docker-images.outputs.cache-hit == 'true'
         run: |
+          gzip -dc docker-image-cache.tar.gz | docker load
+
+      - name: Pull and save compressed images (on cache miss)
+        if: steps.cache-docker-images.outputs.cache-hit != 'true'
+        run: |
+          # Use docker compose pull to get images
           docker compose pull
-          docker compose up --build -d
+          # Get the image names and save them as a single compressed tarball
+          images=$(docker compose config --images)
+          echo "Saving images: $images"
+          docker save $images | gzip -9 > docker-image-cache.tar.gz
+
+      - name: Set up backend
+        run: |
+          # The images are already pulled or loaded from cache
+          docker compose up -d
 
       - name: Set Up Python
         uses: actions/setup-python@v6
