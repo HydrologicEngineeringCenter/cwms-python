@@ -21,20 +21,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and cache Docker images with Buildx
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: false
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: set up backend
-        run: |
-          docker compose pull
-          docker compose up --build -d
-                 
       - name: Set Up Python
         uses: actions/setup-python@v6
         with:
@@ -51,6 +37,28 @@ jobs:
         with:
           path: ~/.cache/pypoetry/artifacts
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+      - name: Build services (docker compose)
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          # Build service images using docker compose which uses each service's build.context/Dockerfile
+          docker compose build --progress=plain --pull
+
+      - name: Per-service Buildx caching (execute Python script)
+        env:
+          DOCKER_BUILDKIT: 1
+        working-directory: .github/workflow_utils
+        run: |
+          # Install PyYAML to parse the compose file
+          python -m pip install pyyaml
+          # Execute the script
+          python buildx_services.py
+
+      - name: set up backend
+        run: |
+          docker compose pull
+          docker compose up --build -d
 
       # Run pytest and generate coverage report data.
       - name: Run Tests and Check Types
