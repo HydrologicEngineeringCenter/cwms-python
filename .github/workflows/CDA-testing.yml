@@ -14,12 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Docker Buildx caching steps
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+      - name: Cache Docker images
+        uses: ScribeMD/docker-cache@0.5.0
+        with:
+          key: docker-images-${{ runner.os }}-${{ hashFiles('docker-compose.yml')
+            }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: set up backend
+        run: |
+          docker compose pull
+          docker compose up --build -d
 
       - name: Set Up Python
         uses: actions/setup-python@v6
@@ -29,8 +33,11 @@ jobs:
       # Use actions-poetry to handle installation
       - name: Install Poetry and Dependencies
         uses: abatilo/actions-poetry@v4
-        with:
-          python-version: '3.9.X'
+
+      # Set Poetry to use an in-project virtual environment
+      - name: Configure Poetry for in-project venv
+        run: poetry config virtualenvs.in-project true
+
           # Poetry will handle installation and caching
       - name: Cache Python dependencies
         uses: actions/cache@v4
@@ -43,27 +50,6 @@ jobs:
       - name: Install dependencies
         if: steps.cache-poetry-venv.outputs.cache-hit != 'true'
         run: poetry install --no-root
-
-      - name: Build services (docker compose)
-        env:
-          DOCKER_BUILDKIT: 1
-        run: |
-          # Build service images using docker compose which uses each service's build.context/Dockerfile
-          docker compose build --progress=plain --pull
-
-      - name: Per-service Buildx caching (execute Python script)
-        env:
-          DOCKER_BUILDKIT: 1
-        run: |
-          # Install PyYAML to parse the compose file
-          python -m pip install pyyaml
-          # Execute the script
-          python .github/workflow_utils/buildx_services.py
-
-      - name: set up backend
-        run: |
-          docker compose pull
-          docker compose up --build -d
 
       # Run pytest and generate coverage report data.
       - name: Run Tests and Check Types
