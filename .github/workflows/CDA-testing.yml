@@ -14,32 +14,38 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # --- Docker Image Caching with Compression ---
-      - name: Pull and tag images
-        id: pull-images
-        run: |
-          # Pull images and generate cache key from their digests
-          docker compose pull
-          images_digests=$(docker compose images --quiet | sort | xargs docker inspect --format='{{.RepoDigests}}' | sort | xargs)
-          echo "cache_key=${{ runner.os }}-docker-images-$(echo "$images_digests" | md5sum | awk '{print $1}')" >> $GITHUB_OUTPUT
+      # --- Disk Space Management ---
+      # Check disk space before any operations
+      - name: Pre-cleanup disk space check
+        run: df -h
 
-      - name: Restore Docker images from cache
+      # Free up disk space to prevent "no space left" errors
+      - name: Free up disk space on runner
+        run: docker system prune -af
+
+      # Check disk space after cleanup
+      - name: Post-cleanup disk space check
+        run: df -h
+
+      - name: Pull and Cache Docker images
         id: cache-docker-images
         uses: actions/cache@v4
         with:
-          path: docker-image-cache.tar.gz
-          key: ${{ steps.pull-images.outputs.cache_key }}
+          path: /tmp/docker-image-cache.tar.gz
+          key: ${{ runner.os }}-docker-images-${{ hashFiles('docker-compose.yml')
+            }}
 
-      - name: Load compressed images (on cache hit)
-        if: steps.cache-docker-images.outputs.cache-hit == 'true'
+      - name: Pull and load/save compressed images
         run: |
-          gzip -dc docker-image-cache.tar.gz | docker load
-
-      - name: Save compressed images to cache (on cache miss)
-        if: steps.cache-docker-images.outputs.cache-hit != 'true'
-        run: |
-          images=$(docker compose config --images)
-          docker save $images | gzip -9 > docker-image-cache.tar.gz
+          if [ "${{ steps.cache-docker-images.outputs.cache-hit }}" == "true" ]; then
+            echo "Cache hit, loading images..."
+            gzip -dc /tmp/docker-image-cache.tar.gz | docker load
+          else
+            echo "Cache miss, pulling and saving images..."
+            docker compose pull
+            images=$(docker compose config --images)
+            docker save $images | gzip -9 > /tmp/docker-image-cache.tar.gz
+          fi
 
       - name: Set up backend
         run: |
