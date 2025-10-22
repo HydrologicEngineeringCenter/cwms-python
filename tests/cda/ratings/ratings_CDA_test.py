@@ -23,17 +23,9 @@ RESOURCES = Path(__file__).parent.parent / "resources"
 TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "TestRating"
 
-# Parse template.xml to construct template ID
-template_xml = (RESOURCES / "template.xml").read_text()
-template_root = ET.fromstring(template_xml)
-parameters_id = template_root.findtext("parameters-id")
-template_version = template_root.findtext("version")
-
-TEST_TEMPLATE_ID = f"{parameters_id}.{template_version}"  # Stage;Flow.TEST
-
 # Parse spec.xml to get rating-spec-id
-spec_xml = (RESOURCES / "spec.xml").read_text()
-spec_root = ET.fromstring(spec_xml)
+SPEC_XML = (RESOURCES / "spec.xml").read_text()
+spec_root = ET.fromstring(SPEC_XML)
 
 TEST_RATING_SPEC_ID = spec_root.findtext(
     "rating-spec-id"
@@ -57,7 +49,10 @@ def init_session():
 
 
 def test_store_template():
-    ratings_template.store_rating_template(template_xml)
+    TEMPLATE_XML = (RESOURCES / "template.xml").read_text()
+    TEST_TEMPLATE_ID = "Stage;Flow.TEST"
+
+    ratings_template.store_rating_template(TEMPLATE_XML)
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched.json["id"] == TEST_TEMPLATE_ID
     assert fetched.json["office-id"] == TEST_OFFICE
@@ -66,6 +61,9 @@ def test_store_template():
 
 
 def test_get_template():
+    TEMPLATE_XML = (RESOURCES / "template.xml").read_text()
+    TEST_TEMPLATE_ID = "Stage;Flow.TEST"
+
     fetched = ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)
     assert fetched.json["id"] == TEST_TEMPLATE_ID
     assert fetched.json["office-id"] == TEST_OFFICE
@@ -74,7 +72,10 @@ def test_get_template():
 
 
 def test_update_template():
-    root = ET.fromstring(template_xml)
+    TEMPLATE_XML = (RESOURCES / "template.xml").read_text()
+    TEST_TEMPLATE_ID = "Stage;Flow.TEST"
+
+    root = ET.fromstring(TEMPLATE_XML)
     desc = root.find("description")
     if desc is None:
         desc = ET.SubElement(root, "description")
@@ -88,7 +89,7 @@ def test_update_template():
 
 
 def test_store_rating_spec():
-    ratings_spec.store_rating_spec(spec_xml)
+    ratings_spec.store_rating_spec(SPEC_XML)
     fetched = ratings_spec.get_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE)
     data_json = fetched.json
     data_df = fetched.df
@@ -130,6 +131,8 @@ def test_delete_rating_spec():
 
 
 def test_delete_template():
+    TEST_TEMPLATE_ID = "Stage;Flow.TEST"
+
     ratings_template.delete_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE, "DELETE_ALL")
     with pytest.raises(ApiError):
         ratings_template.get_rating_template(TEST_TEMPLATE_ID, TEST_OFFICE)

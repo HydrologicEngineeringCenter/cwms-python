@@ -1,9 +1,0 @@
-{
-  "office-id": "MVP",
-  "rating-spec-id": "pytest_template_group.Stage;Flow.pytest_template.Linear.pytest-version",
-  "template-id": "pytest_template.Linear",
-  "ind-parameter": "Stage;ft",
-  "dep-parameter": "Flow;cfs",
-  "version": "pytest-version",
-  "description": "Pytest rating spec for EXSA test"
-}
