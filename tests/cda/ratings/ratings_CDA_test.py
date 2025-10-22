@@ -39,11 +39,15 @@ def setup_data():
     try:
         cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
         try:
-            ratings_spec.delete_rating_spec(TEST_RATING_SPEC_ID, TEST_OFFICE, "DELETE_ALL")
+            ratings_spec.delete_rating_spec(
+                TEST_RATING_SPEC_ID, TEST_OFFICE, "DELETE_ALL"
+            )
         except ApiError:
             pass
         try:
-            ratings_template.delete_rating_template("Stage;Flow.TEST", TEST_OFFICE, "DELETE_ALL")
+            ratings_template.delete_rating_template(
+                "Stage;Flow.TEST", TEST_OFFICE, "DELETE_ALL"
+            )
         except ApiError:
             pass
     except ApiError:
@@ -165,7 +169,10 @@ def test_get_rating_specs():
     df = fetched.df
     assert TEST_RATING_SPEC_ID in df["rating-id"].values
     assert TEST_RATING_SPEC_ID2 in df["rating-id"].values
-    assert len([i for i in df["rating-id"].values if "TestRating.Stage;Flow.TEST" in i]) >= 2
+    assert (
+        len([i for i in df["rating-id"].values if "TestRating.Stage;Flow.TEST" in i])
+        >= 2
+    )
 
 
 def test_update_rating_spec():
