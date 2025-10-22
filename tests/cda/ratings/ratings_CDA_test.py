@@ -160,6 +160,10 @@ def test_get_rating_specs():
     if rating_spec_id_elem is None:
         rating_spec_id_elem = ET.SubElement(root, "rating-spec-id")
     rating_spec_id_elem.text = "TestRating.Stage;Flow.TEST-2.Spec-test"
+    template_elem = root.find("template-id")
+    if template_elem is None:
+        template_elem = ET.SubElement(root, "template-id")
+    template_elem.text = "Stage;Flow.TEST-2"
     TEST_RATING_SPEC_ID2 = "TestRating.Stage;Flow.TEST-2.Spec-test"
     updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
     # Store new rating spec
