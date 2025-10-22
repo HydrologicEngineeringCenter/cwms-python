@@ -163,7 +163,7 @@ def test_get_rating_specs():
     TEST_RATING_SPEC_ID2 = "TestRating.Stage;Flow.TEST-2.Spec-test"
     updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
     # Store new rating spec
-    ratings_spec.store_rating_spec(updated_xml)
+    ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
     # Fetch all rating specs
     fetched = ratings_spec.get_rating_specs(TEST_OFFICE)
     df = fetched.df
