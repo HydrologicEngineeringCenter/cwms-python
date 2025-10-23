@@ -2,7 +2,7 @@
 name = "cwms-python"
 repository = "https://github.com/HydrologicEngineeringCenter/cwms-python"
 
-version = "0.8.5"
+version = "1.0.0"
 
 
 packages = [
