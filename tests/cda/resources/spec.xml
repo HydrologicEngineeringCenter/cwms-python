@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rating-spec office-id="MVP">
+  <rating-spec-id>TestRating.Stage;Flow.TEST.Spec-test</rating-spec-id>
+  <template-id>Stage;Flow.TEST</template-id>
+  <location-id>TestRating</location-id>
+  <version>Spec-test</version>
+  <source-agency>USGS</source-agency>
+  <in-range-method>LINEAR</in-range-method>
+  <out-range-low-method>NEAREST</out-range-low-method>
+  <out-range-high-method>NEAREST</out-range-high-method>
+  <active>true</active>
+  <auto-update>true</auto-update>
+  <auto-activate>true</auto-activate>
+  <auto-migrate-extension>true</auto-migrate-extension>
+  <ind-rounding-specs>
+   <ind-rounding-spec position="1">2223456782</ind-rounding-spec>
+  </ind-rounding-specs>
+  <dep-rounding-spec>2222233332</dep-rounding-spec>
+  <description>TESTing rating spec</description>
+ </rating-spec>
