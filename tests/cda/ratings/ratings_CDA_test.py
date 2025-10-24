@@ -2,7 +2,6 @@ import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 import cwms
@@ -29,6 +28,8 @@ spec_root = ET.fromstring(SPEC_XML)
 
 # Use direct assignment for test rating spec id
 TEST_RATING_SPEC_ID = "TestRating.Stage;Flow.TEST.Spec-test"
+TEST_TEMPLATE_ID2 = "Stage;Flow.TEST-2"
+TEST_RATING_SPEC_ID2 = "TestRating.Stage;Flow.TEST-2.Spec-test"
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -48,6 +49,14 @@ def setup_data():
             ratings_template.delete_rating_template(
                 "Stage;Flow.TEST", TEST_OFFICE, "DELETE_ALL"
             )
+        except ApiError:
+            pass
+        try:
+            ratings_spec.delete_rating_spec(TEST_RATING_SPEC_ID2, TEST_OFFICE, "DELETE_ALL")
+        except ApiError:
+            pass
+        try:
+            ratings_template.delete_rating_template(TEST_TEMPLATE_ID2, TEST_OFFICE, "DELETE_ALL")
         except ApiError:
             pass
     except ApiError:
@@ -94,19 +103,21 @@ def test_get_rating_templates():
         version = ET.SubElement(root, "version")
     version.text = "TEST-2"
     updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
-    TEST_TEMPLATE_ID2 = "Stage;Flow.TEST-2"
 
-    # Store new template
-    ratings_template.store_rating_template(updated_xml)
+    # Store new template and ensure cleanup
+    try:
+        ratings_template.store_rating_template(updated_xml)
 
-    # Fetch all templates
-    fetched = ratings_template.get_rating_templates(TEST_OFFICE)
-    df = fetched.df
-    assert "Stage;Flow.TEST" in df["id"].values
-    assert TEST_TEMPLATE_ID2 in df["id"].values
-    # Ensure at least two templates exist
-    ids = df["id"].values
-    assert len([i for i in ids if "Stage;Flow.TEST" in i]) >= 2
+        # Fetch all templates
+        fetched = ratings_template.get_rating_templates(TEST_OFFICE)
+        df = fetched.df
+        assert "Stage;Flow.TEST" in df["id"].values
+        assert TEST_TEMPLATE_ID2 in df["id"].values
+        # Ensure at least two templates exist
+        ids = df["id"].values
+        assert len([i for i in ids if "Stage;Flow.TEST" in i]) >= 2
+    finally:
+        ratings_template.delete_rating_template(TEST_TEMPLATE_ID2, TEST_OFFICE, "DELETE_ALL")
 
 
 def test_update_template():
@@ -159,24 +170,26 @@ def test_get_rating_specs():
     rating_spec_id_elem = root.find("rating-spec-id")
     if rating_spec_id_elem is None:
         rating_spec_id_elem = ET.SubElement(root, "rating-spec-id")
-    rating_spec_id_elem.text = "TestRating.Stage;Flow.TEST-2.Spec-test"
+    rating_spec_id_elem.text = TEST_RATING_SPEC_ID2
     template_elem = root.find("template-id")
     if template_elem is None:
         template_elem = ET.SubElement(root, "template-id")
-    template_elem.text = "Stage;Flow.TEST-2"
-    TEST_RATING_SPEC_ID2 = "TestRating.Stage;Flow.TEST-2.Spec-test"
+    template_elem.text = TEST_TEMPLATE_ID2
     updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
-    # Store new rating spec
-    ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
-    # Fetch all rating specs
-    fetched = ratings_spec.get_rating_specs(TEST_OFFICE)
-    df = fetched.df
-    assert TEST_RATING_SPEC_ID in df["rating-id"].values
-    assert TEST_RATING_SPEC_ID2 in df["rating-id"].values
-    assert (
-        len([i for i in df["rating-id"].values if "TestRating.Stage;Flow.TEST" in i])
-        >= 2
-    )
+    # Store new rating spec and ensure cleanup
+    try:
+        ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
+        # Fetch all rating specs
+        fetched = ratings_spec.get_rating_specs(TEST_OFFICE)
+        df = fetched.df
+        assert TEST_RATING_SPEC_ID in df["rating-id"].values
+        assert TEST_RATING_SPEC_ID2 in df["rating-id"].values
+        assert (
+            len([i for i in df["rating-id"].values if "TestRating.Stage;Flow.TEST" in i])
+            >= 2
+        )
+    finally:
+        ratings_spec.delete_rating_spec(TEST_RATING_SPEC_ID2, TEST_OFFICE, "DELETE_ALL")
 
 
 def test_update_rating_spec():
