@@ -163,6 +163,15 @@ def test_get_rating_spec():
 
 
 def test_get_rating_specs():
+    # Ensure second template is stored
+    TEMPLATE_XML2 = (RESOURCES / "template.xml").read_text()
+    root_template = ET.fromstring(TEMPLATE_XML2)
+    version = root_template.find("version")
+    if version is None:
+        version = ET.SubElement(root_template, "version")
+    version.text = "TEST-2"
+    template_xml_updated = ET.tostring(root_template, encoding="unicode", xml_declaration=True)
+
     # Load spec XML
     SPEC_XML2 = (RESOURCES / "spec.xml").read_text()
     root = ET.fromstring(SPEC_XML2)
@@ -178,6 +187,7 @@ def test_get_rating_specs():
     updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
     # Store new rating spec and ensure cleanup
     try:
+        ratings_template.store_rating_template(template_xml_updated, fail_if_exists=False)
         ratings_spec.store_rating_spec(updated_xml, fail_if_exists=False)
         # Fetch all rating specs
         fetched = ratings_spec.get_rating_specs(TEST_OFFICE)
@@ -190,6 +200,7 @@ def test_get_rating_specs():
         )
     finally:
         ratings_spec.delete_rating_spec(TEST_RATING_SPEC_ID2, TEST_OFFICE, "DELETE_ALL")
+        ratings_template.delete_rating_template(TEST_TEMPLATE_ID2, TEST_OFFICE, "DELETE_ALL")
 
 
 def test_update_rating_spec():
