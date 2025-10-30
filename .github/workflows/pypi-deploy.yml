@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Download Distribution
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: package-dist
           path: dist/
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: Download Distribution
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: package-dist
           path: dist/
