@@ -1,9 +1,9 @@
 import base64
-from typing import Optional
+from typing import Any, Optional
 
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
-from cwms.utils.checks import is_base64, has_invalid_chars
+from cwms.utils.checks import has_invalid_chars, is_base64
 
 STORE_DICT = """data = {
     "office-id": "SWT",
@@ -29,9 +29,9 @@ def get_blob(blob_id: str, office_id: str) -> str:
         str: the value returned based on the content-type it was stored with as a string
     """
 
-    params = {}
+    params: dict[str, Any] = {}
     if has_invalid_chars(blob_id):
-        endpoint = f"blobs/ignored"
+        endpoint = "blobs/ignored"
         params["blob-id"] = blob_id
     else:
         endpoint = f"blobs/{blob_id}"
@@ -112,9 +112,9 @@ def delete_blob(blob_id: str, office_id: str) -> None:
         None
     """
 
-    params = {}
+    params: dict[str, Any] = {}
     if has_invalid_chars(blob_id):
-        endpoint = f"blobs/ignored"
+        endpoint = "blobs/ignored"
         params["blob-id"] = blob_id
     else:
         endpoint = f"blobs/{blob_id}"
@@ -153,9 +153,9 @@ def update_blob(data: JSON, fail_if_not_exists: Optional[bool] = True) -> None:
 
     blob_id = data.get("id", "").upper()
 
-    params = {}
+    params: dict[str, Any] = {}
     if has_invalid_chars(blob_id):
-        endpoint = f"blobs/ignored"
+        endpoint = "blobs/ignored"
         params["blob-id"] = blob_id
     else:
         endpoint = f"blobs/{blob_id}"

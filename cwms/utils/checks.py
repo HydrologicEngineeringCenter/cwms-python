@@ -9,11 +9,12 @@ def is_base64(s: str) -> bool:
     except (ValueError, TypeError):
         return False
 
+
 def has_invalid_chars(id: str) -> bool:
     """
     Checks if ID contains any invalid web path characters.
     """
-    INVALID_PATH_CHARS = [ '/', '\\', '&', '?', '=']
+    INVALID_PATH_CHARS = ["/", "\\", "&", "?", "="]
 
     for char in INVALID_PATH_CHARS:
         if char in id:

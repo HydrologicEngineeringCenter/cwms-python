@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Any, Optional
 
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
 from cwms.utils.checks import has_invalid_chars
+
 
 def get_clob(clob_id: str, office_id: str) -> Data:
     """Get a single clob.
@@ -20,9 +21,9 @@ def get_clob(clob_id: str, office_id: str) -> Data:
             cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    params = {}
+    params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
-        endpoint = f"clobs/ignored"
+        endpoint = "clobs/ignored"
         params["clob-id"] = clob_id
     else:
         endpoint = f"clobs/{clob_id}"
@@ -82,9 +83,9 @@ def delete_clob(clob_id: str, office_id: str) -> None:
             None
     """
 
-    params = {}
+    params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
-        endpoint = f"clobs/ignored"
+        endpoint = "clobs/ignored"
         params["clob-id"] = clob_id
     else:
         endpoint = f"clobs/{clob_id}"
@@ -119,9 +120,9 @@ def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -
     if not isinstance(data, dict):
         raise ValueError("Cannot store a Clob without a JSON data dictionary")
 
-    params = {}
+    params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
-        endpoint = f"clobs/ignored"
+        endpoint = "clobs/ignored"
         params["clob-id"] = clob_id
     else:
         endpoint = f"clobs/{clob_id}"
