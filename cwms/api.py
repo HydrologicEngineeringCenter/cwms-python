@@ -29,6 +29,7 @@ the error.
 import base64
 import json
 import logging
+from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
@@ -36,7 +37,6 @@ from requests import Response, adapters
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 from urllib3.util.retry import Retry
-from http import HTTPStatus
 
 from cwms.cwms_types import JSON, RequestParams
 
