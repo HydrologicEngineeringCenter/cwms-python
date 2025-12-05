@@ -105,7 +105,7 @@ def delete_clob(clob_id: str, office_id: str) -> None:
 
 
 def update_clob(
-    data: JSON, clob_id: str = None, ignore_nulls: Optional[bool] = True
+    data: JSON, clob_id: Optional[str] = None, ignore_nulls: Optional[bool] = True
 ) -> None:
     """Updates clob
 
@@ -132,11 +132,11 @@ def update_clob(
     if not isinstance(data, dict):
         raise ValueError("Cannot store a Clob without a JSON data dictionary")
 
-    if clob_id is None and "id" not in data:
-        raise ValueError(f"Cannot update a Clob without an 'id' field:\n{STORE_DICT}")
-
     if "id" in data:
         clob_id = data.get("id", "").upper()
+
+    if clob_id is None:
+        raise ValueError(f"Cannot update a Clob without an 'id' field:\n{STORE_DICT}")
 
     params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
