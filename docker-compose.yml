@@ -52,7 +52,7 @@ services:
         condition: service_completed_successfully
       traefik:
         condition: service_healthy
-    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:latest-dev}
+    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:develop-nightly}
     restart: unless-stopped
     volumes:
       - ./compose_files/pki/certs:/conf/
