@@ -4,6 +4,14 @@ import cwms.api as api
 from cwms.cwms_types import JSON, Data
 from cwms.utils.checks import has_invalid_chars
 
+STORE_DICT = """data = {
+    "office-id": "SWT",
+    "id": "CLOB_ID",
+    "description": "Your description here",
+    "value": "STRING of content"
+}
+"""
+
 
 def get_clob(clob_id: str, office_id: str) -> Data:
     """Get a single clob.
@@ -94,7 +102,9 @@ def delete_clob(clob_id: str, office_id: str) -> None:
     return api.delete(endpoint, params=params, api_version=1)
 
 
-def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -> None:
+def update_clob(
+    data: JSON, clob_id: str = None, ignore_nulls: Optional[bool] = True
+) -> None:
     """Updates clob
 
     Parameters
@@ -108,7 +118,7 @@ def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -
                         "value": "string"
                     }
             clob_id: string
-                Specifies the id of the clob to be deleted
+                Specifies the id of the clob to be deleted. Unused if "id" is present in JSON data.
             ignore_nulls: Boolean
                 If true, null and empty fields in the provided clob will be ignored and the existing value of those fields left in place. Default: true
 
@@ -119,6 +129,12 @@ def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -
 
     if not isinstance(data, dict):
         raise ValueError("Cannot store a Clob without a JSON data dictionary")
+
+    if clob_id is None and "id" not in data:
+        raise ValueError(f"Cannot update a Blob without an 'id' field:\n{STORE_DICT}")
+
+    if "id" in data:
+        clob_id = data.get("id", "").upper()
 
     params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
