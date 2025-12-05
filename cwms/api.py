@@ -242,6 +242,12 @@ def _process_response(response: Response) -> Any:
             return response.text
         if content_type.startswith("image/"):
             return base64.b64encode(response.content).decode("utf-8")
+        # Handle excel content types
+        if content_type in [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ]:
+            return response.content
         # Fallback for remaining content types
         return response.content.decode("utf-8")
     except JSONDecodeError as error:
