@@ -107,8 +107,9 @@ class ApiError(Exception):
         response_msg = ""
         try:
             response_msg = self.response.json().get("message", "")
-        except Exception:
-            response_msg = self.response.text
+        except Exception as e:
+            logging.exception(f"Error extracting message from response: {e}")
+            response_msg = str(e)
 
         # Always show the status code and common phrase
         message = f"{self.response.status_code} {HTTPStatus(self.response.status_code).phrase} \n\t{response_msg}\n\t"
