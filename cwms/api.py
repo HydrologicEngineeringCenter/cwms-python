@@ -36,6 +36,7 @@ from requests import Response, adapters
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 from urllib3.util.retry import Retry
+from http import HTTPStatus
 
 from cwms.cwms_types import JSON, RequestParams
 
@@ -90,24 +91,32 @@ class ApiError(Exception):
 
         message += "."
 
+        if content := self.response.content:
+            message += f"\n\n\t{content.decode('utf8')}"
+
         # Add additional context to help the user resolve the issue.
         if hint := self.hint():
-            message += f" {hint}"
-
-        if content := self.response.content:
-            message += f" {content.decode('utf8')}"
+            message += f"\n\n\t{hint}"
 
         return message
 
     def hint(self) -> str:
         """Return a message with additional information on how to resolve the error."""
 
-        if self.response.status_code == 400:
-            return "Check that your parameters are correct."
+        # Always show the status code and common phrase
+        message = f"{self.response.status_code} {HTTPStatus(self.response.status_code).phrase}"
+
+        # Helpful hints in relation to cwms-python for a given status code
+        if self.response.status_code == 429:
+            message += ": Too many requests made"
+        elif self.response.status_code == 400:
+            message += ": Check that your parameters are correct."
+        elif self.response.status_code == 401:
+            message += ": You must provide a valid API key.\n\tIf you have one set it might be invalid for the OFFICE/CDA instance you are targeting."
         elif self.response.status_code == 404:
-            return "May be the result of an empty query."
-        else:
-            return ""
+            message += ": May be the result of an empty query."
+
+        return message
 
 
 def init_session(
