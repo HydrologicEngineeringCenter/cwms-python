@@ -133,7 +133,7 @@ def update_clob(
         raise ValueError("Cannot store a Clob without a JSON data dictionary")
 
     if clob_id is None and "id" not in data:
-        raise ValueError(f"Cannot update a Blob without an 'id' field:\n{STORE_DICT}")
+        raise ValueError(f"Cannot update a Clob without an 'id' field:\n{STORE_DICT}")
 
     if "id" in data:
         clob_id = data.get("id", "").upper()
