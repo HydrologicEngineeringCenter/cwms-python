@@ -103,18 +103,23 @@ class ApiError(Exception):
     def hint(self) -> str:
         """Return a message with additional information on how to resolve the error."""
 
+        # Attempt to extract a message from the error response body
+        response_msg = ""
+        try:
+            response_msg = self.response.json().get("message", "")
+        except Exception:
+            response_msg = self.response.text
+
         # Always show the status code and common phrase
-        message = f"{self.response.status_code} {HTTPStatus(self.response.status_code).phrase}"
+        message = f"{self.response.status_code} {HTTPStatus(self.response.status_code).phrase} \n\t{response_msg}\n\t"
 
         # Helpful hints in relation to cwms-python for a given status code
         if self.response.status_code == 429:
-            message += ": Too many requests made"
+            message += "Too many requests made"
         elif self.response.status_code == 400:
-            message += ": Check that your parameters are correct."
-        elif self.response.status_code == 401:
-            message += ": You must provide a valid API key.\n\tIf you have one set it might be invalid for the OFFICE/CDA instance you are targeting."
+            message += "Check that your parameters are correct."
         elif self.response.status_code == 404:
-            message += ": May be the result of an empty query."
+            message += "May be the result of an empty query."
 
         return message
 
