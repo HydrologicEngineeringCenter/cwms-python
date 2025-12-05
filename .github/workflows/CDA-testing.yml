@@ -14,6 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Clean up disk space, so we don't run out.
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
       - name: Set up backend
         run: |
           docker compose pull
