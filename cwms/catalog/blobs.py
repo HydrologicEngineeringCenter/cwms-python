@@ -14,6 +14,8 @@ STORE_DICT = """data = {
 }
 """
 
+IGNORED_ID = "ignored"
+
 
 def get_blob(blob_id: str, office_id: str) -> str:
     """Get a single BLOB (Binary Large Object).
@@ -31,7 +33,7 @@ def get_blob(blob_id: str, office_id: str) -> str:
 
     params: dict[str, Any] = {}
     if has_invalid_chars(blob_id):
-        endpoint = "blobs/ignored"
+        endpoint = f"blobs/{IGNORED_ID}"
         params["blob-id"] = blob_id
     else:
         endpoint = f"blobs/{blob_id}"
@@ -114,7 +116,7 @@ def delete_blob(blob_id: str, office_id: str) -> None:
 
     params: dict[str, Any] = {}
     if has_invalid_chars(blob_id):
-        endpoint = "blobs/ignored"
+        endpoint = f"blobs/{IGNORED_ID}"
         params["blob-id"] = blob_id
     else:
         endpoint = f"blobs/{blob_id}"
@@ -155,7 +157,7 @@ def update_blob(data: JSON, fail_if_not_exists: Optional[bool] = True) -> None:
 
     params: dict[str, Any] = {}
     if has_invalid_chars(blob_id):
-        endpoint = "blobs/ignored"
+        endpoint = f"blobs/{IGNORED_ID}"
         params["blob-id"] = blob_id
     else:
         endpoint = f"blobs/{blob_id}"

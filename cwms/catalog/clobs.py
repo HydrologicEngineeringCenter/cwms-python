@@ -12,6 +12,8 @@ STORE_DICT = """data = {
 }
 """
 
+IGNORED_ID = "ignored"
+
 
 def get_clob(clob_id: str, office_id: str) -> Data:
     """Get a single clob.
@@ -31,7 +33,7 @@ def get_clob(clob_id: str, office_id: str) -> Data:
 
     params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
-        endpoint = "clobs/ignored"
+        endpoint = f"clobs/{IGNORED_ID}"
         params["clob-id"] = clob_id
     else:
         endpoint = f"clobs/{clob_id}"
@@ -93,7 +95,7 @@ def delete_clob(clob_id: str, office_id: str) -> None:
 
     params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
-        endpoint = "clobs/ignored"
+        endpoint = f"clobs/{IGNORED_ID}"
         params["clob-id"] = clob_id
     else:
         endpoint = f"clobs/{clob_id}"
@@ -138,7 +140,7 @@ def update_clob(
 
     params: dict[str, Any] = {}
     if has_invalid_chars(clob_id):
-        endpoint = "clobs/ignored"
+        endpoint = f"clobs/{IGNORED_ID}"
         params["clob-id"] = clob_id
     else:
         endpoint = f"clobs/{clob_id}"
