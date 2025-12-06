@@ -29,6 +29,7 @@ the error.
 import base64
 import json
 import logging
+from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
@@ -90,24 +91,38 @@ class ApiError(Exception):
 
         message += "."
 
+        if content := self.response.content:
+            message += f"\n\n\t{content.decode('utf8')}"
+
         # Add additional context to help the user resolve the issue.
         if hint := self.hint():
-            message += f" {hint}"
-
-        if content := self.response.content:
-            message += f" {content.decode('utf8')}"
+            message += f"\n\n\t{hint}"
 
         return message
 
     def hint(self) -> str:
         """Return a message with additional information on how to resolve the error."""
 
-        if self.response.status_code == 400:
-            return "Check that your parameters are correct."
+        # Attempt to extract a message from the error response body
+        response_msg = ""
+        try:
+            response_msg = self.response.json().get("message", "")
+        except Exception as e:
+            logging.exception(f"Error extracting message from response: {e}")
+            response_msg = str(e)
+
+        # Always show the status code and common phrase
+        message = f"{self.response.status_code} {HTTPStatus(self.response.status_code).phrase} \n\t{response_msg}\n\t"
+
+        # Helpful hints in relation to cwms-python for a given status code
+        if self.response.status_code == 429:
+            message += "Too many requests made"
+        elif self.response.status_code == 400:
+            message += "Check that your parameters are correct."
         elif self.response.status_code == 404:
-            return "May be the result of an empty query."
-        else:
-            return ""
+            message += "May be the result of an empty query."
+
+        return message
 
 
 def init_session(
@@ -227,6 +242,12 @@ def _process_response(response: Response) -> Any:
             return response.text
         if content_type.startswith("image/"):
             return base64.b64encode(response.content).decode("utf-8")
+        # Handle excel content types
+        if content_type in [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ]:
+            return response.content
         # Fallback for remaining content types
         return response.content.decode("utf-8")
     except JSONDecodeError as error:
