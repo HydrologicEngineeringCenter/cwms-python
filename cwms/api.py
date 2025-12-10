@@ -73,9 +73,9 @@ class InvalidVersion(Exception):
 class ApiError(Exception):
     """CWMS Data Api Error.
 
-    This class is a light wrapper around a `requests.Response` object. Its primary purpose
-    is to generate an error message that includes the request URL and provide additional
-    information to the user to help them resolve the error.
+    Light wrapper around a response-like object (e.g., requests.Response or a
+    test stub with url, status_code, reason, and content attributes). Produces
+    a concise, single-line error message with an optional hint.
     """
 
     def __init__(self, response: Response):
@@ -91,38 +91,38 @@ class ApiError(Exception):
 
         message += "."
 
-        if content := self.response.content:
-            message += f"\n\n\t{content.decode('utf8')}"
-
         # Add additional context to help the user resolve the issue.
-        if hint := self.hint():
-            message += f"\n\n\t{hint}"
+        hint = self.hint()
+        if hint:
+            message += f" {hint}"
+
+        # Optional content (decoded if bytes)
+        content = getattr(self.response, "content", None)
+        if content:
+            if isinstance(content, bytes):
+                try:
+                    text = content.decode("utf-8", errors="replace")
+                except Exception:
+                    text = repr(content)
+            else:
+                text = str(content)
+            message += f" {text}"
 
         return message
 
     def hint(self) -> str:
-        """Return a message with additional information on how to resolve the error."""
+        """Return a short hint based on HTTP status code."""
+        status = getattr(self.response, "status_code", None)
 
-        # Attempt to extract a message from the error response body
-        response_msg = ""
-        try:
-            response_msg = self.response.json().get("message", "")
-        except Exception as e:
-            logging.exception(f"Error extracting message from response: {e}")
-            response_msg = str(e)
+        if status == 429:
+            return "Too many requests made."
+        if status == 400:
+            return "Check that your parameters are correct."
+        if status == 404:
+            return "May be the result of an empty query."
 
-        # Always show the status code and common phrase
-        message = f"{self.response.status_code} {HTTPStatus(self.response.status_code).phrase} \n\t{response_msg}\n\t"
-
-        # Helpful hints in relation to cwms-python for a given status code
-        if self.response.status_code == 429:
-            message += "Too many requests made"
-        elif self.response.status_code == 400:
-            message += "Check that your parameters are correct."
-        elif self.response.status_code == 404:
-            message += "May be the result of an empty query."
-
-        return message
+        # No hint for other codes
+        return ""
 
 
 def init_session(
