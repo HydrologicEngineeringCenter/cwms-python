@@ -41,7 +41,7 @@ jobs:
 
           # Poetry will handle installation and caching
       - name: Cache Python dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: cache-poetry-venv
         with:
           path: .venv
