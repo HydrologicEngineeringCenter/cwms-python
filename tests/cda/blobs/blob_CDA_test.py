@@ -59,10 +59,20 @@ def _find_blob_row(office: str, blob_id: str) -> Optional[pd.Series]:
 
 
 def test_store_blob_excel():
+    # Create an empty file with the excel extension
     excel_file_path = Path(__file__).parent.parent / "resources" / "blob_test.xlsx"
     with open(excel_file_path, "rb") as f:
         file_data = f.read()
-    mime_type, _ = mimetypes.guess_type(excel_file_path)
+
+    # Get the file extension and decide which type to use if xlsx or xlx
+    ext = excel_file_path.suffix.lower()
+    mime_type = mimetypes.guess_type(excel_file_path.name)[0]
+    # Some linux systems may not have the excel mimetypes registered
+    if ext == ".xlsx":
+        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    elif ext == ".xls":
+        mime_type = "application/vnd.ms-excel"
+
     excel_blob_id = "TEST_BLOB_EXCEL"
     payload = {
         "office-id": TEST_OFFICE,
@@ -72,12 +82,16 @@ def test_store_blob_excel():
         "value": base64.b64encode(file_data).decode("utf-8"),
     }
     blobs.store_blobs(data=payload)
-    try:
-        row = _find_blob_row(TEST_OFFICE, excel_blob_id)
-        assert row is not None, "Stored blob not found in listing"
-    finally:
-        # Cleanup excel
-        blobs.delete_blob(blob_id=excel_blob_id, office_id=TEST_OFFICE)
+    row = _find_blob_row(TEST_OFFICE, excel_blob_id)
+    assert row is not None, "Stored blob not found in listing"
+
+
+def test_get_excel_blob():
+    # Retrieve the excel blob stored in the previous test
+    excel_blob_id = "TEST_BLOB_EXCEL"
+    content = blobs.get_blob(office_id=TEST_OFFICE, blob_id=excel_blob_id)
+    assert content is not None, "Failed to retrieve excel blob"
+    assert len(content) > 0, "Excel blob content is empty"
 
 
 def test_store_blob():
@@ -133,3 +147,16 @@ def test_update_blob():
     # Verify new content
     content = blobs.get_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_UPDATED_ID)
     assert TEST_TEXT_UPDATED in content
+
+
+def test_delete_blobs():
+    # Delete the test blob
+    blobs.delete_blob(office_id=TEST_OFFICE, blob_id=TEST_BLOB_ID)
+    blobs.delete_blob(office_id=TEST_OFFICE, blob_id="TEST_BLOB_EXCEL")
+
+    # Confirm deletion via listing
+    row = _find_blob_row(TEST_OFFICE, TEST_BLOB_ID)
+    assert row is None, "Blob still found after deletion"
+
+    row = _find_blob_row(TEST_OFFICE, "TEST_BLOB_EXCEL")
+    assert row is None, "Excel blob still found after deletion"
