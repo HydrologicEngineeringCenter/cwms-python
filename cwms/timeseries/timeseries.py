@@ -606,8 +606,8 @@ def store_timeseries(
         for chunk in chunks:
             future = executor.submit(
                 api.post,  # The function to execute
-                endpoint,  # The chunk of data to store
-                data,
+                endpoint,
+                chunk,  # The chunk of data to store
                 params,
             )
             futures.append(future)  # Add the future to the list
