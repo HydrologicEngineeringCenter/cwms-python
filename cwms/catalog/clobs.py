@@ -1,10 +1,21 @@
-from typing import Optional
+from typing import Any, Optional
 
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
+from cwms.utils.checks import has_invalid_chars
+
+STORE_DICT = """data = {
+    "office-id": "SWT",
+    "id": "CLOB_ID",
+    "description": "Your description here",
+    "value": "STRING of content"
+}
+"""
+
+IGNORED_ID = "ignored"
 
 
-def get_clob(clob_id: str, office_id: str, clob_id_query: Optional[str] = None) -> Data:
+def get_clob(clob_id: str, office_id: str) -> Data:
     """Get a single clob.
 
     Parameters
@@ -13,16 +24,6 @@ def get_clob(clob_id: str, office_id: str, clob_id_query: Optional[str] = None) 
                 Specifies the id of the clob
             office_id: string
                 Specifies the office of the clob.
-            clob_id_query: string
-                If this query parameter is provided the id path parameter is ignored and the
-                value of the query parameter is used. Note: this query parameter is necessary
-                for id's that contain '/' or other special characters. Because of abuse even
-                properly escaped '/' in url paths are blocked. When using this query parameter
-                a valid path parameter must still be provided for the request to be properly
-                routed. If your clob id contains '/' you can't specify the clob-id query
-                parameter and also specify the id path parameter because firewall and/or server
-                rules will deny the request even though you are specifying this override. "ignored"
-                is suggested.
 
 
         Returns
@@ -30,11 +31,13 @@ def get_clob(clob_id: str, office_id: str, clob_id_query: Optional[str] = None) 
             cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    endpoint = f"clobs/{clob_id}"
-    params = {
-        "office": office_id,
-        "clob-id-query": clob_id_query,
-    }
+    params: dict[str, Any] = {}
+    if has_invalid_chars(clob_id):
+        endpoint = f"clobs/{IGNORED_ID}"
+        params["clob-id"] = clob_id
+    else:
+        endpoint = f"clobs/{clob_id}"
+    params["office"] = office_id
     response = api.get(endpoint, params)
     return Data(response)
 
@@ -90,13 +93,20 @@ def delete_clob(clob_id: str, office_id: str) -> None:
             None
     """
 
-    endpoint = f"clobs/{clob_id}"
-    params = {"office": office_id}
+    params: dict[str, Any] = {}
+    if has_invalid_chars(clob_id):
+        endpoint = f"clobs/{IGNORED_ID}"
+        params["clob-id"] = clob_id
+    else:
+        endpoint = f"clobs/{clob_id}"
+    params["office"] = office_id
 
     return api.delete(endpoint, params=params, api_version=1)
 
 
-def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -> None:
+def update_clob(
+    data: JSON, clob_id: Optional[str] = None, ignore_nulls: Optional[bool] = True
+) -> None:
     """Updates clob
 
     Parameters
@@ -110,7 +120,7 @@ def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -
                         "value": "string"
                     }
             clob_id: string
-                Specifies the id of the clob to be deleted
+                Specifies the id of the clob to be deleted. Unused if "id" is present in JSON data.
             ignore_nulls: Boolean
                 If true, null and empty fields in the provided clob will be ignored and the existing value of those fields left in place. Default: true
 
@@ -122,8 +132,19 @@ def update_clob(data: JSON, clob_id: str, ignore_nulls: Optional[bool] = True) -
     if not isinstance(data, dict):
         raise ValueError("Cannot store a Clob without a JSON data dictionary")
 
-    endpoint = f"clobs/{clob_id}"
-    params = {"ignore-nulls": ignore_nulls}
+    if "id" in data:
+        clob_id = data.get("id", "").upper()
+
+    if clob_id is None:
+        raise ValueError(f"Cannot update a Clob without an 'id' field:\n{STORE_DICT}")
+
+    params: dict[str, Any] = {}
+    if has_invalid_chars(clob_id):
+        endpoint = f"clobs/{IGNORED_ID}"
+        params["clob-id"] = clob_id
+    else:
+        endpoint = f"clobs/{clob_id}"
+    params["ignore-nulls"] = ignore_nulls
 
     return api.patch(endpoint, data, params, api_version=1)
 

@@ -3,22 +3,27 @@ volumes:
   auth_data:
 services:
   db:
-    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:latest-dev
+    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:develop-nightly
     environment:
       #- ORACLE_DATABASE=FREEPDB1
       - ORACLE_PASSWORD=badSYSpassword
       - CWMS_PASSWORD=simplecwmspasswD1
       - OFFICE_ID=HQ
       - OFFICE_EROC=s0
-    ports: ["1526:1521"]
+    ports:
+      - "1526:1521"
     healthcheck:
-      test: ["CMD", "tnsping", "FREEPDB1"]
+      test:
+        [
+          "CMD-SHELL",
+          "sqlplus -s -L sys/badSYSpassword@localhost:1521/FREEPDB1 as sysdba <<< 'exit;'",
+        ]
       interval: 30s
       timeout: 50s
       retries: 50
       start_period: 40m
   db_webuser_permissions:
-    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:latest-dev
+    image: ${CWMS_SCHEMA_INSTALLER_IMAGE:-registry-public.hecdev.net/cwms/schema_installer:latest-dev}
     restart: "no"
     environment:
       - DB_HOST_PORT=db:1521
@@ -31,15 +36,11 @@ services:
       - INSTALLONCE=1
       - QUIET=1
     command: >
-      sh -xc "sqlplus CWMS_20/$$CWMS_PASSWORD@$$DB_HOST_PORT$$DB_NAME @/setup_sql/users
-      $$OFFICE_EROC"
-    volumes: [./compose_files/sql:/setup_sql:ro]
+      sh -xc "sqlplus CWMS_20/$$CWMS_PASSWORD@$$DB_HOST_PORT$$DB_NAME @/setup_sql/users $$OFFICE_EROC"
+    volumes:
+      - ./compose_files/sql:/setup_sql:ro
     depends_on:
       db:
-        condition: service_healthy
-      auth:
-        condition: service_healthy
-      traefik:
         condition: service_healthy
 
   data-api:
@@ -58,6 +59,7 @@ services:
       - ./compose_files/pki/certs:/conf/
       - ./compose_files/tomcat/logging.properties:/usr/local/tomcat/conf/logging.properties:ro
     environment:
+      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
       - CDA_JDBC_DRIVER=oracle.jdbc.driver.OracleDriver
       - CDA_JDBC_URL=jdbc:oracle:thin:@db/FREEPDB1
       - CDA_JDBC_USERNAME=s0webtest
@@ -73,9 +75,12 @@ services:
       - cwms.dataapi.access.openid.altAuthUrl=http://localhost:${APP_PORT:-8082}
       - cwms.dataapi.access.openid.useAltWellKnown=true
       - cwms.dataapi.access.openid.issuer=http://localhost:${APP_PORT:-8082}/auth/realms/cwms
-    expose: [7000]
+    expose:
+      - 7000
+      - 5005
     healthcheck:
-      test: ["CMD", "/usr/bin/curl", "-I", "localhost:7000/cwms-data/offices/HEC"]
+      test:
+        ["CMD", "/usr/bin/curl", "-I", "localhost:7000/cwms-data/offices/HEC"]
       interval: 5s
       timeout: 1s
       retries: 100
@@ -84,15 +89,13 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.data-api.rule=PathPrefix(`/cwms-data`)"
       - "traefik.http.routers.data-api.entryPoints=web"
+      - "traefik.http.services.data-api.loadbalancer.server.port=7000"
 
   auth:
     image: quay.io/keycloak/keycloak:19.0.1
-    command: ["start-dev", "--import-realm"]
+    command: ["start-dev", "--features-disabled=admin2", "--import-realm"]
     healthcheck:
-      test:
-        - "CMD-SHELL"
-        - "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit\
-          \ 1"
+      test: "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit 1"
       interval: 5s
       timeout: 1s
       retries: 100
@@ -108,8 +111,6 @@ services:
       - KC_PROXY=none
       - KC_HTTP_ENABLED=true
       - KC_HTTP_RELATIVE_PATH=/auth
-      - KC_HOSTNAME=localhost
-      - KC_DB=dev-file
     volumes:
       - ./compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
     labels:
@@ -123,10 +124,13 @@ services:
 
   # Proxy for HTTPS for OpenID
   traefik:
-    image: traefik:v3.6.2
-    ports: ["${APP_PORT:-8082}:80"]
-    expose: ["8080"]
-    volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"]
+    image: "traefik:v3.6.2"
+    ports:
+      - "${APP_PORT:-8082}:80"
+    expose:
+      - "8081"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     healthcheck:
       test: traefik healthcheck --ping
     command:
