@@ -41,7 +41,7 @@ def get_outlet(office_id: str, name: str) -> Data:
 
     endpoint = f"projects/outlets/{name}"
     params = {"office": office_id}
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
