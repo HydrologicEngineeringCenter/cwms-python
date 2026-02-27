@@ -1,7 +1,6 @@
 import concurrent.futures
 import logging
 from datetime import datetime, timedelta, timezone
-from modulefinder import test
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -228,11 +227,6 @@ def combine_timeseries_results(results: List[Data]) -> Data:
     combined_json["begin"] = combined_df["date-time"].min().isoformat()
     combined_json["end"] = combined_df["date-time"].max().isoformat()
     combined_json["total"] = len(combined_df)
-
-    # make sure that dataTime column is in iso8601 formate.
-    # combined_df["date-time"] = pd.to_datetime(combined_df["date-time"], utc=True).apply(
-    #    pd.Timestamp.isoformat
-    # )
 
     combined_df["date-time"] = combined_df["date-time"].apply(
         lambda x: int(pd.Timestamp(x).timestamp() * 1000)
