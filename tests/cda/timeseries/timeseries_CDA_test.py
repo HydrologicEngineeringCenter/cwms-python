@@ -16,6 +16,7 @@ TEST_TSID_MULTI1 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-1"
 TEST_TSID_MULTI2 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-2"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
+TEST_TSID_COPY = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Copy"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
 TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
 # Generate 15-minute interval timestamps
@@ -253,6 +254,33 @@ def test_store_timeseries_chunk_ts():
 
     data_multithread = ts.get_timeseries(
         ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    )
+    df = data_multithread.df
+    # make sure the dataframe matches stored dataframe
+    pdt.assert_frame_equal(
+        df, DF_CHUNK_MULTI
+    ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
+
+
+def test_copy_timeseries_chunk_json():
+    data_json = ts.get_timeseries(
+        ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    ).json
+    data_json["name"] = TEST_TSID_COPY
+    ts.store_timeseries(data_json)
+
+    data_multithread = ts.get_timeseries(
+        ts_id=TEST_TSID_COPY,
         office_id=TEST_OFFICE,
         begin=START_DATE_CHUNK_MULTI,
         end=END_DATE_CHUNK_MULTI,

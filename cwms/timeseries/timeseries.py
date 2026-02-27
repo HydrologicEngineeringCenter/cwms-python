@@ -1,6 +1,7 @@
 import concurrent.futures
 import logging
 from datetime import datetime, timedelta, timezone
+from modulefinder import test
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -228,8 +229,18 @@ def combine_timeseries_results(results: List[Data]) -> Data:
     combined_json["end"] = combined_df["date-time"].max().isoformat()
     combined_json["total"] = len(combined_df)
 
+    # make sure that dataTime column is in iso8601 formate.
+    # combined_df["date-time"] = pd.to_datetime(combined_df["date-time"], utc=True).apply(
+    #    pd.Timestamp.isoformat
+    # )
+
+    combined_df["date-time"] = combined_df["date-time"].apply(
+        lambda x: int(pd.Timestamp(x).timestamp() * 1000)
+    )
+    combined_df["date-time"] = combined_df["date-time"].astype("Int64")
+    combined_df = combined_df.reindex(columns=["date-time", "value", "quality-code"])
     # Update the "values" key in the JSON to include the combined data
-    combined_json["values"] = combined_df.to_dict(orient="records")
+    combined_json["values"] = combined_df.values.tolist()
 
     # Return a new cwms Data object with the combined DataFrame and updated metadata
     return Data(combined_json, selector="values")
@@ -455,6 +466,32 @@ def store_multi_timeseries_df(
     office_id: str,
     max_workers: Optional[int] = 30,
 ) -> None:
+    """stored mulitple timeseries from a dataframe.  The dataframe must be a metled dataframe with columns
+    for date-time, value, quality-code(optional), ts_id, units, and version_date(optional).  The dataframe will
+    be grouped by ts_id and version_date and each group will be posted as a separate timeseries using the store_timeseries
+    function.  If version_date column is not included then all data will be stored as unversioned data.  If version_date
+    column is included then data will be grouped by ts_id and version_date and stored as versioned timeseries with the
+    version date specified in the version_date column.
+
+    Parameters
+    ----------
+        data: dataframe
+            Time Series data to be stored.  Dataframe must be melted with columns for date-time, value, quality-code(optional),
+            ts_id, units, and version_date(optional).
+                                        date-time value  quality-code  ts_id                                  units   version_date
+                0   2023-12-20T14:45:00.000-05:00  93.1           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:00:00-05:00
+                1   2023-12-20T15:00:00.000-05:00  99.8           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:00:00-05:00
+                2   2023-12-20T15:15:00.000-05:00  98.5           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:15:00-05:00
+        office_id: string
+            The owning office of the time series(s).
+        max_workers: Int, Optional, default is None
+            It is a number of Threads aka size of pool in concurrent.futures.ThreadPoolExecutor.
+
+        Returns
+        -------
+            None
+    """
+
     def store_ts_ids(
         data: pd.DataFrame,
         ts_id: str,
@@ -476,6 +513,12 @@ def store_multi_timeseries_df(
             print(f"Error processing {ts_id}: {e}")
         return None
 
+    required_columns = ["date-time", "value", "ts_id", "units"]
+    for col in required_columns:
+        if col not in data.columns:
+            raise TypeError(
+                f"{col} is a required column in data when posting multiple timeseries from a dataframe. Make sure you are using a melted dataframe with columns for date-time, value, quality-code(optional), ts_id, units, and version_date(optional)."
+            )
     ts_data_all = data.copy()
     if "version_date" not in ts_data_all.columns:
         ts_data_all = ts_data_all.assign(version_date=pd.to_datetime(pd.Series([])))
