@@ -16,4 +16,7 @@ jobs:
       # formatted. The code is not automatically reformatted like it is when running the
       # pre-commit hooks.
       - uses: psf/black@stable
+        with:
+          # Specify the desired Black version
+          version: "24.10.0"
       - uses: isort/isort-action@v1
