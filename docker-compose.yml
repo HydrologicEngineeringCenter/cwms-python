@@ -86,7 +86,7 @@ services:
       - "traefik.http.routers.data-api.entryPoints=web"
 
   auth:
-    image: quay.io/keycloak/keycloak:19.0.1
+    image: quay.io/keycloak/keycloak:26.5
     command: ["start-dev", "--import-realm"]
     healthcheck:
       test:
