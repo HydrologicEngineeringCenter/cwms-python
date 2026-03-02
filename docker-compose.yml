@@ -91,32 +91,32 @@ services:
     healthcheck:
       test:
         - "CMD-SHELL"
-        - "/usr/bin/curl -If localhost:${APP_PORT:-8082}/auth/health/ready || exit\
-          \ 1"
-      interval: 5s
-      timeout: 1s
-      retries: 100
-      start_period: 2s
+        - "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.0\\\
+          r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
       - KC_FEATURES=admin-fine-grained-authz
-      - KC_HTTP_PORT=${APP_PORT:-8082}
-      - KEYCLOAK_FRONTEND_URL=http://localhost:${APP_PORT:-8082}
+      - KC_HTTP_PORT=8082
       - KC_HOSTNAME_STRICT=false
       - KC_PROXY=none
       - KC_HTTP_ENABLED=true
       - KC_HTTP_RELATIVE_PATH=/auth
-      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME=http://localhost:8082
       - KC_DB=dev-file
+      - APP_PORT=${APP_PORT:-8082}
     volumes:
       - ./compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
       - "traefik.http.routers.auth.entryPoints=web"
-      - "traefik.http.services.auth.loadbalancer.server.port=${APP_PORT:-8082}"
+      - "traefik.http.services.auth.loadbalancer.server.port=8082"
     depends_on:
       traefik:
         condition: service_healthy
