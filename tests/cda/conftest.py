@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 import pytest
@@ -9,13 +10,13 @@ def pytest_addoption(parser):
     parser.addoption(
         "--api_key",
         action="store",
-        default="0123456789abcdef0123456789abcdef",
+        default=os.getenv("CDA_API_KEY", "0123456789abcdef0123456789abcdef"),
         help="Set a custom API key for the CWMS API",
     )
     parser.addoption(
         "--api_root",
         action="store",
-        default="http://localhost:8082/cwms-data/",
+        default=os.getenv("CDA_API_ROOT", "http://localhost:8082/cwms-data/"),
         help="Set a custom API root for the CWMS API",
     )
 
