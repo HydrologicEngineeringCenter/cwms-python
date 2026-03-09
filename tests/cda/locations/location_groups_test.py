@@ -42,7 +42,6 @@ LOC_GROUP_DATA_UPDATE = {
 # Setup and teardown fixture for test location
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
-
     TEST_LATITUDE = 45.1704758
     TEST_LONGITUDE = -92.8411439
 
@@ -68,9 +67,12 @@ def setup_data():
     yield
 
     # Delete location and TS after tests
-    cwms.delete_location(
-        location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
-    )
+    try:
+        cwms.delete_location(
+            location_id=TEST_LOCATION_ID, office_id=TEST_OFFICE, cascade_delete=True
+        )
+    except Exception as e:
+        print(f"Failed to delete location {TEST_LOCATION_ID}: {e}")
 
 
 @pytest.fixture(autouse=True)
@@ -79,7 +81,6 @@ def init_session(request):
 
 
 def test_store_location_group():
-
     lg.store_location_groups(data=LOC_GROUP_DATA)
     data = lg.get_location_group(
         loc_group_id=TEST_GROUP_ID,
