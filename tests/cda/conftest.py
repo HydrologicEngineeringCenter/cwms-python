@@ -19,6 +19,20 @@ def pytest_addoption(parser):
         default=os.getenv("CDA_API_ROOT", "http://localhost:8082/cwms-data/"),
         help="Set a custom API root for the CWMS API",
     )
+    parser.addoption(
+        "--user_admin_api_key",
+        action="store",
+        default=os.getenv("CDA_USER_ADMIN_API_KEY", "0123456789abcdef0123456789abcdef"),
+        help="Set an admin API key for CDA user-management tests",
+    )
+    parser.addoption(
+        "--user_non_admin_api_key",
+        action="store",
+        default=os.getenv(
+            "CDA_USER_NON_ADMIN_API_KEY", "1234567890abcdef1234567890abcdef"
+        ),
+        help="Set a non-admin API key for CDA user authorization tests",
+    )
 
 
 @pytest.fixture(scope="package", autouse=True)
