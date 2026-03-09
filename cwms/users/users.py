@@ -35,7 +35,24 @@ def get_user(user_name: str) -> dict[str, Any]:
 
     if not user_name:
         raise ValueError("Get user requires a user name")
-    return api.get(f"users/{user_name}", api_version=1)
+    try:
+        response = api.get(f"users/{user_name}", api_version=1)
+    except api.ApiError as error:
+        status_code = getattr(error.response, "status_code", None)
+        if status_code == 404:
+            raise api.NotFoundError(
+                error.response, f"User '{user_name}' was not found."
+            ) from None
+        if status_code == 403:
+            response_hint = getattr(error.response, "reason", None) or "Forbidden"
+            message = (
+                f"User '{user_name}' could not be retrieved because the current "
+                "credentials are not authorized for user-management access or are "
+                f"missing the required role assignment. CDA responded with 403 {response_hint}."
+            )
+            raise api.PermissionError(error.response, message) from None
+        raise
+    return dict(response)
 
 
 def store_user(user_name: str, office_id: str, roles: List[str]) -> None:
