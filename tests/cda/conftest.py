@@ -27,7 +27,7 @@ def auto_track_locations(request):
     api_root = request.config.getoption("api_root")
     cwms.api.init_session(api_root=api_root, api_key=api_key)
 
-    print(f"Test api_root and api_key: {api_root}, {api_key}")
+    print(f"Test api_root and api_key: {api_root}, {len(api_key) * '*' + api_key[-4:]}")
 
     created_locations = set()
 
