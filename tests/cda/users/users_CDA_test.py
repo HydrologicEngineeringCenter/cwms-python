@@ -6,6 +6,7 @@ import cwms
 
 TEST_USER_NAME = os.getenv("CWMS_TEST_USER_NAME", "l2hectest")
 TEST_OFFICE_ID = os.getenv("CWMS_TEST_OFFICE_ID", "SPK")
+FORBIDDEN_LOOKUP_USER_NAME = os.getenv("CWMS_FORBIDDEN_LOOKUP_USER_NAME", "q0hectest")
 
 
 @pytest.fixture(autouse=True)
@@ -79,7 +80,7 @@ def test_get_user():
 def test_get_user_403_has_friendly_message_for_missing_roles(request):
     api_root = request.config.getoption("api_root")
     non_admin_api_key = request.config.getoption("user_non_admin_api_key")
-    user_name = str(TEST_USER_NAME)
+    user_name = str(FORBIDDEN_LOOKUP_USER_NAME)
 
     cwms.api.init_session(api_root=api_root, api_key=non_admin_api_key)
 
