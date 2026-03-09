@@ -31,7 +31,8 @@ def get_roles() -> List[str]:
 def get_user_profile() -> dict[str, Any]:
     """Retrieve the profile for the currently authenticated user."""
 
-    return api.get("user/profile", api_version=1)
+    response = api.get("user/profile", api_version=1)
+    return dict(response)
 
 
 def get_users(
