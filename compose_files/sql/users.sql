@@ -33,16 +33,19 @@ begin
     cwms_sec.add_user_to_group('q0hectest','All Users', 'LRL');
     cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'LRL');
     cwms_sec.add_user_to_group('q0hectest','TS ID Creator','LRL');
+    cwms_sec.add_user_to_group('q0hectest','CWMS User Admins', 'LRL');
 
     cwms_sec.add_cwms_user('q0hectest', NULL, 'SPK');
     cwms_sec.add_user_to_group('q0hectest','All Users', 'SPK');
     cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'SPK');
     cwms_sec.add_user_to_group('q0hectest','TS ID Creator','SPK');
+    cwms_sec.add_user_to_group('q0hectest','CWMS User Admins', 'SPK');
 
     cwms_sec.add_cwms_user('q0hectest', NULL, 'MVP');
     cwms_sec.add_user_to_group('q0hectest','All Users', 'MVP');
     cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'MVP');
     cwms_sec.add_user_to_group('q0hectest','TS ID Creator','MVP');
+    cwms_sec.add_user_to_group('q0hectest','CWMS User Admins', 'MVP');
 
     insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('Q0HECTEST', 'testkey', '0123456789abcdef0123456789abcdef');
 
