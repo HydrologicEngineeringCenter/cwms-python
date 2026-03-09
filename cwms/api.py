@@ -172,7 +172,6 @@ def init_session(
     if api_key:
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
-        logging.debug(f"Setting authorization key: api_key={api_key}")
         SESSION.headers.update({"Authorization": "apikey " + api_key})
 
     return SESSION
