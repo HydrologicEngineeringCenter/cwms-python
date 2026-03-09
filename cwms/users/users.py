@@ -5,10 +5,26 @@ import cwms.api as api
 from cwms.cwms_types import Data
 
 
+def _raise_user_management_error(error: api.ApiError, action: str) -> None:
+    status_code = getattr(error.response, "status_code", None)
+    if status_code == 403:
+        response_hint = getattr(error.response, "reason", None) or "Forbidden"
+        message = (
+            f"{action} could not be completed because the current credentials "
+            "are not authorized for user-management access or are missing the "
+            f"required role assignment. CDA responded with 403 {response_hint}."
+        )
+        raise api.PermissionError(error.response, message) from None
+    raise error
+
+
 def get_roles() -> List[str]:
     """Retrieve all available user-management roles."""
 
-    response = api.get("roles", api_version=1)
+    try:
+        response = api.get("roles", api_version=1)
+    except api.ApiError as error:
+        _raise_user_management_error(error, "User role lookup")
     return list(response)
 
 
@@ -26,7 +42,10 @@ def get_users(
     """Retrieve users with optional office and paging filters."""
 
     params = {"office": office_id, "page": page, "page-size": page_size}
-    response = api.get("users", params=params, api_version=1)
+    try:
+        response = api.get("users", params=params, api_version=1)
+    except api.ApiError as error:
+        _raise_user_management_error(error, "User list lookup")
     return Data(response, selector="users")
 
 
@@ -44,13 +63,7 @@ def get_user(user_name: str) -> dict[str, Any]:
                 error.response, f"User '{user_name}' was not found."
             ) from None
         if status_code == 403:
-            response_hint = getattr(error.response, "reason", None) or "Forbidden"
-            message = (
-                f"User '{user_name}' could not be retrieved because the current "
-                "credentials are not authorized for user-management access or are "
-                f"missing the required role assignment. CDA responded with 403 {response_hint}."
-            )
-            raise api.PermissionError(error.response, message) from None
+            _raise_user_management_error(error, f"User '{user_name}' retrieval")
         raise
     return dict(response)
 
@@ -72,7 +85,12 @@ def store_user(user_name: str, office_id: str, roles: List[str]) -> None:
         raise ValueError("Store user requires a roles list")
 
     endpoint = f"user/{user_name}/roles/{office_id}"
-    api.post(endpoint, roles)
+    try:
+        api.post(endpoint, roles)
+    except api.ApiError as error:
+        _raise_user_management_error(
+            error, f"User '{user_name}' role assignment update"
+        )
 
 
 def delete_user_roles(user_name: str, office_id: str, roles: List[str]) -> None:
@@ -92,7 +110,9 @@ def delete_user_roles(user_name: str, office_id: str, roles: List[str]) -> None:
         endpoint, headers=headers, data=json.dumps(roles)
     ) as response:
         if not response.ok:
-            raise api.ApiError(response)
+            _raise_user_management_error(
+                api.ApiError(response), f"User '{user_name}' role deletion"
+            )
 
 
 def update_user(user_name: str, office_id: str, roles: List[str]) -> None:
@@ -128,4 +148,7 @@ def update_user(user_name: str, office_id: str, roles: List[str]) -> None:
     if roles_to_remove:
         delete_user_roles(user_name, office_id, roles_to_remove)
     if roles_to_add:
-        api.post(endpoint, roles_to_add)
+        try:
+            api.post(endpoint, roles_to_add)
+        except api.ApiError as error:
+            _raise_user_management_error(error, f"User '{user_name}' role replacement")
