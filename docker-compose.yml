@@ -12,9 +12,7 @@ services:
       - OFFICE_EROC=s0
     ports: ["1526:1521"]
     healthcheck:
-      test: ["CMD", "tnsping", "
-      
-      /FREEPDB1"]
+      test: ["CMD", "tnsping", "/FREEPDB1"]
       interval: 30s
       timeout: 50s
       retries: 50
