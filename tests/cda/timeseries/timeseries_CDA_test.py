@@ -9,13 +9,14 @@ import cwms
 import cwms.timeseries.timeseries as ts
 
 TEST_OFFICE = "MVP"
-TEST_LOCATION_ID = "pytest_group"
+TEST_LOCATION_ID = "pytest_ts"
 TEST_TSID = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Test"
 TEST_TSID_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi"
 TEST_TSID_MULTI1 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-1"
 TEST_TSID_MULTI2 = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-2"
 TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
+TEST_TSID_COPY = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Copy"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
 TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
 # Generate 15-minute interval timestamps
@@ -29,6 +30,7 @@ TSIDS = [
     TEST_TSID_MULTI2,
     TEST_TSID_STORE,
     TEST_TSID_CHUNK_MULTI,
+    TEST_TSID_COPY,
 ]
 
 
@@ -71,6 +73,11 @@ DF_MULTI_TIMESERIES = pd.concat(
     [DF_MULTI_TIMESERIES1, DF_MULTI_TIMESERIES2]
 ).reset_index(drop=True)
 
+DT = datetime(2023, 1, 1, 0, 0, tzinfo=timezone.utc)
+EPOCH_MS = int(DT.timestamp() * 1000)
+BEGIN = DT - timedelta(minutes=5)
+END = DT + timedelta(minutes=5)
+
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
@@ -91,6 +98,13 @@ def setup_data():
     }
     cwms.store_location(location)
 
+    ts_json = {
+        "name": TEST_TSID_DELETE,
+        "office-id": TEST_OFFICE,
+        "units": "ft",
+        "values": [[EPOCH_MS, 99, 0]],
+    }
+    ts.store_timeseries(ts_json)
     yield
     for ts_id in TSIDS:
         try:
@@ -108,21 +122,14 @@ def init_session():
 
 
 def test_store_timeseries():
-    now = datetime.now(timezone.utc).replace(microsecond=0)
-    now_epoch_ms = int(now.timestamp() * 1000)
-    iso_now = now.isoformat()
     ts_json = {
         "name": TEST_TSID_STORE,
         "office-id": TEST_OFFICE,
         "units": "ft",
-        "values": [[now_epoch_ms, 99, 0]],
-        "begin": iso_now,
-        "end": iso_now,
-        "version-date": iso_now,
-        "time-zone": "UTC",
+        "values": [[EPOCH_MS, 99, 0]],
     }
     ts.store_timeseries(ts_json)
-    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE).json
+    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE, begin=BEGIN, end=END).json
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
@@ -130,7 +137,7 @@ def test_store_timeseries():
 
 
 def test_get_timeseries():
-    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE).json
+    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE, begin=BEGIN, end=END).json
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
@@ -138,10 +145,9 @@ def test_get_timeseries():
 
 
 def test_timeseries_df_to_json():
-    dt = datetime(2023, 1, 1, 0, 0, tzinfo=timezone.utc)
     df = pd.DataFrame(
         {
-            "date-time": [dt],
+            "date-time": [DT],
             "value": [42],
             "quality-code": [0],
         }
@@ -154,16 +160,14 @@ def test_timeseries_df_to_json():
     assert json_out["office-id"] == office, "Incorrect office-id in output"
     assert json_out["units"] == units, "Incorrect units in output"
     assert json_out["values"] == [
-        [dt.isoformat(), 42, 0]
+        [DT.isoformat(), 42, 0]
     ], "Values do not match expected"
 
 
 def test_store_multi_timeseries_df():
-    now = datetime.now(timezone.utc).replace(microsecond=0)
-    TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
     df = pd.DataFrame(
         {
-            "date-time": [now, now],
+            "date-time": [DT, DT],
             "value": [7, 8],
             "quality-code": [0, 0],
             "ts_id": [TEST_TSID_MULTI, TS_ID_REV_TEST],
@@ -171,8 +175,12 @@ def test_store_multi_timeseries_df():
         }
     )
     ts.store_multi_timeseries_df(df, TEST_OFFICE)
-    data1 = ts.get_timeseries(TEST_TSID_MULTI, TEST_OFFICE, multithread=False).json
-    data2 = ts.get_timeseries(TS_ID_REV_TEST, TEST_OFFICE, multithread=False).json
+    data1 = ts.get_timeseries(
+        TEST_TSID_MULTI, TEST_OFFICE, multithread=False, begin=BEGIN, end=END
+    ).json
+    data2 = ts.get_timeseries(
+        TS_ID_REV_TEST, TEST_OFFICE, multithread=False, begin=BEGIN, end=END
+    ).json
     assert data1["name"] == TEST_TSID_MULTI
     assert data1["office-id"] == TEST_OFFICE
     assert data1["units"] == "ft"
@@ -228,8 +236,9 @@ def test_get_multi_timeseries_chunk_df():
 
 
 def test_get_multi_timeseries_df():
-    TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
-    df = ts.get_multi_timeseries_df([TEST_TSID_MULTI, TS_ID_REV_TEST], TEST_OFFICE)
+    df = ts.get_multi_timeseries_df(
+        [TEST_TSID_MULTI, TS_ID_REV_TEST], TEST_OFFICE, begin=BEGIN, end=END
+    )
     assert df is not None, "Returned DataFrame is None"
     assert not df.empty, "Returned DataFrame is empty"
     assert any(
@@ -253,6 +262,33 @@ def test_store_timeseries_chunk_ts():
 
     data_multithread = ts.get_timeseries(
         ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    )
+    df = data_multithread.df
+    # make sure the dataframe matches stored dataframe
+    pdt.assert_frame_equal(
+        df, DF_CHUNK_MULTI
+    ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
+
+
+def test_copy_timeseries_chunk_json():
+    data_json = ts.get_timeseries(
+        ts_id=TEST_TSID_CHUNK_MULTI,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        max_days_per_chunk=14,
+        unit="SI",
+    ).json
+    data_json["name"] = TEST_TSID_COPY
+    ts.store_timeseries(data_json)
+
+    data_multithread = ts.get_timeseries(
+        ts_id=TEST_TSID_COPY,
         office_id=TEST_OFFICE,
         begin=START_DATE_CHUNK_MULTI,
         end=END_DATE_CHUNK_MULTI,
@@ -296,10 +332,6 @@ def test_read_timeseries_chunk_ts():
 
 
 def test_delete_timeseries():
-    TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
-    now = datetime.now(timezone.utc).replace(microsecond=0)
-    begin = now - timedelta(minutes=15)
-    end = now + timedelta(minutes=15)
-    ts.delete_timeseries(TS_ID_REV_TEST, TEST_OFFICE, begin, end)
-    result = ts.get_timeseries(TS_ID_REV_TEST, TEST_OFFICE)
+    ts.delete_timeseries(TEST_TSID_DELETE, TEST_OFFICE, BEGIN, END)
+    result = ts.get_timeseries(TEST_TSID_DELETE, TEST_OFFICE)
     assert result is None or result.json.get("values", []) == []
