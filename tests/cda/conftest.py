@@ -29,7 +29,7 @@ def pytest_addoption(parser):
         "--user_non_admin_api_key",
         action="store",
         default=os.getenv(
-            "CDA_USER_NON_ADMIN_API_KEY", "1234567890abcdef1234567890abcdef"
+            "CDA_USER_NON_ADMIN_API_KEY", "fedcba9876543210fedcba9876543210"
         ),
         help="Set a non-admin API key for CDA user authorization tests",
     )
