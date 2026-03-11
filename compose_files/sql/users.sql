@@ -33,20 +33,25 @@ begin
     cwms_sec.add_user_to_group('q0hectest','All Users', 'LRL');
     cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'LRL');
     cwms_sec.add_user_to_group('q0hectest','TS ID Creator','LRL');
+    cwms_sec.add_user_to_group('q0hectest','CWMS User Admins', 'LRL');
 
     cwms_sec.add_cwms_user('q0hectest', NULL, 'SPK');
     cwms_sec.add_user_to_group('q0hectest','All Users', 'SPK');
     cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'SPK');
     cwms_sec.add_user_to_group('q0hectest','TS ID Creator','SPK');
+    cwms_sec.add_user_to_group('q0hectest','CWMS User Admins', 'SPK');
 
     cwms_sec.add_cwms_user('q0hectest', NULL, 'MVP');
     cwms_sec.add_user_to_group('q0hectest','All Users', 'MVP');
     cwms_sec.add_user_to_group('q0hectest','CWMS Users', 'MVP');
     cwms_sec.add_user_to_group('q0hectest','TS ID Creator','MVP');
+    cwms_sec.add_user_to_group('q0hectest','CWMS User Admins', 'MVP');
 
     insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('Q0HECTEST', 'testkey', '0123456789abcdef0123456789abcdef');
-
     insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('L2HECTEST', 'testkey2', '1234567890abcdef1234567890abcdef');
+    -- Non-admin API key for the L1 with reduced permissions
+    -- Used by CDA user-management tests that verify 403 handling
+    insert into cwms_20.at_api_keys (userid, key_name, apikey) values ('L1HECTEST', 'non_admin_test_key', 'fedcba9876543210fedcba9876543210');
 
 end;
 /

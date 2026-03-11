@@ -140,3 +140,4 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=PathPrefix(`/traefik`)"
       - "traefik.http.routers.traefik.service=api@internal"
+

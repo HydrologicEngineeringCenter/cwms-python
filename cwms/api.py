@@ -78,10 +78,14 @@ class ApiError(Exception):
     a concise, single-line error message with an optional hint.
     """
 
-    def __init__(self, response: Response):
+    def __init__(self, response: Response, message: Optional[str] = None):
         self.response = response
+        self.message = message
 
     def __str__(self) -> str:
+        if self.message:
+            return self.message
+
         # Include the request URL in the error message.
         message = f"CWMS API Error ({self.response.url})"
 
@@ -125,6 +129,14 @@ class ApiError(Exception):
         return ""
 
 
+class NotFoundError(ApiError):
+    """Raised when a requested CDA resource does not exist."""
+
+
+class PermissionError(ApiError):
+    """Raised when the CDA request is not authorized for the current caller."""
+
+
 def init_session(
     *,
     api_root: Optional[str] = None,
@@ -160,7 +172,6 @@ def init_session(
     if api_key:
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
-        logging.debug(f"Setting authorization key: api_key={api_key}")
         SESSION.headers.update({"Authorization": "apikey " + api_key})
 
     return SESSION
