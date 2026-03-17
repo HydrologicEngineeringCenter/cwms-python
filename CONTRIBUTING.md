@@ -51,6 +51,10 @@ poetry run pytest tests/turbines/turbines_test.py
 
 To test and develop with a local CDA instance, follow these steps:
 
+For application code and manual local development, `cwms.api.init_session()`
+now supports either `api_key=` or `token=` authentication. When both are
+passed, bearer token auth takes precedence.
+
 1. **Install Docker**  
     Download and install Docker from the [official website](https://www.docker.com/get-started/).
 
@@ -89,6 +93,10 @@ To test and develop with a local CDA instance, follow these steps:
     ```sh
     poetry run pytest tests/cda/ --api_root=http://localhost:8082/cwms-data/
     ```
+
+    At the moment, the CDA pytest options are still keyed to `--api_key`; the
+    new `token=` support is available through `cwms.api.init_session()` in
+    library code.
 
     > **Warning:** The tests in the `tests/cda/` package are destructive and may cause irreversible deletion of data from the targeted CDA instance. Use caution and avoid running these tests against production or important environments.
 
