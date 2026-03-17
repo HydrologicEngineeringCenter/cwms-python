@@ -5,9 +5,9 @@ functions should be used internally to interact with the API. The user should no
 interact with these directly.
 
 The `init_session()` function can be used to specify an alternative root URL, and to
-provide an authentication key (if required). If `init_session()` is not called, the
-default root URL (see `API_ROOT` below) will be used, and no authentication keys will be
-included when making API calls.
+provide an authentication key or bearer token (if required). If `init_session()` is not
+called, the default root URL (see `API_ROOT` below) will be used, and no authentication
+headers will be included when making API calls.
 
 Example: Initializing a session
 
@@ -16,6 +16,9 @@ Example: Initializing a session
 
     # Specify an alternate URL and an auth key
     init_session(api_root="https://example.com/cwms-data", api_key="API_KEY")
+
+    # Specify an alternate URL and an OIDC bearer token
+    init_session(api_root="https://example.com/cwms-data", token="ACCESS_TOKEN")
 
 Functions which make API calls that _may_ return a JSON response will return a `dict`
 containing the deserialized data. If the API response does not include data, an empty
@@ -141,17 +144,21 @@ def init_session(
     *,
     api_root: Optional[str] = None,
     api_key: Optional[str] = None,
+    token: Optional[str] = None,
     pool_connections: int = 100,
 ) -> BaseUrlSession:
-    """Specify a root URL and authentication key for the CWMS Data API.
+    """Specify a root URL and authentication credentials for the CWMS Data API.
 
     This function can be used to change the root URL used when interacting with the CDA.
-    All API calls made after this function is called will use the specified URL. If an
-    authentication key is given it will be included in all future request headers.
+    All API calls made after this function is called will use the specified URL. If
+    authentication credentials are given they will be included in all future request
+    headers.
 
     Keyword Args:
         api_root (optional): The root URL for the CWMS Data API.
         api_key (optional): An authentication key.
+        token (optional): A Keycloak access token. If both token and api_key are
+            provided, token is used.
 
     Returns:
         Returns the updated session object.
@@ -169,7 +176,16 @@ def init_session(
             max_retries=retry_strategy,
         )
         SESSION.mount("https://", adapter)
-    if api_key:
+    if token:
+        if api_key:
+            logging.warning(
+                "Both token and api_key were provided to init_session(); using token for Authorization."
+            )
+        # Ensure we don't provide the bearer text twice
+        if token.lower().startswith("bearer "):
+            token = token[7:]
+        SESSION.headers.update({"Authorization": "Bearer " + token})
+    elif api_key:
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
         SESSION.headers.update({"Authorization": "apikey " + api_key})
