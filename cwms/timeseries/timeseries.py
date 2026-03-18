@@ -458,6 +458,10 @@ def timeseries_df_to_json(
 def store_multi_timeseries_df(
     data: pd.DataFrame,
     office_id: str,
+    create_as_ltrs: Optional[bool] = False,
+    store_rule: Optional[str] = None,
+    override_protection: Optional[bool] = False,
+    multithread: Optional[bool] = False,
     max_workers: Optional[int] = 30,
 ) -> None:
     """stored mulitple timeseries from a dataframe.  The dataframe must be a metled dataframe with columns
@@ -478,6 +482,19 @@ def store_multi_timeseries_df(
                 2   2023-12-20T15:15:00.000-05:00  98.5           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:15:00-05:00
         office_id: string
             The owning office of the time series(s).
+        create_as_ltrs: bool, optional, default is False
+            Flag indicating if timeseries should be created as Local Regular Time Series.
+        store_rule: str, optional, default is None:
+            The business rule to use when merging the incoming with existing data. Available values :
+                REPLACE_ALL,
+                DO_NOT_REPLACE,
+                REPLACE_MISSING_VALUES_ONLY,
+                REPLACE_WITH_NON_MISSING,
+                DELETE_INSERT.
+        override_protection: bool, optional, default is False
+            A flag to ignore the protected data quality flag when storing data.
+        multithread: bool, default is false
+            Specifies whether to store chunked time series values using multiple threads.
         max_workers: Int, Optional, default is None
             It is a number of Threads aka size of pool in concurrent.futures.ThreadPoolExecutor.
 
@@ -491,7 +508,6 @@ def store_multi_timeseries_df(
         ts_id: str,
         office_id: str,
         version_date: Optional[datetime] = None,
-        multithread: bool = False,
     ) -> None:
         try:
             units = data["units"].iloc[0]
@@ -502,7 +518,13 @@ def store_multi_timeseries_df(
                 office_id=office_id,
                 version_date=version_date,
             )
-            store_timeseries(data=data_json, multithread=multithread)
+            store_timeseries(
+                data=data_json,
+                create_as_ltrs=create_as_ltrs,
+                store_rule=store_rule,
+                override_protection=override_protection,
+                multithread=multithread,
+            )
         except Exception as e:
             print(f"Error processing {ts_id}: {e}")
         return None
