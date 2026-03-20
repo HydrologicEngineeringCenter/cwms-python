@@ -37,16 +37,37 @@ def get_user_profile() -> dict[str, Any]:
 
 def get_users(
     office_id: Optional[str] = None,
+    username_like: Optional[str] = None,
+    include_roles: Optional[bool] = None,
     page: Optional[str] = None,
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 5000,
 ) -> Data:
     """Retrieve users with optional office and paging filters."""
 
-    params = {"office": office_id, "page": page, "page-size": page_size}
+    endpoint = "users"
+    params = {
+        "office": office_id,
+        "username-like": username_like,
+        "include-roles": include_roles,
+        "page": page,
+        "page-size": page_size,
+    }
     try:
-        response = api.get("users", params=params, api_version=1)
+        response = api.get_with_paging(
+            endpoint=endpoint, selector="users", params=params, api_version=1
+        )
     except api.ApiError as error:
         _raise_user_management_error(error, "User list lookup")
+
+    # filter by office if office_id is provided since the API does not
+    # currently support filtering by office on the backend. This is a
+    # temporary workaround until the API supports office filtering.
+    if office_id:
+        data = response
+        filtered_users = [
+            user for user in data["users"] if office_id in user.get("roles", {})
+        ]
+        response = {**data, "users": filtered_users, "total": len(filtered_users)}
     return Data(response, selector="users")
 
 
