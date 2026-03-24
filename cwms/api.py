@@ -32,6 +32,7 @@ the error.
 import base64
 import json
 import logging
+from builtins import BaseException
 from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
