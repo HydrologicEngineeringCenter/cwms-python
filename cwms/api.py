@@ -37,6 +37,7 @@ from json import JSONDecodeError
 from typing import Any, Optional, cast
 
 from requests import Response, adapters
+from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 from urllib3.util.retry import Retry
@@ -60,6 +61,7 @@ retry_strategy = Retry(
         504,
     ],  # Example: also retry on these HTTP status codes
     allowed_methods=["GET", "PUT", "POST", "PATCH", "DELETE"],  # Methods to retry
+    raise_on_status=False,
 )
 SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
 adapter = adapters.HTTPAdapter(
@@ -137,6 +139,21 @@ class NotFoundError(ApiError):
 
 class PermissionError(ApiError):
     """Raised when the CDA request is not authorized for the current caller."""
+
+
+def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
+    """Return the original retry cause when requests wraps it in RetryError."""
+
+    current: BaseException = error
+    while getattr(current, "__cause__", None) is not None:
+        current = current.__cause__
+
+    if current is error and error.args:
+        current = error.args[0]
+        while getattr(current, "reason", None) is not None:
+            current = current.reason
+
+    return current if isinstance(current, Exception) else error
 
 
 def init_session(
@@ -307,11 +324,14 @@ def get(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    with SESSION.get(endpoint, params=params, headers=headers) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
-        return _process_response(response)
+    try:
+        with SESSION.get(endpoint, params=params, headers=headers) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+            return _process_response(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def get_with_paging(
@@ -366,11 +386,16 @@ def _post_function(
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
-    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
-        return response
+    try:
+        with SESSION.post(
+            endpoint, params=params, headers=headers, data=data
+        ) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+            return response
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def post(
@@ -460,10 +485,15 @@ def patch(
 
     if data and isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
-    with SESSION.patch(endpoint, params=params, headers=headers, data=data) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
+    try:
+        with SESSION.patch(
+            endpoint, params=params, headers=headers, data=data
+        ) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def delete(
@@ -487,7 +517,10 @@ def delete(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    with SESSION.delete(endpoint, params=params, headers=headers) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
+    try:
+        with SESSION.delete(endpoint, params=params, headers=headers) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
