@@ -55,7 +55,6 @@ retry_strategy = Retry(
     status_forcelist=[
         403,
         429,
-        500,
         502,
         503,
         504,
