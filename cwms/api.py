@@ -32,7 +32,6 @@ the error.
 import base64
 import json
 import logging
-from builtins import BaseException
 from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
@@ -145,16 +144,22 @@ class PermissionError(ApiError):
 def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
     """Return the original retry cause when requests wraps it in RetryError."""
 
-    current: BaseException = error
-    while getattr(current, "__cause__", None) is not None:
-        current = current.__cause__
+    current: Exception = error
+    cause = error.__cause__
+    while isinstance(cause, Exception):
+        current = cause
+        cause = cause.__cause__
 
     if current is error and error.args:
-        current = error.args[0]
-        while getattr(current, "reason", None) is not None:
-            current = current.reason
+        first_arg = error.args[0]
+        if isinstance(first_arg, Exception):
+            current = first_arg
+            reason = getattr(current, "reason", None)
+            while isinstance(reason, Exception):
+                current = reason
+                reason = getattr(current, "reason", None)
 
-    return current if isinstance(current, Exception) else error
+    return current
 
 
 def init_session(
