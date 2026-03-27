@@ -233,6 +233,14 @@ def combine_timeseries_results(results: List[Data]) -> Data:
     )
     combined_df["date-time"] = combined_df["date-time"].astype("Int64")
     combined_df = combined_df.reindex(columns=["date-time", "value", "quality-code"])
+
+    # Replace NaN in value column with None so they serialize as JSON null
+    # rather than the invalid JSON literal NaN.
+    combined_df["value"] = (
+        combined_df["value"]
+        .astype(object)
+        .where(combined_df["value"].notna(), other=None)
+    )
     # Update the "values" key in the JSON to include the combined data
     combined_json["values"] = combined_df.values.tolist()
 
@@ -438,8 +446,11 @@ def timeseries_df_to_json(
         pd.Timestamp.isoformat
     )
     df = df.reindex(columns=["date-time", "value", "quality-code"])
-    if df.isnull().values.any():
-        raise ValueError("Null/NaN data must be removed from the dataframe")
+
+    # Replace NaN/NA/NaT in value column with None so they serialize as JSON
+    # null rather than the invalid JSON literal NaN.
+    df["value"] = df["value"].astype(object).where(df["value"].notna(), other=None)
+
     if version_date:
         version_date_iso = version_date.isoformat()
     else:
