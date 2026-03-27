@@ -18,6 +18,7 @@ TEST_TSID_STORE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Store"
 TEST_TSID_CHUNK_MULTI = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Chunk"
 TEST_TSID_COPY = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Copy"
 TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
+TEST_TSID_CHUNK_NULLS = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Nulls"
 TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
 # Generate 15-minute interval timestamps
 START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)
@@ -31,6 +32,7 @@ TSIDS = [
     TEST_TSID_STORE,
     TEST_TSID_CHUNK_MULTI,
     TEST_TSID_COPY,
+    TEST_TSID_CHUNK_NULLS,
 ]
 
 
@@ -273,6 +275,37 @@ def test_store_timeseries_chunk_ts():
     pdt.assert_frame_equal(
         df, DF_CHUNK_MULTI
     ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
+
+
+def test_store_timesereis_chunk_to_with_null_values():
+    # Define parameters
+    ts_id = TEST_TSID_CHUNK_NULLS
+    office = TEST_OFFICE
+    units = "m"
+
+    # Create a copy of the original DataFrame and introduce null values
+    df_with_nulls = DF_CHUNK_MULTI.copy()
+    # Set the 100 and 200 index value to null
+    df_with_nulls.loc[100, "value"] = None
+    df_with_nulls.loc[200, "value"] = None
+
+    # Convert DataFrame to JSON format
+    ts_json = ts.timeseries_df_to_json(df_with_nulls, ts_id, units, office)
+
+    ts.store_timeseries(ts_json, multithread=True)
+
+    data_nulls = ts.get_timeseries(
+        ts_id=ts_id,
+        office_id=TEST_OFFICE,
+        begin=START_DATE_CHUNK_MULTI,
+        end=END_DATE_CHUNK_MULTI,
+        unit="SI",
+    )
+    df_nulls = data_nulls.df
+    # make sure the dataframe matches stored dataframe with null values
+    pdt.assert_frame_equal(
+        df_nulls, df_with_nulls
+    ), f"Data frames do not match: original with nulls = {df_with_nulls.describe()}, stored = {df_nulls.describe()}"
 
 
 def test_copy_timeseries_chunk_json():

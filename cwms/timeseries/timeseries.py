@@ -438,8 +438,11 @@ def timeseries_df_to_json(
         pd.Timestamp.isoformat
     )
     df = df.reindex(columns=["date-time", "value", "quality-code"])
-    if df.isnull().values.any():
-        raise ValueError("Null/NaN data must be removed from the dataframe")
+
+    # Replace NaN/NA/NaT in value column with None so they serialize as JSON
+    # null rather than the invalid JSON literal NaN.
+    df["value"] = df["value"].astype(object).where(df["value"].notna(), other=None)
+
     if version_date:
         version_date_iso = version_date.isoformat()
     else:
