@@ -113,12 +113,17 @@ def test_get_users_by_office():
     # returned page when filtering by the test user's office.
     user_name = str(TEST_USER_NAME)
     office_id = TEST_OFFICE_ID
-    users = cwms.get_users(office_id=office_id, page_size=200)
-    users_list = users.json.get("users", [])
+    users = cwms.get_users(office_id=office_id, page_size=200).json
+    users_list = users.get("users", [])
     assert isinstance(users_list, list)
     assert any(
         str(u.get("user-name", "")).lower() == user_name.lower() for u in users_list
     )
+    for user in users["users"]:
+        roles = user["roles"]
+        assert set(roles.keys()) == {
+            office_id
+        }, f"{user['user-name']} has unexpected office keys: {set(roles.keys())}"
 
 
 def test_get_users_by_office_not_present_in_other_office():

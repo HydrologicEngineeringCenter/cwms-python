@@ -35,6 +35,37 @@ def get_user_profile() -> dict[str, Any]:
     return dict(response)
 
 
+def filter_users_by_office(data: dict, office: str) -> dict:
+    """
+    Filter users JSON to only include users that have roles for the specified office.
+    Each user's roles dict will only contain the entry for that office.
+
+    Args:
+        data:   The full users JSON as a Python dict.
+        office: The office key to filter by (e.g., 'MVP', 'LRL').
+
+    Returns:
+        A new dict with the same structure, filtered to the specified office.
+    """
+    filtered_users = []
+
+    for user in data.get("users", []):
+        roles = user.get("roles", {})
+
+        if office in roles:
+            # Build a copy of the user with only the target office's roles
+            filtered_user = {k: v for k, v in user.items() if k != "roles"}
+            filtered_user["roles"] = {office: roles[office]}
+            filtered_users.append(filtered_user)
+
+    return {
+        "page": data.get("page"),
+        "page-size": data.get("page-size"),
+        "total": len(filtered_users),
+        "users": filtered_users,
+    }
+
+
 def get_users(
     office_id: Optional[str] = None,
     username_like: Optional[str] = None,
@@ -63,11 +94,7 @@ def get_users(
     # currently support filtering by office on the backend. This is a
     # temporary workaround until the API supports office filtering.
     if office_id:
-        data = response
-        filtered_users = [
-            user for user in data["users"] if office_id in user.get("roles", {})
-        ]
-        response = {**data, "users": filtered_users, "total": len(filtered_users)}
+        response = filter_users_by_office(response, office_id)
     return Data(response, selector="users")
 
 
