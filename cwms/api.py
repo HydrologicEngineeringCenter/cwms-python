@@ -5,9 +5,9 @@ functions should be used internally to interact with the API. The user should no
 interact with these directly.
 
 The `init_session()` function can be used to specify an alternative root URL, and to
-provide an authentication key (if required). If `init_session()` is not called, the
-default root URL (see `API_ROOT` below) will be used, and no authentication keys will be
-included when making API calls.
+provide an authentication key or bearer token (if required). If `init_session()` is not
+called, the default root URL (see `API_ROOT` below) will be used, and no authentication
+headers will be included when making API calls.
 
 Example: Initializing a session
 
@@ -16,6 +16,9 @@ Example: Initializing a session
 
     # Specify an alternate URL and an auth key
     init_session(api_root="https://example.com/cwms-data", api_key="API_KEY")
+
+    # Specify an alternate URL and an OIDC bearer token
+    init_session(api_root="https://example.com/cwms-data", token="ACCESS_TOKEN")
 
 Functions which make API calls that _may_ return a JSON response will return a `dict`
 containing the deserialized data. If the API response does not include data, an empty
@@ -34,6 +37,7 @@ from json import JSONDecodeError
 from typing import Any, Optional, cast
 
 from requests import Response, adapters
+from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 from urllib3.util.retry import Retry
@@ -52,12 +56,12 @@ retry_strategy = Retry(
     status_forcelist=[
         403,
         429,
-        500,
         502,
         503,
         504,
     ],  # Example: also retry on these HTTP status codes
     allowed_methods=["GET", "PUT", "POST", "PATCH", "DELETE"],  # Methods to retry
+    raise_on_status=False,
 )
 SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
 adapter = adapters.HTTPAdapter(
@@ -137,21 +141,46 @@ class PermissionError(ApiError):
     """Raised when the CDA request is not authorized for the current caller."""
 
 
+def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
+    """Return the original retry cause when requests wraps it in RetryError."""
+
+    current: Exception = error
+    cause = error.__cause__
+    while isinstance(cause, Exception):
+        current = cause
+        cause = cause.__cause__
+
+    if current is error and error.args:
+        first_arg = error.args[0]
+        if isinstance(first_arg, Exception):
+            current = first_arg
+            reason = getattr(current, "reason", None)
+            while isinstance(reason, Exception):
+                current = reason
+                reason = getattr(current, "reason", None)
+
+    return current
+
+
 def init_session(
     *,
     api_root: Optional[str] = None,
     api_key: Optional[str] = None,
+    token: Optional[str] = None,
     pool_connections: int = 100,
 ) -> BaseUrlSession:
-    """Specify a root URL and authentication key for the CWMS Data API.
+    """Specify a root URL and authentication credentials for the CWMS Data API.
 
     This function can be used to change the root URL used when interacting with the CDA.
-    All API calls made after this function is called will use the specified URL. If an
-    authentication key is given it will be included in all future request headers.
+    All API calls made after this function is called will use the specified URL. If
+    authentication credentials are given they will be included in all future request
+    headers.
 
     Keyword Args:
         api_root (optional): The root URL for the CWMS Data API.
         api_key (optional): An authentication key.
+        token (optional): A Keycloak access token. If both token and api_key are
+            provided, token is used.
 
     Returns:
         Returns the updated session object.
@@ -169,7 +198,16 @@ def init_session(
             max_retries=retry_strategy,
         )
         SESSION.mount("https://", adapter)
-    if api_key:
+    if token:
+        if api_key:
+            logging.warning(
+                "Both token and api_key were provided to init_session(); using token for Authorization."
+            )
+        # Ensure we don't provide the bearer text twice
+        if token.lower().startswith("bearer "):
+            token = token[7:]
+        SESSION.headers.update({"Authorization": "Bearer " + token})
+    elif api_key:
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
         SESSION.headers.update({"Authorization": "apikey " + api_key})
@@ -292,11 +330,14 @@ def get(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    with SESSION.get(endpoint, params=params, headers=headers) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
-        return _process_response(response)
+    try:
+        with SESSION.get(endpoint, params=params, headers=headers) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+            return _process_response(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def get_with_paging(
@@ -351,11 +392,16 @@ def _post_function(
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
-    with SESSION.post(endpoint, params=params, headers=headers, data=data) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
-        return response
+    try:
+        with SESSION.post(
+            endpoint, params=params, headers=headers, data=data
+        ) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+            return response
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def post(
@@ -445,10 +491,15 @@ def patch(
 
     if data and isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
-    with SESSION.patch(endpoint, params=params, headers=headers, data=data) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
+    try:
+        with SESSION.patch(
+            endpoint, params=params, headers=headers, data=data
+        ) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def delete(
@@ -472,7 +523,10 @@ def delete(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    with SESSION.delete(endpoint, params=params, headers=headers) as response:
-        if not response.ok:
-            logging.error(f"CDA Error: response={response}")
-            raise ApiError(response)
+    try:
+        with SESSION.delete(endpoint, params=params, headers=headers) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
