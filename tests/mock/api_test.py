@@ -3,7 +3,9 @@ from requests.exceptions import RetryError as RequestsRetryError
 from urllib3.exceptions import MaxRetryError, ResponseError
 
 import cwms.api
-from cwms.api import SESSION, ApiError, InvalidVersion, api_version_text, init_session
+from cwms.api import SESSION, ApiError, api_version_text, init_session
+
+TEST_ENDPOINT = "/test-endpoint"
 
 
 def test_session_default():
@@ -90,7 +92,7 @@ def test_post_500_raises_api_error(monkeypatch):
     monkeypatch.setattr(cwms.api, "SESSION", SessionStub())
 
     with pytest.raises(ApiError) as error:
-        cwms.api._post_function(endpoint="/test-endpoint", data={})
+        cwms.api._post_function(endpoint=TEST_ENDPOINT, data={})
 
     assert error.value.response.status_code == 500
     assert "Internal Server Error" in str(error.value)
@@ -102,7 +104,7 @@ def test_retry_error_unwraps_original_cause(monkeypatch):
 
     original_error = ResponseError("too many 503 error responses")
     wrapped_error = RequestsRetryError(
-        MaxRetryError(pool=None, url="/test-endpoint", reason=original_error)
+        MaxRetryError(pool=None, url=TEST_ENDPOINT, reason=original_error)
     )
 
     class SessionStub:
@@ -112,4 +114,4 @@ def test_retry_error_unwraps_original_cause(monkeypatch):
     monkeypatch.setattr(cwms.api, "SESSION", SessionStub())
 
     with pytest.raises(ResponseError, match="too many 503 error responses"):
-        cwms.api.get("/test-endpoint")
+        cwms.api.get(TEST_ENDPOINT)
