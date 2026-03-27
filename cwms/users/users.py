@@ -35,18 +35,66 @@ def get_user_profile() -> dict[str, Any]:
     return dict(response)
 
 
+def filter_users_by_office(data: dict[str, Any], office: str) -> dict[str, Any]:
+    """
+    Filter users JSON to only include users that have roles for the specified office.
+    Each user's roles dict will only contain the entry for that office.
+
+    Args:
+        data:   The full users JSON as a Python dict.
+        office: The office key to filter by (e.g., 'MVP', 'LRL').
+
+    Returns:
+        A new dict with the same structure, filtered to the specified office.
+    """
+    filtered_users = []
+
+    for user in data.get("users", []):
+        roles = user.get("roles", {})
+
+        if office in roles:
+            # Build a copy of the user with only the target office's roles
+            filtered_user = {k: v for k, v in user.items() if k != "roles"}
+            filtered_user["roles"] = {office: roles[office]}
+            filtered_users.append(filtered_user)
+
+    return {
+        "page": data.get("page"),
+        "page-size": data.get("page-size"),
+        "total": len(filtered_users),
+        "users": filtered_users,
+    }
+
+
 def get_users(
     office_id: Optional[str] = None,
+    username_like: Optional[str] = None,
+    include_roles: Optional[bool] = None,
     page: Optional[str] = None,
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 5000,
 ) -> Data:
     """Retrieve users with optional office and paging filters."""
 
-    params = {"office": office_id, "page": page, "page-size": page_size}
+    endpoint = "users"
+    params = {
+        "office": office_id,
+        "username-like": username_like,
+        "include-roles": include_roles,
+        "page": page,
+        "page-size": page_size,
+    }
     try:
-        response = api.get("users", params=params, api_version=1)
+        response = api.get_with_paging(
+            endpoint=endpoint, selector="users", params=params, api_version=1
+        )
     except api.ApiError as error:
         _raise_user_management_error(error, "User list lookup")
+
+    # filter by office if office_id is provided since the API does not
+    # currently support filtering by office on the backend. This is a
+    # temporary workaround until the API supports office filtering.
+    if office_id:
+        response = filter_users_by_office(response, office_id)
     return Data(response, selector="users")
 
 
