@@ -35,7 +35,7 @@ def get_user_profile() -> dict[str, Any]:
     return dict(response)
 
 
-def filter_users_by_office(data: dict, office: str) -> dict:
+def filter_users_by_office(data: dict[str, Any], office: str) -> dict[str, Any]:
     """
     Filter users JSON to only include users that have roles for the specified office.
     Each user's roles dict will only contain the entry for that office.
