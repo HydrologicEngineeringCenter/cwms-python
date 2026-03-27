@@ -233,6 +233,14 @@ def combine_timeseries_results(results: List[Data]) -> Data:
     )
     combined_df["date-time"] = combined_df["date-time"].astype("Int64")
     combined_df = combined_df.reindex(columns=["date-time", "value", "quality-code"])
+
+    # Replace NaN in value column with None so they serialize as JSON null
+    # rather than the invalid JSON literal NaN.
+    combined_df["value"] = (
+        combined_df["value"]
+        .astype(object)
+        .where(combined_df["value"].notna(), other=None)
+    )
     # Update the "values" key in the JSON to include the combined data
     combined_json["values"] = combined_df.values.tolist()
 
