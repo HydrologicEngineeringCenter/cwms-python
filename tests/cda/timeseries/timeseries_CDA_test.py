@@ -184,7 +184,12 @@ def test_store_multi_timeseries_df():
             "units": ["ft", "ft"],
         }
     )
-    ts.store_multi_timeseries_df(df, TEST_OFFICE)
+    ts.store_multi_timeseries_df(
+        df,
+        TEST_OFFICE,
+        store_rule="REPLACE_ALL",
+        override_protection=False,
+    )
     data1 = ts.get_timeseries(
         TEST_TSID_MULTI, TEST_OFFICE, multithread=False, begin=BEGIN, end=END
     ).json
@@ -203,7 +208,13 @@ def test_store_multi_timeseries_df():
 
 def test_store_multi_timeseries_chunks_df():
     # test getting multi timeseries while using the chunk method as well
-    ts.store_multi_timeseries_df(data=DF_MULTI_TIMESERIES, office_id=TEST_OFFICE)
+    ts.store_multi_timeseries_df(
+        data=DF_MULTI_TIMESERIES,
+        office_id=TEST_OFFICE,
+        store_rule="REPLACE_ALL",
+        override_protection=False,
+        multithread=True,
+    )
     data1 = ts.get_timeseries(
         ts_id=TEST_TSID_MULTI1,
         office_id=TEST_OFFICE,
