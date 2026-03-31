@@ -67,7 +67,9 @@ def get_locations_catalog(
         "location-kind-like": location_kind_like,
     }
 
-    response = api.get(endpoint=endpoint, params=params, api_version=2)
+    response = api.get_with_paging(
+        endpoint=endpoint, selector="entries", params=params, api_version=2
+    )
     return Data(response, selector="entries")
 
 
@@ -131,7 +133,9 @@ def get_timeseries_catalog(
         "include-extents": include_extents,
     }
 
-    response = api.get(endpoint=endpoint, params=params, api_version=2)
+    response = api.get_with_paging(
+        endpoint=endpoint, selector="entries", params=params, api_version=2
+    )
     return Data(response, selector="entries")
 
 

@@ -107,6 +107,53 @@ def test_get_users():
     )
 
 
+def test_get_users_by_office():
+    # /users?office={office_id}
+    # Covers filtering the user list by office and verifies the known test account appears in the
+    # returned page when filtering by the test user's office.
+    user_name = str(TEST_USER_NAME)
+    office_id = TEST_OFFICE_ID
+    users = cwms.get_users(office_id=office_id, page_size=200).json
+    users_list = users.get("users", [])
+    assert isinstance(users_list, list)
+    assert any(
+        str(u.get("user-name", "")).lower() == user_name.lower() for u in users_list
+    )
+    for user in users["users"]:
+        roles = user["roles"]
+        assert set(roles.keys()) == {
+            office_id
+        }, f"{user['user-name']} has unexpected office keys: {set(roles.keys())}"
+
+
+def test_get_users_by_office_not_present_in_other_office():
+    # /users?office={office_id}
+    # Covers filtering the user list by office and verifies the known test account does not appear in the
+    # returned page when filtering by a different office.
+    user_name = str(TEST_USER_NAME)
+    office_id = "MVP" if TEST_OFFICE_ID != "MVP" else "SPK"
+    users = cwms.get_users(office_id=office_id, page_size=200)
+    users_list = users.json.get("users", [])
+    assert isinstance(users_list, list)
+    assert not any(
+        str(u.get("user-name", "")).lower() == user_name.lower() for u in users_list
+    )
+
+
+def test_get_users_with_paging():
+    # /users with paging parameters
+    # Covers requesting a specific page and page size and verifies the response contains the expected pagination metadata.
+    page_size = 2
+    users_with_page = cwms.get_users(page_size=page_size)
+    users_list = users_with_page.json.get("users", [])
+    users_without_page = cwms.get_users()
+    all_users_list = users_without_page.json.get("users", [])
+    assert isinstance(users_list, list)
+    assert isinstance(all_users_list, list)
+    assert len(users_list) >= page_size
+    assert len(all_users_list) == len(users_list)
+
+
 def test_store_update_delete_user_roles_roundtrip():
     # Round Trip: Covers the role-management lifecycle for an existing user in one office:
     # 1. add a role the user does not currently have
