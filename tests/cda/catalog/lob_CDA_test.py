@@ -3,11 +3,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+from catalog_resources import CatalogResource, find_row
 
 import cwms.catalog.blobs as blobs
 import cwms.catalog.clobs as clobs
-
-from catalog_resources import CatalogResource, find_row
 
 
 def _blob_content(x) -> str:
