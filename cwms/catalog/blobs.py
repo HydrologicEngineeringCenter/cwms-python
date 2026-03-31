@@ -1,9 +1,9 @@
 import base64
-from typing import Optional
+from typing import Any, Optional
 
 import cwms.api as api
 from cwms.cwms_types import JSON, Data
-from cwms.utils.checks import is_base64
+from cwms.utils.checks import has_invalid_chars, is_base64
 
 STORE_DICT = """data = {
     "office-id": "SWT",
@@ -13,6 +13,8 @@ STORE_DICT = """data = {
     "value": "STRING of content or BASE64_ENCODED_STRING"
 }
 """
+
+IGNORED_ID = "ignored"
 
 
 def get_blob(blob_id: str, office_id: str) -> str:
@@ -29,8 +31,13 @@ def get_blob(blob_id: str, office_id: str) -> str:
         str: the value returned based on the content-type it was stored with as a string
     """
 
-    endpoint = f"blobs/{blob_id}"
-    params = {"office": office_id}
+    params: dict[str, Any] = {}
+    if has_invalid_chars(blob_id):
+        endpoint = f"blobs/{IGNORED_ID}"
+        params["blob-id"] = blob_id
+    else:
+        endpoint = f"blobs/{blob_id}"
+    params["office"] = office_id
     response = api.get(endpoint, params, api_version=1)
     return str(response)
 
@@ -107,8 +114,13 @@ def delete_blob(blob_id: str, office_id: str) -> None:
         None
     """
 
-    endpoint = f"blobs/{blob_id}"
-    params = {"office": office_id}
+    params: dict[str, Any] = {}
+    if has_invalid_chars(blob_id):
+        endpoint = f"blobs/{IGNORED_ID}"
+        params["blob-id"] = blob_id
+    else:
+        endpoint = f"blobs/{blob_id}"
+    params["office"] = office_id
     return api.delete(endpoint, params, api_version=1)
 
 
@@ -143,6 +155,11 @@ def update_blob(data: JSON, fail_if_not_exists: Optional[bool] = True) -> None:
 
     blob_id = data.get("id", "").upper()
 
-    endpoint = f"blobs/{blob_id}"
-    params = {"fail-if-not-exists": fail_if_not_exists}
+    params: dict[str, Any] = {}
+    if has_invalid_chars(blob_id):
+        endpoint = f"blobs/{IGNORED_ID}"
+        params["blob-id"] = blob_id
+    else:
+        endpoint = f"blobs/{blob_id}"
+    params["fail-if-not-exists"] = fail_if_not_exists
     return api.patch(endpoint, data, params, api_version=1)
