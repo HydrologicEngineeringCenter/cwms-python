@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 import pytest
@@ -9,14 +10,28 @@ def pytest_addoption(parser):
     parser.addoption(
         "--api_key",
         action="store",
-        default="0123456789abcdef0123456789abcdef",
+        default=os.getenv("CDA_API_KEY", "0123456789abcdef0123456789abcdef"),
         help="Set a custom API key for the CWMS API",
     )
     parser.addoption(
         "--api_root",
         action="store",
-        default="http://localhost:8082/cwms-data/",
+        default=os.getenv("CDA_API_ROOT", "http://localhost:8082/cwms-data/"),
         help="Set a custom API root for the CWMS API",
+    )
+    parser.addoption(
+        "--user_admin_api_key",
+        action="store",
+        default=os.getenv("CDA_USER_ADMIN_API_KEY", "0123456789abcdef0123456789abcdef"),
+        help="Set an admin API key for CDA user-management tests",
+    )
+    parser.addoption(
+        "--user_non_admin_api_key",
+        action="store",
+        default=os.getenv(
+            "CDA_USER_NON_ADMIN_API_KEY", "fedcba9876543210fedcba9876543210"
+        ),
+        help="Set a non-admin API key for CDA user authorization tests",
     )
 
 
@@ -26,7 +41,7 @@ def auto_track_locations(request):
     api_root = request.config.getoption("api_root")
     cwms.api.init_session(api_root=api_root, api_key=api_key)
 
-    print(f"Test api_root and api_key: {api_root}, {api_key}")
+    print(f"Test api_root and api_key: {api_root}")
 
     created_locations = set()
 

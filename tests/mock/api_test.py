@@ -1,6 +1,11 @@
 import pytest
+from requests.exceptions import RetryError as RequestsRetryError
+from urllib3.exceptions import MaxRetryError, ResponseError
 
-from cwms.api import SESSION, InvalidVersion, api_version_text, init_session
+import cwms.api
+from cwms.api import SESSION, ApiError, api_version_text, init_session
+
+TEST_ENDPOINT = "/test-endpoint"
 
 
 def test_session_default():
@@ -53,3 +58,60 @@ def test_api_headers():
 
     version = api_version_text(api_version=2)
     assert version == "application/json;version=2"
+
+
+def test_retry_strategy_configuration():
+    """Verify retry behavior preserves the original CDA error path."""
+
+    retries = SESSION.adapters["https://"].max_retries
+
+    assert 500 not in retries.status_forcelist
+    assert retries.raise_on_status is False
+
+
+def test_post_500_raises_api_error(monkeypatch):
+    """Verify a 500 response is surfaced directly as ApiError."""
+
+    class ResponseStub:
+        url = "https://example.com/cwms-data/test-endpoint"
+        ok = False
+        status_code = 500
+        reason = "Internal Server Error"
+        content = b"incident identifier 34566432"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    class SessionStub:
+        def post(self, endpoint, params=None, headers=None, data=None):
+            return ResponseStub()
+
+    monkeypatch.setattr(cwms.api, "SESSION", SessionStub())
+
+    with pytest.raises(ApiError) as error:
+        cwms.api._post_function(endpoint=TEST_ENDPOINT, data={})
+
+    assert error.value.response.status_code == 500
+    assert "Internal Server Error" in str(error.value)
+    assert "incident identifier 34566432" in str(error.value)
+
+
+def test_retry_error_unwraps_original_cause(monkeypatch):
+    """Verify wrapped retry failures propagate the underlying cause."""
+
+    original_error = ResponseError("too many 503 error responses")
+    wrapped_error = RequestsRetryError(
+        MaxRetryError(pool=None, url=TEST_ENDPOINT, reason=original_error)
+    )
+
+    class SessionStub:
+        def get(self, endpoint, params=None, headers=None):
+            raise wrapped_error
+
+    monkeypatch.setattr(cwms.api, "SESSION", SessionStub())
+
+    with pytest.raises(ResponseError, match="too many 503 error responses"):
+        cwms.api.get(TEST_ENDPOINT)

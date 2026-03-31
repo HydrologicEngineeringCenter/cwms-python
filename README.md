@@ -20,6 +20,24 @@ Then import the package:
 import cwms
 ```
 
+### Authentication
+
+`cwms.init_session()` supports both CDA API keys and Keycloak access tokens.
+Use `api_key=` for the headless CDA API key flow, or `token=` for an OIDC access
+token such as one saved by [`cwms-cli login`]().
+
+```python
+import cwms
+
+cwms.init_session(
+    api_root="https://cwms-data.usace.army.mil/cwms-data/",
+    token="ACCESS_TOKEN",
+)
+```
+
+If both `token` and `api_key` are provided, `cwms-python` will use the token
+and log a warning.
+
 ## Getting Started
 
 ```python
