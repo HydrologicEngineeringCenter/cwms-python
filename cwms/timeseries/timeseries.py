@@ -461,7 +461,7 @@ def store_multi_timeseries_df(
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
-    multithread: Optional[bool] = False,
+    multithread: Optional[bool] = True,
     max_workers: Optional[int] = 30,
 ) -> None:
     """stored mulitple timeseries from a dataframe.  The dataframe must be a metled dataframe with columns
