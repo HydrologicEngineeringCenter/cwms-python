@@ -9,9 +9,9 @@ import pandas as pd
 @dataclass(frozen=True)
 class CatalogResource:
     name: str
-    id_key: str                 # "blob_id" or "clob_id" for delete/get args
-    id_col_fallback: str        # "blob-id" or "clob-id" in listing df
-    list_fn: Callable[..., Any] # get_blobs/get_clobs
+    id_key: str  # "blob_id" or "clob_id" for delete/get args
+    id_col_fallback: str  # "blob-id" or "clob-id" in listing df
+    list_fn: Callable[..., Any]  # get_blobs/get_clobs
     store_fn: Callable[..., Any]
     get_fn: Callable[..., Any]  # get_blob/get_clob
     update_fn: Callable[..., Any]
@@ -25,7 +25,9 @@ def df_from_result(res: Any) -> Optional[pd.DataFrame]:
     return getattr(res, "df", None)
 
 
-def find_row(resource: CatalogResource, office: str, item_id: str) -> Optional[pd.Series]:
+def find_row(
+    resource: CatalogResource, office: str, item_id: str
+) -> Optional[pd.Series]:
     res = resource.list_fn(office_id=office, **{f"{resource.id_key}_like": item_id})
     df = df_from_result(res)
     if df is None or df.empty:
