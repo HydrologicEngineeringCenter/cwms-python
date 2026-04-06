@@ -21,6 +21,7 @@ TEST_TSID_DELETE = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Delete"
 TEST_TSID_CHUNK_NULLS = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Nulls"
 TEST_TSID_COPY_NULLS = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Copy-Nulls"
 TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
+TEST_TSID_CHUNK_PARTIAL = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Partial"
 # Generate 15-minute interval timestamps
 START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)
 END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)
@@ -35,6 +36,8 @@ TSIDS = [
     TEST_TSID_COPY,
     TEST_TSID_CHUNK_NULLS,
     TEST_TSID_COPY_NULLS,
+    TEST_TSID_CHUNK_PARTIAL,
+    TEST_TSID_DELETE,
 ]
 
 
@@ -123,7 +126,10 @@ def setup_data():
             )
         except Exception as e:
             print(f"Failed to delete tsid {ts_id}: {e}")
-    cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
+    try:
+        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
+    except Exception as e:
+        print(f"Failed to delete location {TEST_LOCATION_ID}: {e}")
 
 
 @pytest.fixture(autouse=True)
@@ -294,6 +300,37 @@ def test_store_timeseries_chunk_ts():
     pdt.assert_frame_equal(
         df, DF_CHUNK_MULTI
     ), f"Data frames do not match: original = {DF_CHUNK_MULTI.describe()}, stored = {df.describe()}"
+
+
+def test_store_timeseries_partial_chunk_fail_real_api():
+    """One chunk with a corrupt value is rejected by the real API;
+    the rest succeed. RuntimeError must surface with exactly 1 failure."""
+    chunk_size = 2 * 7 * 24 * 4  # two weeks of 15-min data
+
+    ts_json = ts.timeseries_df_to_json(
+        DF_CHUNK_MULTI, TEST_TSID_CHUNK_PARTIAL, "m", TEST_OFFICE
+    )
+
+    # Confirm multiple chunks exist so the multithreaded path is taken
+    chunks = ts.chunk_timeseries_data(ts_json, chunk_size)
+    assert (
+        len(chunks) > 1
+    ), "Test requires multiple chunks — increase DF_CHUNK_MULTI range"
+
+    # Corrupt the first value of the second chunk so only that chunk is rejected.
+    # chunk_size values fit in chunk 0 (indices 0..chunk_size-1),
+    # so index chunk_size is the first value of chunk 1.
+    corrupt_index = chunk_size
+    original = ts_json["values"][corrupt_index]
+    ts_json["values"][corrupt_index] = [original[0], "not_a_number", original[2]]
+
+    with pytest.raises(RuntimeError) as exc_info:
+        ts.store_timeseries(ts_json, multithread=True, chunk_size=chunk_size)
+
+    error_msg = str(exc_info.value)
+    print(error_msg)
+    assert "1 chunk(s) failed to store" in error_msg
+    assert "Error storing chunk from" in error_msg
 
 
 def test_store_timesereis_chunk_to_with_null_values():
