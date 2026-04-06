@@ -669,29 +669,30 @@ def store_timeseries(
 
     # Store chunks concurrently
     responses: List[Dict[str, Any]] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Initialize an empty list to store futures
-        futures = []
-        # Submit each chunk as a separate task to the executor
-        for chunk in chunks:
-            future = executor.submit(
-                api.post,  # The function to execute
-                endpoint,
-                chunk,  # The chunk of data to store
-                params,
-            )
-            futures.append(future)  # Add the future to the list
+    errors: List[str] = []
 
-        for future in concurrent.futures.as_completed(futures):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=actual_workers) as executor:
+        future_to_chunk = {
+            executor.submit(api.post, endpoint, chunk, params): chunk
+            for chunk in chunks
+        }
+
+        for future in concurrent.futures.as_completed(future_to_chunk):
+            chunk = future_to_chunk[future]
             try:
-                responses.append({"success:": future.result()})
+                responses.append({"success": future.result()})
             except Exception as e:
                 start_time = chunk["values"][0][0]
                 end_time = chunk["values"][-1][0]
-                logging.error(
-                    f"Error storing chunk from {start_time} to {end_time}: {e}"
-                )
-                responses.append({"error": str(e)})
+                error_msg = f"Error storing chunk from {start_time} to {end_time}: {e}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+                responses.append({"error": error_msg})
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} chunk(s) failed to store:\n" + "\n".join(errors)
+        )
 
     return
 
