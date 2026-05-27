@@ -154,6 +154,23 @@ def get_timeseries_chunk(
     return Data(response, selector=selector)
 
 
+# Number of attempts for a single chunked timeseries request. CDA occasionally
+# returns 500s caused by connection-pool exhaustion that succeed on retry; 500
+# is intentionally not in the session-level status_forcelist (see PR #282), so
+# we retry here, scoped to the chunked store/fetch paths only.
+_CHUNK_ATTEMPTS = 6
+
+
+def _call_with_retry(fn: Any, *args: Any, attempts: int = _CHUNK_ATTEMPTS) -> Any:
+    for i in range(attempts):
+        try:
+            return fn(*args)
+        except Exception as e:
+            if i == attempts - 1:
+                raise
+            logging.warning(f"chunk attempt {i + 1}/{attempts} failed: {e}")
+
+
 def fetch_timeseries_chunks(
     chunks: List[Tuple[datetime, datetime]],
     params: Dict[str, Any],
@@ -161,14 +178,13 @@ def fetch_timeseries_chunks(
     endpoint: str,
     max_workers: int,
 ) -> List[Data]:
-    # Initialize an empty list to store results
-    results = []
+    results: List[Data] = []
+    errors: List[str] = []
 
-    # Create a ThreadPoolExecutor to manage multithreading
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit tasks for each chunk to the api
         future_to_chunk = {
             executor.submit(
+                _call_with_retry,
                 get_timeseries_chunk,
                 selector,
                 endpoint,
@@ -179,18 +195,23 @@ def fetch_timeseries_chunks(
             for chunk_start, chunk_end in chunks
         }
 
-        # Process completed threads as they finish
         for future in concurrent.futures.as_completed(future_to_chunk):
+            chunk_start, chunk_end = future_to_chunk[future]
             try:
-                # Retrieve the result of the completed future
-                result = future.result()
-                results.append(result)
+                results.append(future.result())
             except Exception as e:
-                chunk_start, chunk_end = future_to_chunk[future]
-                # Log or handle any errors that occur during execution
-                logging.error(
+                error_msg = (
                     f"Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
                 )
+                logging.error(error_msg)
+                errors.append(error_msg)
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to fetch:\n"
+            + "\n".join(errors)
+        )
+
     return results
 
 
@@ -673,7 +694,7 @@ def store_timeseries(
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=actual_workers) as executor:
         future_to_chunk = {
-            executor.submit(api.post, endpoint, chunk, params): chunk
+            executor.submit(_call_with_retry, api.post, endpoint, chunk, params): chunk
             for chunk in chunks
         }
 
@@ -691,7 +712,8 @@ def store_timeseries(
 
     if errors:
         raise RuntimeError(
-            f"{len(errors)} chunk(s) failed to store:\n" + "\n".join(errors)
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to store:\n"
+            + "\n".join(errors)
         )
 
     return
