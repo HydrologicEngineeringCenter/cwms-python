@@ -318,8 +318,6 @@ def test_store_timeseries_partial_chunk_fail_real_api():
     ), "Test requires multiple chunks — increase DF_CHUNK_MULTI range"
 
     # Corrupt the first value of the second chunk so only that chunk is rejected.
-    # chunk_size values fit in chunk 0 (indices 0..chunk_size-1),
-    # so index chunk_size is the first value of chunk 1.
     corrupt_index = chunk_size
     original = ts_json["values"][corrupt_index]
     ts_json["values"][corrupt_index] = [original[0], "not_a_number", original[2]]
@@ -328,9 +326,52 @@ def test_store_timeseries_partial_chunk_fail_real_api():
         ts.store_timeseries(ts_json, multithread=True, chunk_size=chunk_size)
 
     error_msg = str(exc_info.value)
-    print(error_msg)
-    assert "1 chunk(s) failed to store" in error_msg
+    assert "1 of " in error_msg and "chunk(s) failed to store" in error_msg
     assert "Error storing chunk from" in error_msg
+
+
+def test_get_timeseries_partial_chunk_fail_real_api():
+    """One fetch chunk is forced to fail; the others really hit the API.
+    RuntimeError must surface with the chunk details. Depends on
+    test_store_timeseries_chunk_ts having populated TEST_TSID_CHUNK_MULTI."""
+
+    max_days = 14
+    sabotage_begin = START_DATE_CHUNK_MULTI + timedelta(days=max_days)
+
+    chunks = ts.chunk_timeseries_time_range(
+        START_DATE_CHUNK_MULTI,
+        END_DATE_CHUNK_MULTI.replace(tzinfo=timezone.utc),
+        timedelta(days=max_days),
+    )
+    assert (
+        len(chunks) > 1
+    ), "Test requires multiple chunks — increase chunk count or shrink max_days"
+    assert any(
+        start == sabotage_begin for start, _ in chunks
+    ), "sabotage_begin must align with a real chunk boundary"
+
+    original_chunk = ts.get_timeseries_chunk
+
+    def sabotaged(selector, endpoint, param, begin, end):
+        if begin == sabotage_begin:
+            raise RuntimeError("simulated CDA failure")
+        return original_chunk(selector, endpoint, param, begin, end)
+
+    with patch.object(ts, "get_timeseries_chunk", side_effect=sabotaged):
+        with pytest.raises(RuntimeError) as exc_info:
+            ts.get_timeseries(
+                ts_id=TEST_TSID_CHUNK_MULTI,
+                office_id=TEST_OFFICE,
+                begin=START_DATE_CHUNK_MULTI,
+                end=END_DATE_CHUNK_MULTI,
+                max_days_per_chunk=max_days,
+                unit="SI",
+            )
+
+    error_msg = str(exc_info.value)
+    assert "1 of " in error_msg and "chunk(s) failed to fetch" in error_msg
+    assert "Failed to fetch data from" in error_msg
+    assert "simulated CDA failure" in error_msg
 
 
 def test_store_timesereis_chunk_to_with_null_values():
