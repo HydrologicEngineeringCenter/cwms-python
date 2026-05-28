@@ -11,8 +11,8 @@ from cwms.cwms_types import JSON, Data
 
 def get_timeseries_group(
     group_id: str,
-    category_id: str,
-    category_office_id: str,
+    category_id: Optional[str] = None,
+    category_office_id: Optional[str] = None,
     office_id: Optional[str] = None,
     group_office_id: Optional[str] = None,
 ) -> Data:
@@ -54,14 +54,16 @@ def get_timeseries_groups(
     timeseries_category_like: Optional[str] = None,
     timeseries_group_like: Optional[str] = None,
     category_office_id: Optional[str] = None,
+    group_office_id: Optional[str] = None,
 ) -> Data:
     """
     Retreives a list of time series groups.
 
     Parameters
     ----------
-        category_id: string
-            The category id that contains the timeseries group.
+        office_id: string
+            Specifies the owning office of the timeseries assigned to the group(s).
+            If not specified, group information for all assigned TS offices is returned.
         include_assigned: Boolean
             Include the assigned timeseries in the returned timeseries groups. (default: true)
         timeseries_category_like: string
@@ -70,6 +72,8 @@ def get_timeseries_groups(
             Posix regular expression matching against the timeseries group id
         category_office_id: string
             Specifies the owning office of the timeseries group category
+        group_office_id: string
+            Specifies the owning office of the timeseries group
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe
@@ -78,9 +82,10 @@ def get_timeseries_groups(
     endpoint = "timeseries/group"
     params = {
         "office": office_id,
+        "group-office-id": group_office_id,
         "include-assigned": include_assigned,
         "timeseries-category-like": timeseries_category_like,
-        "timeseries_group_like": timeseries_group_like,
+        "timeseries-group-like": timeseries_group_like,
         "category-office-id": category_office_id,
     }
     response = api.get(endpoint=endpoint, params=params, api_version=1)
@@ -165,7 +170,11 @@ def timeseries_group_df_to_json(
     return json_dict
 
 
-def store_timeseries_groups(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
+def store_timeseries_groups(
+    data: JSON,
+    fail_if_exists: Optional[bool] = True,
+    ignore_nulls: Optional[bool] = True,
+) -> None:
     """
     Create new TimeSeriesGroup
     Parameters
@@ -174,6 +183,11 @@ def store_timeseries_groups(data: JSON, fail_if_exists: Optional[bool] = True) -
             Time Series data to be stored.
         fail_if_exists: Boolean Defualt = True
             Create will fail if provided ID already exists.
+        ignore_nulls: Boolean Default = True
+            Ignore null values in the request body. If fail_if_exists is False
+            and ignore_nulls is False, an existing group's description or
+            assigned time series list may be replaced with null/empty values
+            from the request body.
 
     Returns
     -------
@@ -184,7 +198,7 @@ def store_timeseries_groups(data: JSON, fail_if_exists: Optional[bool] = True) -
         raise ValueError("Cannot store a standard text without timeseries group JSON")
 
     endpoint = "timeseries/group"
-    params = {"fail-if-exists": fail_if_exists}
+    params = {"fail-if-exists": fail_if_exists, "ignore-nulls": ignore_nulls}
 
     return api.post(endpoint, data, params, api_version=1)
 
@@ -227,7 +241,12 @@ def update_timeseries_groups(
     api.patch(endpoint=endpoint, data=data, params=params, api_version=1)
 
 
-def delete_timeseries_group(group_id: str, category_id: str, office_id: str) -> None:
+def delete_timeseries_group(
+    group_id: str,
+    category_id: str,
+    office_id: str,
+    cascade_delete: Optional[bool] = False,
+) -> None:
     """Deletes requested time series group
 
     Parameters
@@ -238,6 +257,8 @@ def delete_timeseries_group(group_id: str, category_id: str, office_id: str) -> 
                 Specifies the time series category of the time series group to be deleted
             office_id: string
                 Specifies the owning office of the time series group to be deleted
+            cascade_delete: Boolean Default = False
+                Specifies whether to unassign time series in this group before deleting.
 
         Returns
         -------
@@ -248,6 +269,7 @@ def delete_timeseries_group(group_id: str, category_id: str, office_id: str) -> 
     params = {
         "office": office_id,
         "category-id": category_id,
+        "cascade-delete": cascade_delete,
     }
 
     return api.delete(endpoint, params=params, api_version=1)
