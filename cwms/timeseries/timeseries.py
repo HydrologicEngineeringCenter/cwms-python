@@ -154,6 +154,23 @@ def get_timeseries_chunk(
     return Data(response, selector=selector)
 
 
+# Number of attempts for a single chunked timeseries request. CDA occasionally
+# returns 500s caused by connection-pool exhaustion that succeed on retry; 500
+# is intentionally not in the session-level status_forcelist (see PR #282), so
+# we retry here, scoped to the chunked store/fetch paths only.
+_CHUNK_ATTEMPTS = 6
+
+
+def _call_with_retry(fn: Any, *args: Any, attempts: int = _CHUNK_ATTEMPTS) -> Any:
+    for i in range(attempts):
+        try:
+            return fn(*args)
+        except Exception as e:
+            if i == attempts - 1:
+                raise
+            logging.warning(f"chunk attempt {i + 1}/{attempts} failed: {e}")
+
+
 def fetch_timeseries_chunks(
     chunks: List[Tuple[datetime, datetime]],
     params: Dict[str, Any],
@@ -161,14 +178,13 @@ def fetch_timeseries_chunks(
     endpoint: str,
     max_workers: int,
 ) -> List[Data]:
-    # Initialize an empty list to store results
-    results = []
+    results: List[Data] = []
+    errors: List[str] = []
 
-    # Create a ThreadPoolExecutor to manage multithreading
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit tasks for each chunk to the api
         future_to_chunk = {
             executor.submit(
+                _call_with_retry,
                 get_timeseries_chunk,
                 selector,
                 endpoint,
@@ -179,18 +195,23 @@ def fetch_timeseries_chunks(
             for chunk_start, chunk_end in chunks
         }
 
-        # Process completed threads as they finish
         for future in concurrent.futures.as_completed(future_to_chunk):
+            chunk_start, chunk_end = future_to_chunk[future]
             try:
-                # Retrieve the result of the completed future
-                result = future.result()
-                results.append(result)
+                results.append(future.result())
             except Exception as e:
-                chunk_start, chunk_end = future_to_chunk[future]
-                # Log or handle any errors that occur during execution
-                logging.error(
+                error_msg = (
                     f"Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
                 )
+                logging.error(error_msg)
+                errors.append(error_msg)
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to fetch:\n"
+            + "\n".join(errors)
+        )
+
     return results
 
 
@@ -669,29 +690,31 @@ def store_timeseries(
 
     # Store chunks concurrently
     responses: List[Dict[str, Any]] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Initialize an empty list to store futures
-        futures = []
-        # Submit each chunk as a separate task to the executor
-        for chunk in chunks:
-            future = executor.submit(
-                api.post,  # The function to execute
-                endpoint,
-                chunk,  # The chunk of data to store
-                params,
-            )
-            futures.append(future)  # Add the future to the list
+    errors: List[str] = []
 
-        for future in concurrent.futures.as_completed(futures):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=actual_workers) as executor:
+        future_to_chunk = {
+            executor.submit(_call_with_retry, api.post, endpoint, chunk, params): chunk
+            for chunk in chunks
+        }
+
+        for future in concurrent.futures.as_completed(future_to_chunk):
+            chunk = future_to_chunk[future]
             try:
-                responses.append({"success:": future.result()})
+                responses.append({"success": future.result()})
             except Exception as e:
                 start_time = chunk["values"][0][0]
                 end_time = chunk["values"][-1][0]
-                logging.error(
-                    f"Error storing chunk from {start_time} to {end_time}: {e}"
-                )
-                responses.append({"error": str(e)})
+                error_msg = f"Error storing chunk from {start_time} to {end_time}: {e}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+                responses.append({"error": error_msg})
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to store:\n"
+            + "\n".join(errors)
+        )
 
     return
 
