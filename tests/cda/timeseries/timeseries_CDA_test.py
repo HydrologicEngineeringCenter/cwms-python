@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ import pytest
 
 import cwms
 import cwms.timeseries.timeseries as ts
+from cwms.api import ApiError
 
 TEST_OFFICE = "MVP"
 TEST_LOCATION_ID = "pytest_ts"
@@ -137,6 +139,17 @@ def init_session():
     print("Initializing CWMS API session for timeseries tests...")
 
 
+def get_timeseries_with_retry(*args, **kwargs):
+    last_error = None
+    for _ in range(5):
+        try:
+            return ts.get_timeseries(*args, **kwargs)
+        except ApiError as exc:
+            last_error = exc
+            time.sleep(1)
+    raise last_error
+
+
 def test_store_timeseries():
     ts_json = {
         "name": TEST_TSID_STORE,
@@ -145,7 +158,9 @@ def test_store_timeseries():
         "values": [[EPOCH_MS, 99, 0]],
     }
     ts.store_timeseries(ts_json)
-    data = ts.get_timeseries(TEST_TSID_STORE, TEST_OFFICE, begin=BEGIN, end=END).json
+    data = get_timeseries_with_retry(
+        TEST_TSID_STORE, TEST_OFFICE, begin=BEGIN, end=END
+    ).json
     assert data["name"] == TEST_TSID_STORE
     assert data["office-id"] == TEST_OFFICE
     assert data["units"] == "ft"
