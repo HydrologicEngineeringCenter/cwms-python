@@ -38,6 +38,23 @@ cwms.init_session(
 If both `token` and `api_key` are provided, `cwms-python` will use the token
 and log a warning.
 
+#### CWMS batch jobs
+
+- The runner can provide short-lived authentication through
+  environment variables.
+- Given an env `CDA_BEARER_TOKEN` is set, `cwms.init_session()`
+  uses it as a bearer token if no explicit `token=` is provided in the args. In addition, when
+  `BATCH_JOB_CONTEXT_TOKEN` is set, it is sent as `X-CWMS-Job-Context` so CDA can
+  apply the authorized batch run context.
+
+```python
+import cwms
+
+# Reads from env variables
+cwms.init_session(api_root="https://cwms-data.usace.army.mil/cwms-data/")
+profile = cwms.get_user_profile()
+```
+
 ## Getting Started
 
 ```python
@@ -93,7 +110,7 @@ print(json)
 ## TimeSeries Profile API Compatibility Warning
 
 Currently, the TimeSeries Profile API may not be fully supported
-until a new version of cwms-data-access is released with the updated 
+until a new version of cwms-data-access is released with the updated
 endpoint implementation.
 
 ## Contributing

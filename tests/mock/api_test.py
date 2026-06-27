@@ -50,6 +50,41 @@ def test_session_init_api_key():
     assert session.headers["Authorization"] == "apikey API_AUTH_KEY"
 
 
+def test_session_init_token_from_env(monkeypatch):
+    monkeypatch.setenv("CDA_BEARER_TOKEN", "Bearer ENV_TOKEN")
+
+    session = init_session(api_root="https://example.com/")
+
+    assert session.headers["Authorization"] == "Bearer ENV_TOKEN"
+
+
+def test_session_init_explicit_token_precedes_env(monkeypatch):
+    monkeypatch.setenv("CDA_BEARER_TOKEN", "ENV_TOKEN")
+
+    session = init_session(api_root="https://example.com/", token="ARG_TOKEN")
+
+    assert session.headers["Authorization"] == "Bearer ARG_TOKEN"
+
+
+def test_session_init_batch_job_context_from_env(monkeypatch):
+    monkeypatch.setenv("BATCH_JOB_CONTEXT_TOKEN", "JOB_CONTEXT")
+
+    session = init_session(api_root="https://example.com/")
+
+    assert session.headers["X-CWMS-Job-Context"] == "JOB_CONTEXT"
+
+
+def test_session_init_explicit_batch_job_context_precedes_env(monkeypatch):
+    monkeypatch.setenv("BATCH_JOB_CONTEXT_TOKEN", "ENV_CONTEXT")
+
+    session = init_session(
+        api_root="https://example.com/",
+        job_context_token="ARG_CONTEXT",
+    )
+
+    assert session.headers["X-CWMS-Job-Context"] == "ARG_CONTEXT"
+
+
 def test_api_headers():
     """Verify that the API version headers are correct."""
 

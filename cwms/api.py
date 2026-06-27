@@ -32,6 +32,7 @@ the error.
 import base64
 import json
 import logging
+import os
 from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
@@ -167,6 +168,7 @@ def init_session(
     api_root: Optional[str] = None,
     api_key: Optional[str] = None,
     token: Optional[str] = None,
+    job_context_token: Optional[str] = None,
     pool_connections: int = 100,
 ) -> BaseUrlSession:
     """Specify a root URL and authentication credentials for the CWMS Data API.
@@ -181,6 +183,8 @@ def init_session(
         api_key (optional): An authentication key.
         token (optional): A Keycloak access token. If both token and api_key are
             provided, token is used.
+        job_context_token (optional): A signed batch job context token. If not
+            provided, BATCH_JOB_CONTEXT_TOKEN is used when present.
 
     Returns:
         Returns the updated session object.
@@ -198,6 +202,10 @@ def init_session(
             max_retries=retry_strategy,
         )
         SESSION.mount("https://", adapter)
+    if token is None:
+        # Batch runner images provide CDA_BEARER_TOKEN for normal init_session
+        # calls, keeping office API keys out of scripts and job definitions.
+        token = os.getenv("CDA_BEARER_TOKEN")
     if token:
         if api_key:
             logging.warning(
@@ -211,6 +219,12 @@ def init_session(
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
         SESSION.headers.update({"Authorization": "apikey " + api_key})
+    if job_context_token is None:
+        # Keep batch run context separate from the OAuth token; CDA can validate
+        # it only when the job runner provides the signed fallback context.
+        job_context_token = os.getenv("BATCH_JOB_CONTEXT_TOKEN")
+    if job_context_token:
+        SESSION.headers.update({"X-CWMS-Job-Context": job_context_token})
 
     return SESSION
 
