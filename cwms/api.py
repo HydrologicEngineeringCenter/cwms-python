@@ -210,17 +210,21 @@ def init_session(
         # Ensure we don't provide the bearer text twice
         if token.lower().startswith("bearer "):
             token = token[7:]
-        SESSION.headers.update({
-            "Authorization": "Bearer " + token,
-            "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower()
-        })
+        SESSION.headers.update(
+            {
+                "Authorization": "Bearer " + token,
+                "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+            }
+        )
     elif api_key:
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
-        SESSION.headers.update({
-            "Authorization": "apikey " + api_key,
-            "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower()
-        })
+        SESSION.headers.update(
+            {
+                "Authorization": "apikey " + api_key,
+                "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+            }
+        )
 
     USE_NEW_LRTS_IDS = use_new_lrts_format
 
@@ -235,6 +239,7 @@ def return_base_url() -> str:
     """
 
     return str(SESSION.base_url)
+
 
 def set_use_new_lrts_ids(state: bool) -> None:
     """Sets whether the new LRTS identifer format is used for subsequent operations.
@@ -255,6 +260,7 @@ def set_use_new_lrts_ids(state: bool) -> None:
 
     USE_NEW_LRTS_IDS = state
 
+
 def get_use_new_lrts_ids() -> bool:
     """Gets whether the new LRTS identifer format is used for subsequent operations.
 
@@ -273,6 +279,7 @@ def get_use_new_lrts_ids() -> bool:
     global USE_NEW_LRTS_IDS
 
     return USE_NEW_LRTS_IDS
+
 
 def api_version_text(api_version: int) -> str:
     """Initialize CDA request headers.
@@ -380,7 +387,7 @@ def get(
 
     headers = {
         "Accept": api_version_text(api_version),
-        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower()
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
     }
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
@@ -444,7 +451,7 @@ def _post_function(
     headers = {
         "accept": "*/*",
         "Content-Type": api_version_text(api_version),
-        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower()
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
     }
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
@@ -546,7 +553,7 @@ def patch(
     headers = {
         "accept": "*/*",
         "Content-Type": api_version_text(api_version),
-        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower()
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
     }
 
     if data and isinstance(data, dict) or isinstance(data, list):
@@ -584,7 +591,7 @@ def delete(
 
     headers = {
         "Accept": api_version_text(api_version),
-        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower()
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
     }
     try:
         with SESSION.delete(endpoint, params=params, headers=headers) as response:
