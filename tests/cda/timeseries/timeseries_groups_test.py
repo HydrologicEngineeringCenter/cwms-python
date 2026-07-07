@@ -155,24 +155,10 @@ def test_update_timeseries_groups():
 
 def test_delete_timeseries_group():
 
-    # update with no timeseries in the group first
-    df = pd.DataFrame(columns=["timeseries-id", "office-id", "alias"])
-
-    json_dict = tg.timeseries_group_df_to_json(
-        data=df,
-        group_id=TEST_GROUP_ID,
-        group_office_id=TEST_OFFICE,
-        category_office_id=TEST_OFFICE,
-        category_id=TEST_CATEGORY_ID,
-    )
-    tg.update_timeseries_groups(
-        group_id=TEST_GROUP_ID,
-        office_id=TEST_OFFICE,
-        replace_assigned_ts=True,
-        data=json_dict,
-    )
-
     # delete the group
     tg.delete_timeseries_group(
-        group_id=TEST_GROUP_ID, category_id=TEST_CATEGORY_ID, office_id=TEST_OFFICE
+        group_id=TEST_GROUP_ID,
+        category_id=TEST_CATEGORY_ID,
+        office_id=TEST_OFFICE,
+        cascade_delete=True,
     )
