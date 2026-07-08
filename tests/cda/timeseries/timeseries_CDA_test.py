@@ -92,8 +92,25 @@ BEGIN = DT - timedelta(minutes=5)
 END = DT + timedelta(minutes=5)
 
 
+def _cleanup_tsids_and_location():
+    for ts_id in TSIDS:
+        try:
+            cwms.delete_timeseries_identifier(
+                ts_id=ts_id, office_id=TEST_OFFICE, delete_method="DELETE_ALL"
+            )
+        except Exception as e:
+            print(f"Failed to delete tsid {ts_id}: {e}")
+    try:
+        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
+    except Exception as e:
+        print(f"Failed to delete location {TEST_LOCATION_ID}: {e}")
+
+
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
+    # Clean up any leftover state from a prior aborted run before starting.
+    _cleanup_tsids_and_location()
+
     location = {
         "name": TEST_LOCATION_ID,
         "latitude": 40.0,
@@ -119,17 +136,7 @@ def setup_data():
     }
     ts.store_timeseries(ts_json)
     yield
-    for ts_id in TSIDS:
-        try:
-            cwms.delete_timeseries_identifier(
-                ts_id=ts_id, office_id=TEST_OFFICE, delete_method="DELETE_ALL"
-            )
-        except Exception as e:
-            print(f"Failed to delete tsid {ts_id}: {e}")
-    try:
-        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
-    except Exception as e:
-        print(f"Failed to delete location {TEST_LOCATION_ID}: {e}")
+    _cleanup_tsids_and_location()
 
 
 @pytest.fixture(autouse=True)
