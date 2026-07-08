@@ -65,7 +65,7 @@ begin
     cwms_sec.add_user_to_group('pytest_mvp_admin','CWMS User Admins', 'MVP');
     cwms_sec.add_user_to_group('pytest_mvp_admin','CWMS PD Users', 'MVP');
 
-    insert into cwms_20.at_api_keys (userid, key_name, apikey, created, expires) values ('PYTEST_MVP_ADMIN', 'testkey', 'ak1_CYflBX6c$argon2id$v=19$m=19456,t=2,p=1$8Wh8X9m+O81UvrbCJ/eOFQ$+E0Rp3jhjduIHxaqmzx+OLR43B3HdcMuDyn8cO5/69s', sysdate, sysdate + 365);
+    insert into cwms_20.at_api_keys (userid, key_name, apikey, created, expires) values ('QOHECTEST', 'testkey', 'ak1_CYflBX6c$argon2id$v=19$m=19456,t=2,p=1$8Wh8X9m+O81UvrbCJ/eOFQ$+E0Rp3jhjduIHxaqmzx+OLR43B3HdcMuDyn8cO5/69s', sysdate, sysdate + 365);
     -- key is  ak1_CYflBX6cQOHlJkkcsA6NPvJ7npm1kynzfUsa45ncIPcGNewkcvK2ounQN8MaDj8Wkc8o0HiZvLkETpGrGkl3OvJD9Nt0vQCIPLBeqQiLGBQHsPDZmk1gEkVCzubSyfKy31bagcf0jrajn6zCcRAv1tpMpnucFCkUwCpTYwNCfCnPkqukNVpOyTv7I2II8NIxBQmQOZPc09yOrKPkQpj1sHM4NNxIcUfTZrPpidT1QGjhfVaaWW1AiqodkxXPxlTqvuRLz9bL
     
     insert into cwms_20.at_api_keys (userid, key_name, apikey, created, expires) values ('L2HECTEST', 'testkey2', 'ak1_3rF3RXlB$argon2id$v=19$m=19456,t=2,p=1$xxL2ItUkn3gC1LT5F8Wb0g$2az8A0GpJVVhbaccD4ICVWvnM2uoKzU652r9jemE9qg', sysdate, sysdate + 365);
