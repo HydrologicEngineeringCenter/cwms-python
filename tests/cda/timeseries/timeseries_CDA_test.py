@@ -128,13 +128,22 @@ def setup_data():
     }
     cwms.store_location(location)
 
-    ts_json = {
-        "name": TEST_TSID_DELETE,
-        "office-id": TEST_OFFICE,
-        "units": "ft",
-        "values": [[EPOCH_MS, 99, 0]],
-    }
-    ts.store_timeseries(ts_json)
+    ts.store_timeseries(
+        {
+            "name": TEST_TSID_DELETE,
+            "office-id": TEST_OFFICE,
+            "units": "ft",
+            "values": [[EPOCH_MS, 99, 0]],
+        }
+    )
+    # Warmup GET against /cwms-data/timeseries. The first GET on this
+    # endpoint after a cold connection intermittently trips a CDA bug
+    # (SESSION_OFFICE_ID_NOT_SET → ORA-01422 for multi-office API-key
+    # users). Absorbing the failure here keeps individual tests clean.
+    try:
+        ts.get_timeseries(TEST_TSID_DELETE, TEST_OFFICE, begin=BEGIN, end=END)
+    except Exception as e:
+        print(f"Warmup GET failed (expected on cold CDA connection): {e}")
     yield
     _cleanup_tsids_and_location()
 
