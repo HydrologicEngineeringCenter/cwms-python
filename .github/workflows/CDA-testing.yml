@@ -17,7 +17,7 @@ jobs:
         python-version: ['3.9', '3.13']
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Clean up disk space, so we don't run out.
         if: runner.os == 'Linux'
