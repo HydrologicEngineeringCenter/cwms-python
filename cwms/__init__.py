@@ -18,6 +18,7 @@ from cwms.projects.project_lock_rights import *
 from cwms.projects.project_locks import *
 from cwms.projects.projects import *
 from cwms.projects.water_supply.accounting import *
+from cwms.properties.properties import *
 from cwms.ratings.ratings import *
 from cwms.ratings.ratings_spec import *
 from cwms.ratings.ratings_template import *

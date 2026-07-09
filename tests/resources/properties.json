@@ -1,0 +1,16 @@
+[
+  {
+    "office-id": "SPK",
+    "category": "CWMS",
+    "name": "PropertyName",
+    "value": "PropertyValue",
+    "comment": "Property comment"
+  },
+  {
+    "office-id": "SWT",
+    "category": "CWMS",
+    "name": "OtherProperty",
+    "value": "OtherValue",
+    "comment": "Other property comment"
+  }
+]
