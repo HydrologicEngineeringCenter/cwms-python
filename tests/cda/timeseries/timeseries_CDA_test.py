@@ -92,8 +92,25 @@ BEGIN = DT - timedelta(minutes=5)
 END = DT + timedelta(minutes=5)
 
 
+def _cleanup_tsids_and_location():
+    for ts_id in TSIDS:
+        try:
+            cwms.delete_timeseries_identifier(
+                ts_id=ts_id, office_id=TEST_OFFICE, delete_method="DELETE_ALL"
+            )
+        except Exception as e:
+            print(f"Failed to delete tsid {ts_id}: {e}")
+    try:
+        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
+    except Exception as e:
+        print(f"Failed to delete location {TEST_LOCATION_ID}: {e}")
+
+
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
+    # Clean up any leftover state from a prior aborted run before starting.
+    _cleanup_tsids_and_location()
+
     location = {
         "name": TEST_LOCATION_ID,
         "latitude": 40.0,
@@ -111,25 +128,24 @@ def setup_data():
     }
     cwms.store_location(location)
 
-    ts_json = {
-        "name": TEST_TSID_DELETE,
-        "office-id": TEST_OFFICE,
-        "units": "ft",
-        "values": [[EPOCH_MS, 99, 0]],
-    }
-    ts.store_timeseries(ts_json)
-    yield
-    for ts_id in TSIDS:
-        try:
-            cwms.delete_timeseries_identifier(
-                ts_id=ts_id, office_id=TEST_OFFICE, delete_method="DELETE_ALL"
-            )
-        except Exception as e:
-            print(f"Failed to delete tsid {ts_id}: {e}")
+    ts.store_timeseries(
+        {
+            "name": TEST_TSID_DELETE,
+            "office-id": TEST_OFFICE,
+            "units": "ft",
+            "values": [[EPOCH_MS, 99, 0]],
+        }
+    )
+    # Warmup GET against /cwms-data/timeseries. The first GET on this
+    # endpoint after a cold connection intermittently trips a CDA bug
+    # (SESSION_OFFICE_ID_NOT_SET → ORA-01422 for multi-office API-key
+    # users). Absorbing the failure here keeps individual tests clean.
     try:
-        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE, cascade_delete=True)
+        ts.get_timeseries(TEST_TSID_DELETE, TEST_OFFICE, begin=BEGIN, end=END)
     except Exception as e:
-        print(f"Failed to delete location {TEST_LOCATION_ID}: {e}")
+        print(f"Warmup GET failed (expected on cold CDA connection): {e}")
+    yield
+    _cleanup_tsids_and_location()
 
 
 @pytest.fixture(autouse=True)
