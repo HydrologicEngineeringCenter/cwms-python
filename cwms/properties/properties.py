@@ -102,7 +102,7 @@ def create_property(data: JSON) -> None:
     if data is None:
         raise ValueError("Cannot store a property without JSON data")
 
-    return api.post(endpoint, data)
+    return api.post(endpoint, data, api_version=1)
 
 
 def update_property(name: str, data: JSON) -> None:
