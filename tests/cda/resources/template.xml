@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rating-template office-id="MVP">
+<parameters-id>Stage;Flow</parameters-id>
+<version>TEST</version>\
+  <ind-parameter-specs>
+   <ind-parameter-spec position="1">
+    <parameter>Stage</parameter>
+    <in-range-method>LINEAR</in-range-method>
+    <out-range-low-method>LINEAR</out-range-low-method>
+    <out-range-high-method>LINEAR</out-range-high-method>
+   </ind-parameter-spec>
+  </ind-parameter-specs>
+  <dep-parameter>Flow</dep-parameter>
+  <description>Expanded, Shift-Adjusted Stream Rating</description>
+ </rating-template>

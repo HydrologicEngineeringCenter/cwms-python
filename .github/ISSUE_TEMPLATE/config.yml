@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: CWMS CLI
+    url: https://github.com/hydrologicengineeringcenter/cwms-cli/issues/new
+    about: Please file issues related to the cwms-cli project here.
+  - name: CWMS Data API (CDA)
+    url: https://github.com/usace/cwms-data-api/issues/new
+    about: Please file issues related to the cwms-data-api project here.
+  - name: HEC Python Library
+    url: https://github.com/HydrologicEngineeringCenter/hec-python-library/issues/new
+    about: Please file issues related to the hec-python-library project here.
+  - name: HEC DSS
+    url: https://github.com/HydrologicEngineeringCenter/hec-dss/issues/new
+    about: Please file issues related to the hec-dss project here.

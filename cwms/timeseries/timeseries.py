@@ -1,46 +1,301 @@
-from datetime import datetime
-from typing import Optional
+import concurrent.futures
+import logging
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
+from pandas import DataFrame
 
 import cwms.api as api
+from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
 
 
-def get_timeseries_group(group_id: str, category_id: str, office_id: str) -> Data:
-    """Retreives time series stored in the requested time series group
+def get_multi_timeseries_df(
+    ts_ids: list[str],
+    office_id: str,
+    unit: Optional[str] = "EN",
+    begin: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    melted: Optional[bool] = False,
+    max_workers: Optional[int] = 30,
+) -> DataFrame:
+    """gets multiple timeseries and stores into a single dataframe
 
     Parameters
-        ----------
-            group_id: string
-                Timeseries group whose data is to be included in the response.
-            category_id: string
-                The category id that contains the timeseries group.
-            office_id: string
-                The owning office of the timeseries group.
+    ----------
+        ts_ids: list
+            a list of timeseries to get.  If the timeseries is a versioned timeseries then separate the ts_id from the
+            version_date using a :.  Example "OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT:2024-04-22 07:00:00-05:00".  Make
+            sure that the version date include the timezone offset if not in UTC.
+        office_id: string
+            The owning office of the time series(s).
+        unit: string, optional, default is EN
+            The unit or unit system of the response. Defaults to EN. Valid values
+            for the unit field are:
+                1. EN. English unit system.
+                2. SI. SI unit system.
+                3. Other.
+        begin: datetime, optional, default is None
+            Start of the time window for data to be included in the response. If this field is
+            not specified, any required time window begins 24 hours prior to the specified
+            or default end time. Any timezone information should be passed within the datetime
+            object. If no timezone information is given, default will be UTC.
+        end: datetime, optional, default is None
+            End of the time window for data to be included in the response. If this field is
+            not specified, any required time window ends at the current time. Any timezone
+            information should be passed within the datetime object. If no timezone information
+            is given, default will be UTC.
+        melted: Boolean, optional, default is false
+            if set to True a melted dataframe will be provided. By default a multi-index column dataframe will be
+            returned.
+        max_workers: Int, Optional, default is None
+            It is a number of Threads aka size of pool in concurrent.futures.ThreadPoolExecutor. From 3.8 onwards
+            default value is min(32, os.cpu_count() + 4). Out of these 5 threads are preserved for I/O bound task.
+
 
         Returns
         -------
-            cwms data type.  data.json will return the JSON output and data.df will return a dataframe
+            dataframe
     """
 
-    endpoint = f"timeseries/group/{group_id}"
-    params = {"office": office_id, "category-id": category_id}
+    def get_ts_ids(ts_id: str) -> Any:
+        try:
+            if ":" in ts_id:
+                ts_id, version_date = ts_id.split(":", 1)
+                version_date_dt = pd.to_datetime(version_date)
+            else:
+                version_date_dt = None
+            data = get_timeseries(
+                ts_id=ts_id,
+                office_id=office_id,
+                unit=unit,
+                begin=begin,
+                end=end,
+                version_date=version_date_dt,
+                multithread=False,
+            )
+            result_dict = {
+                "ts_id": ts_id,
+                "unit": data.json["units"],
+                "version_date": version_date_dt,
+                "values": data.df,
+            }
+            return result_dict
+        except Exception as e:
+            logging.error(f"Error processing {ts_id}: {e}")
+            return None
 
-    response = api.get(endpoint=endpoint, params=params, api_version=1)
-    return Data(response, selector="assigned-time-series")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = executor.map(get_ts_ids, ts_ids)
+
+    result_dict = list(results)
+    data = pd.DataFrame()
+    for row in result_dict:
+        if row:
+            temp_df = row["values"]
+            temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+            if "version_date" in row.keys():
+                temp_df = temp_df.assign(version_date=row["version_date"])
+            temp_df.dropna(how="all", axis=1, inplace=True)
+            data = pd.concat([data, temp_df], ignore_index=True)
+
+    if not melted and "date-time" in data.columns:
+        cols = ["ts_id", "units"]
+        if "version_date" in data.columns:
+            cols.append("version_date")
+            data["version_date"] = data["version_date"].dt.strftime(
+                "%Y-%m-%d %H:%M:%S%z"
+            )
+            data["version_date"] = (
+                data["version_date"].str[:-2] + ":" + data["version_date"].str[-2:]
+            )
+            data.fillna({"version_date": ""}, inplace=True)
+        data = data.pivot(index="date-time", columns=cols, values="value")
+
+    return data
+
+
+def chunk_timeseries_time_range(
+    begin: datetime, end: datetime, chunk_size: timedelta
+) -> List[Tuple[datetime, datetime]]:
+    """
+    Splits a time range into smaller chunks.
+
+    Parameters
+    ----------
+    begin : datetime
+        The start of the time range.
+    end : datetime
+        The end of the time range.
+    chunk_size : timedelta
+        The size of each chunk.
+
+    Returns
+    -------
+    List[Tuple[datetime, datetime]]
+        A list of tuples, where each tuple represents the start and end of a chunk.
+    """
+    chunks = []
+    current = begin
+    while current < end:
+        next_chunk = min(current + chunk_size, end)
+        chunks.append((current, next_chunk))
+        current = next_chunk
+    return chunks
+
+
+def get_timeseries_chunk(
+    selector: str, endpoint: str, param: Dict[str, Any], begin: datetime, end: datetime
+) -> Data:
+    param["begin"] = begin.isoformat() if begin else None
+    param["end"] = end.isoformat() if end else None
+    response = api.get_with_paging(selector=selector, endpoint=endpoint, params=param)
+    return Data(response, selector=selector)
+
+
+# Number of attempts for a single chunked timeseries request. CDA occasionally
+# returns 500s caused by connection-pool exhaustion that succeed on retry; 500
+# is intentionally not in the session-level status_forcelist (see PR #282), so
+# we retry here, scoped to the chunked store/fetch paths only.
+_CHUNK_ATTEMPTS = 6
+
+
+def _call_with_retry(fn: Any, *args: Any, attempts: int = _CHUNK_ATTEMPTS) -> Any:
+    for i in range(attempts):
+        try:
+            return fn(*args)
+        except Exception as e:
+            if i == attempts - 1:
+                raise
+            logging.warning(f"chunk attempt {i + 1}/{attempts} failed: {e}")
+
+
+def fetch_timeseries_chunks(
+    chunks: List[Tuple[datetime, datetime]],
+    params: Dict[str, Any],
+    selector: str,
+    endpoint: str,
+    max_workers: int,
+) -> List[Data]:
+    results: List[Data] = []
+    errors: List[str] = []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_chunk = {
+            executor.submit(
+                _call_with_retry,
+                get_timeseries_chunk,
+                selector,
+                endpoint,
+                params.copy(),
+                chunk_start,
+                chunk_end,
+            ): (chunk_start, chunk_end)
+            for chunk_start, chunk_end in chunks
+        }
+
+        for future in concurrent.futures.as_completed(future_to_chunk):
+            chunk_start, chunk_end = future_to_chunk[future]
+            try:
+                results.append(future.result())
+            except Exception as e:
+                error_msg = (
+                    f"Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
+                )
+                logging.error(error_msg)
+                errors.append(error_msg)
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to fetch:\n"
+            + "\n".join(errors)
+        )
+
+    return results
+
+
+def combine_timeseries_results(results: List[Data]) -> Data:
+    """
+    Combines the results from multiple chunks into a single cwms Data object.
+
+    Parameters
+    ----------
+    results : list
+        List of cwms Data objects returned from the executor.
+
+    Returns
+    -------
+    cwms Data
+        Combined cwms Data object with merged DataFrame and updated JSON metadata.
+    """
+    # Extract DataFrames from each cwms data object
+    dataframes = [result.df for result in results]
+
+    # Combine all DataFrames into one
+    combined_df = pd.concat(dataframes, ignore_index=True)
+
+    # Sort the combined DataFrame by 'date-time'
+    combined_df.sort_values(by="date-time", inplace=True)
+
+    # Drop duplicate rows based on 'date-time' (if necessary)
+    combined_df.drop_duplicates(subset="date-time", inplace=True)
+
+    # Extract metadata from the first result (assuming all chunks share the same metadata)
+    combined_json = results[0].json
+
+    # Update metadata to reflect the combined time range
+    combined_json["begin"] = combined_df["date-time"].min().isoformat()
+    combined_json["end"] = combined_df["date-time"].max().isoformat()
+    combined_json["total"] = len(combined_df)
+
+    combined_df["date-time"] = combined_df["date-time"].apply(
+        lambda x: int(pd.Timestamp(x).timestamp() * 1000)
+    )
+    combined_df["date-time"] = combined_df["date-time"].astype("Int64")
+    combined_df = combined_df.reindex(columns=["date-time", "value", "quality-code"])
+
+    # Replace NaN in value column with None so they serialize as JSON null
+    # rather than the invalid JSON literal NaN.
+    combined_df["value"] = (
+        combined_df["value"]
+        .astype(object)
+        .where(combined_df["value"].notna(), other=None)
+    )
+    # Update the "values" key in the JSON to include the combined data
+    combined_json["values"] = combined_df.values.tolist()
+
+    # Return a new cwms Data object with the combined DataFrame and updated metadata
+    return Data(combined_json, selector="values")
+
+
+def validate_dates(
+    begin: Optional[datetime] = None, end: Optional[datetime] = None
+) -> Tuple[datetime, datetime]:
+    # Ensure `begin` and `end` are valid datetime objects
+    begin = begin or datetime.now(tz=timezone.utc) - timedelta(
+        days=1
+    )  # Default to 24 hours ago
+    end = end or datetime.now(tz=timezone.utc)
+    # assign UTC tz
+    begin = begin.replace(tzinfo=timezone.utc)
+    end = end.replace(tzinfo=timezone.utc)
+    return begin, end
 
 
 def get_timeseries(
     ts_id: str,
     office_id: str,
-    unit: str = "EN",
+    unit: Optional[str] = "EN",
     datum: Optional[str] = None,
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
-    page_size: int = 500000,
+    page_size: Optional[int] = 300000,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
+    multithread: Optional[bool] = True,
+    max_workers: int = 20,
+    max_days_per_chunk: int = 14,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -48,9 +303,9 @@ def get_timeseries(
     Parameters
     ----------
         ts_id: string
-            Name(s) of the time series whose data is to be included in the response.
+            Name of the time series whose data is to be included in the response.
         office_id: string
-            The owning office of the time series(s).
+            The owning office of the time series.
         unit: string, optional, default is EN
             The unit or unit system of the response. Defaults to EN. Valid values
             for the unit field are:
@@ -72,19 +327,25 @@ def get_timeseries(
             not specified, any required time window ends at the current time. Any timezone
             information should be passed within the datetime object. If no timezone information
             is given, default will be UTC.
-        page_size: int, optional, default is 5000000: Sepcifies the number of records to obtain in
+        page_size: int, optional, default is 300000: Specifies the number of records to obtain in
             a single call.
         version_date: datetime, optional, default is None
             Version date of time series values being requested. If this field is not specified and
             the timeseries is versioned, the query will return the max aggregate for the time period.
         trim: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
+        multithread: boolean, optional, default is True
+            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+        max_workers: integer, default is 20
+            The maximum number of worker threads that will be spawned for multithreading, If calling more than 3 years of 15 minute data, consider using 30 max_workers
+        max_days_per_chunk: integer, default is 14
+            The maximum number of days that would be included in a thread. If calling more than 1 year of 15 minute data, consider using 30 days
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
 
-    # creates the dataframe from the timeseries data
+    selector = "values"
     endpoint = "timeseries"
     params = {
         "office": office_id,
@@ -94,11 +355,63 @@ def get_timeseries(
         "begin": begin.isoformat() if begin else None,
         "end": end.isoformat() if end else None,
         "page-size": page_size,
+        "page": None,
         "version-date": version_date.isoformat() if version_date else None,
+        "trim": trim,
     }
 
-    response = api.get(endpoint, params)
-    return Data(response, selector="values")
+    begin, end = validate_dates(begin=begin, end=end)
+
+    # grab extents if begin is before CWMS DB were implemented to prevent empty queries outside of extents
+    if begin < datetime(2014, 1, 1, tzinfo=timezone.utc) and multithread:
+        try:
+            begin_extent, _, _ = get_ts_extents(ts_id=ts_id, office_id=office_id)
+            # replace begin with begin extent if outside extents
+            if begin < begin_extent:
+                begin = begin_extent
+                logging.debug(
+                    f"Requested begin was before any data in this timeseries. Reseting to {begin}"
+                )
+        except Exception as e:
+            # If getting extents fails, fall back to single-threaded mode
+            logging.debug(
+                f"Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
+            )
+
+            response = api.get_with_paging(
+                selector=selector, endpoint=endpoint, params=params
+            )
+            return Data(response, selector=selector)
+
+    # divide the time range into chunks
+    chunks = chunk_timeseries_time_range(begin, end, timedelta(days=max_days_per_chunk))
+
+    # find max worker thread
+    max_workers = max(min(len(chunks), max_workers), 1)
+
+    # if not multithread
+    if max_workers == 1 or not multithread:
+        response = api.get_with_paging(
+            selector=selector, endpoint="timeseries", params=params
+        )
+        return Data(response, selector=selector)
+    else:
+        logging.debug(
+            f"Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
+        )
+        # fetch the data
+        result_list = fetch_timeseries_chunks(
+            chunks,
+            params,
+            selector,
+            endpoint,
+            max_workers,
+        )
+
+        # combine the results
+        results = combine_timeseries_results(result_list)
+
+        return results
 
 
 def timeseries_df_to_json(
@@ -108,7 +421,7 @@ def timeseries_df_to_json(
     office_id: str,
     version_date: Optional[datetime] = None,
 ) -> JSON:
-    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries fucntion.
+    """This function converts a dataframe to a json dictionary in the correct format to be posted using the store_timeseries function.
 
     Parameters
     ----------
@@ -123,7 +436,7 @@ def timeseries_df_to_json(
                 2   2023-12-20T15:15:00.000-05:00  98.5           0
                 3   2023-12-20T15:30:00.000-05:00  98.5           0
         ts_id: str
-            timeseried id:specified name of the timeseries to be posted to
+            timeseries id:specified name of the timeseries to be posted to
         office_id: str
             the owning office of the time series
         units: str
@@ -132,35 +445,187 @@ def timeseries_df_to_json(
             Version date of time series values to be posted.
 
     Returns:
-        JSON
+        JSON.  Dates in JSON will be in UTC to be stored in
     """
+
+    # make a copy so original dataframe does not get updated.
+    df = data.copy()
     # check dataframe columns
-    if "quality-code" not in data:
-        data["quality-code"] = 0
-    if "date-time" not in data:
+    if "quality-code" not in df:
+        df["quality-code"] = 0
+    if "date-time" not in df:
         raise TypeError(
-            "date-time is a required column in data when posting as a dateframe"
+            "date-time is a required column in data when posting as a dataframe"
         )
-    if "value" not in data:
+    if "value" not in df:
         raise TypeError(
             "value is a required column when posting data when posting as a dataframe"
         )
 
     # make sure that dataTime column is in iso8601 formate.
-    data["date-time"] = pd.to_datetime(data["date-time"]).apply(pd.Timestamp.isoformat)
-    data = data.reindex(columns=["date-time", "value", "quality-code"])
-    if data.isnull().values.any():
-        raise ValueError("Null/NaN data must be removed from the dataframe")
+    df["date-time"] = pd.to_datetime(df["date-time"], utc=True).apply(
+        pd.Timestamp.isoformat
+    )
+    df = df.reindex(columns=["date-time", "value", "quality-code"])
 
+    # Replace NaN/NA/NaT in value column with None so they serialize as JSON
+    # null rather than the invalid JSON literal NaN.
+    df["value"] = df["value"].astype(object).where(df["value"].notna(), other=None)
+
+    if version_date:
+        version_date_iso = version_date.isoformat()
+    else:
+        version_date_iso = None
     ts_dict = {
         "name": ts_id,
         "office-id": office_id,
         "units": units,
-        "values": data.values.tolist(),
-        "version-date": version_date,
+        "values": df.values.tolist(),
+        "version-date": version_date_iso,
     }
 
     return ts_dict
+
+
+def store_multi_timeseries_df(
+    data: pd.DataFrame,
+    office_id: str,
+    create_as_ltrs: Optional[bool] = False,
+    store_rule: Optional[str] = None,
+    override_protection: Optional[bool] = False,
+    multithread: Optional[bool] = True,
+    max_workers: Optional[int] = 30,
+) -> None:
+    """stored mulitple timeseries from a dataframe.  The dataframe must be a metled dataframe with columns
+    for date-time, value, quality-code(optional), ts_id, units, and version_date(optional).  The dataframe will
+    be grouped by ts_id and version_date and each group will be posted as a separate timeseries using the store_timeseries
+    function.  If version_date column is not included then all data will be stored as unversioned data.  If version_date
+    column is included then data will be grouped by ts_id and version_date and stored as versioned timeseries with the
+    version date specified in the version_date column.
+
+    Parameters
+    ----------
+        data: dataframe
+            Time Series data to be stored.  Dataframe must be melted with columns for date-time, value, quality-code(optional),
+            ts_id, units, and version_date(optional).
+                                        date-time value  quality-code  ts_id                                  units   version_date
+                0   2023-12-20T14:45:00.000-05:00  93.1           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:00:00-05:00
+                1   2023-12-20T15:00:00.000-05:00  99.8           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:00:00-05:00
+                2   2023-12-20T15:15:00.000-05:00  98.5           0   OMA.Stage.Inst.6Hours.0.Fcst-MRBWM-GRFT ft     2024-04-22 07:15:00-05:00
+        office_id: string
+            The owning office of the time series(s).
+        create_as_ltrs: bool, optional, default is False
+            Flag indicating if timeseries should be created as Local Regular Time Series.
+        store_rule: str, optional, default is None:
+            The business rule to use when merging the incoming with existing data. Available values :
+                REPLACE_ALL,
+                DO_NOT_REPLACE,
+                REPLACE_MISSING_VALUES_ONLY,
+                REPLACE_WITH_NON_MISSING,
+                DELETE_INSERT.
+        override_protection: bool, optional, default is False
+            A flag to ignore the protected data quality flag when storing data.
+        multithread: bool, default is false
+            Specifies whether to store chunked time series values using multiple threads.
+        max_workers: Int, Optional, default is None
+            It is a number of Threads aka size of pool in concurrent.futures.ThreadPoolExecutor.
+
+        Returns
+        -------
+            None
+    """
+
+    def store_ts_ids(
+        data: pd.DataFrame,
+        ts_id: str,
+        office_id: str,
+        version_date: Optional[datetime] = None,
+    ) -> None:
+        try:
+            units = data["units"].iloc[0]
+            data_json = timeseries_df_to_json(
+                data=data,
+                ts_id=ts_id,
+                units=units,
+                office_id=office_id,
+                version_date=version_date,
+            )
+            store_timeseries(
+                data=data_json,
+                create_as_ltrs=create_as_ltrs,
+                store_rule=store_rule,
+                override_protection=override_protection,
+                multithread=multithread,
+            )
+        except Exception as e:
+            print(f"Error processing {ts_id}: {e}")
+        return None
+
+    required_columns = ["date-time", "value", "ts_id", "units"]
+    for col in required_columns:
+        if col not in data.columns:
+            raise TypeError(
+                f"{col} is a required column in data when posting multiple timeseries from a dataframe. Make sure you are using a melted dataframe with columns for date-time, value, quality-code(optional), ts_id, units, and version_date(optional)."
+            )
+    ts_data_all = data.copy()
+    if "version_date" not in ts_data_all.columns:
+        ts_data_all = ts_data_all.assign(version_date=pd.to_datetime(pd.Series([])))
+    unique_tsids = (
+        ts_data_all["ts_id"].astype(str) + ":" + ts_data_all["version_date"].astype(str)
+    ).unique()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for unique_tsid in unique_tsids:
+            ts_id, version_date = unique_tsid.split(":", 1)
+            if version_date != "NaT":
+                version_date_dt = pd.to_datetime(version_date)
+                ts_data = ts_data_all[
+                    (ts_data_all["ts_id"] == ts_id)
+                    & (ts_data_all["version_date"] == version_date_dt)
+                ]
+            else:
+                version_date_dt = None
+                ts_data = ts_data_all[
+                    (ts_data_all["ts_id"] == ts_id) & ts_data_all["version_date"].isna()
+                ]
+            if not data.empty:
+                executor.submit(
+                    store_ts_ids, ts_data, ts_id, office_id, version_date_dt
+                )
+
+
+def chunk_timeseries_data(
+    data: Dict[str, Any], chunk_size: int
+) -> List[Dict[str, Any]]:
+    """
+    Splits the time series values into smaller chunks.
+
+    Parameters
+    ----------
+    values : list
+        List of time series values to be stored.
+    chunk_size : int
+        Maximum number of values per chunk.
+
+    Returns
+    -------
+    list
+        List of chunks, where each chunk is a subset of the values.
+    """
+    values = data["values"]
+    chunk_list = []
+    for i in range(0, len(values), chunk_size):
+        chunk = values[i : i + chunk_size]
+        chunked_data = {
+            "name": data["name"],
+            "office-id": data["office-id"],
+            "units": data["units"],
+            "values": chunk,
+            "version-date": data.get("version-date"),
+        }
+
+        chunk_list.append(chunked_data)
+    return chunk_list
 
 
 def store_timeseries(
@@ -168,6 +633,9 @@ def store_timeseries(
     create_as_ltrs: Optional[bool] = False,
     store_rule: Optional[str] = None,
     override_protection: Optional[bool] = False,
+    multithread: Optional[bool] = True,
+    max_workers: int = 20,
+    chunk_size: int = 2 * 7 * 24 * 4,  # two weeks of 15 min data
 ) -> None:
     """Will Create new TimeSeries if not already present.  Will store any data provided
 
@@ -175,7 +643,7 @@ def store_timeseries(
     ----------
         data: JSON dictionary
             Time Series data to be stored.
-        create_as_ltrs: bool, optional, defualt is False
+        create_as_ltrs: bool, optional, default is False
             Flag indicating if timeseries should be created as Local Regular Time Series.
         store_rule: str, optional, default is None:
             The business rule to use when merging the incoming with existing data. Available values :
@@ -186,10 +654,16 @@ def store_timeseries(
                 DELETE_INSERT.
         override_protection: str, optional, default is False
             A flag to ignore the protected data quality when storing data.
+        multithread: bool, default is true
+        max_workers: int, default is 20, maximum numbers of worker threads,
+            if saving more than 3 years of 15 minute data, consider using 30
+        chunk_size: int, default is 2 * 7 * 24 * 4 (two weeks of 15 minute data),
+            maximum values that will be saved by a thread, if saving more than 3 years of 15 minute data,
+            consider using 30 days of 15 minute data
 
     Returns
     -------
-    response
+    None
     """
 
     endpoint = "timeseries"
@@ -202,7 +676,47 @@ def store_timeseries(
     if not isinstance(data, dict):
         raise ValueError("Cannot store a timeseries without a JSON data dictionary")
 
-    return api.post(endpoint, data, params)
+    # Chunk the data
+    chunks = chunk_timeseries_data(data, chunk_size)
+
+    # if multi-threaded not needed
+    if len(chunks) == 1 or not multithread:
+        return api.post(endpoint, data, params)
+
+    actual_workers = min(max_workers, len(chunks))
+    logging.debug(
+        f"Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
+    )
+
+    # Store chunks concurrently
+    responses: List[Dict[str, Any]] = []
+    errors: List[str] = []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=actual_workers) as executor:
+        future_to_chunk = {
+            executor.submit(_call_with_retry, api.post, endpoint, chunk, params): chunk
+            for chunk in chunks
+        }
+
+        for future in concurrent.futures.as_completed(future_to_chunk):
+            chunk = future_to_chunk[future]
+            try:
+                responses.append({"success": future.result()})
+            except Exception as e:
+                start_time = chunk["values"][0][0]
+                end_time = chunk["values"][-1][0]
+                error_msg = f"Error storing chunk from {start_time} to {end_time}: {e}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+                responses.append({"error": error_msg})
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to store:\n"
+            + "\n".join(errors)
+        )
+
+    return
 
 
 def delete_timeseries(

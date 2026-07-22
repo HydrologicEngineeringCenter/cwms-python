@@ -88,18 +88,6 @@ def get_binary_timeseries(
     return Data(response)
 
 
-def get_large_blob(url: str) -> bytes:
-    """
-    Retrieves large blob data greater than 64kb from CWMS data api
-    :param url: str
-        Url used in query by CDA
-    :return: bytes
-        Large binary data
-    """
-    response = requests.get(url)
-    return response.content
-
-
 def store_binary_timeseries(data: JSON, replace_all: bool = False) -> None:
     """
     This method is used to store a binary time series through CWMS Data API.

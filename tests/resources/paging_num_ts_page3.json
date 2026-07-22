@@ -1,0 +1,31 @@
+{
+    "begin": "2024-10-03T11:14:17.125301Z", 
+    "date-version-type": "UNVERSIONED", 
+    "end": "2024-10-04T11:14:17.125301Z", 
+    "interval": "PT15M", 
+    "interval-offset": 0, 
+    "name": "Test.Stage.Inst.15Minutes.0.TEST_PAGING",  
+    "office-id": "NWDM", 
+    "page": "MTcyNzk3MjEwMDAwMHx8OTZ8fDEw", 
+    "page-size": 10, 
+    "time-zone": "US/Central", 
+    "total": 30, 
+    "units": "ft", 
+    "value-columns": [
+        {"name": "date-time", "ordinal": 1, "datatype": "java.sql.Timestamp"}, 
+        {"name": "value", "ordinal": 2, "datatype": "java.lang.Double"}, 
+        {"name": "quality-code", "ordinal": 3, "datatype": "int"}
+        ], 
+    "values": [
+        [1727972100000, 4.28, 0], 
+        [1727973000000, 4.3, 0], 
+        [1727973900000, 4.28, 0], 
+        [1727974800000, 4.3, 0], 
+        [1727975700000, 4.3, 0], 
+        [1727976600000, 4.28, 0], 
+        [1727977500000, 4.28, 0], 
+        [1727978400000, 4.3, 0], 
+        [1727979300000, 4.28, 0], 
+        [1727980200000, 4.29, 0]
+    ]
+}

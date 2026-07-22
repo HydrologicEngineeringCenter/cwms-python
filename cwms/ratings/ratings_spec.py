@@ -8,7 +8,7 @@ from cwms.cwms_types import JSON, Data
 
 
 def get_rating_spec(rating_id: str, office_id: str) -> Data:
-    """Retrives a single rating spec
+    """Retrieves a single rating spec
 
       Parameters
       ----------
@@ -37,7 +37,7 @@ def get_rating_specs(
     rating_id_mask: Optional[str] = None,
     page_size: int = 500000,
 ) -> Data:
-    """Retrives a list of rating specification
+    """Retrieves a list of rating specification
 
       Parameters
       ----------
@@ -45,7 +45,7 @@ def get_rating_specs(
               The owning office of the rating specifications. If no office is provided information from all offices will
               be returned
           rating-id-mask: string, optional
-              Posix regular expression that specifies the rating ids to be included in the reponce.  If not specified all
+              Posix regular expression that specifies the rating ids to be included in the response.  If not specified all
               rating specs shall be returned.
           page-size: int, optional, default is 5000000: Specifies the number of records to obtain in
               a single call.
@@ -101,6 +101,68 @@ def delete_rating_spec(rating_id: str, office_id: str, delete_method: str) -> No
     params = {"office": office_id, "method": delete_method}
 
     return api.delete(endpoint, params)
+
+
+def rating_spec_df_to_xml(data: pd.DataFrame) -> str:
+    """
+    Converts a dataframe containing rating specification parameters
+    into xml to be stored into the database.
+
+    Parameters
+    ----------
+    data : pd_dataframe
+        pandas dataframe that contains rating specification parameters
+        should follow same formate the is returned from get_rating_spec function
+    Returns
+    -------
+    str: xml that can be used in store_rating_spec function
+    """
+
+    spec_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+    <rating-spec office-id="{data.loc[0,'office-id']}">
+      <rating-spec-id>{data.loc[0,'rating-id']}</rating-spec-id>
+      <template-id>{data.loc[0,'template-id']}</template-id>
+      <location-id>{data.loc[0,'location-id']}</location-id>
+      <version>{data.loc[0,'version']}</version>"""
+    try:
+        spec_xml += f"""
+      <source-agency>{data.loc[0,'source-agency']}</source-agency>"""
+    except Exception:
+        spec_xml += """
+      <source-agency/>"""
+    spec_xml += f"""
+      <in-range-method>{data.loc[0,'in-range-method']}</in-range-method>
+      <out-range-low-method>{data.loc[0,'out-range-low-method']}</out-range-low-method>
+      <out-range-high-method>{data.loc[0,'out-range-high-method']}</out-range-high-method>
+      <active>{str(data.loc[0,'active']).lower()}</active>
+      <auto-update>{str(data.loc[0,'auto-update']).lower()}</auto-update>
+      <auto-activate>{str(data.loc[0,'auto-activate']).lower()}</auto-activate>
+      <auto-migrate-extension>{str(data.loc[0,'auto-migrate-extension']).lower()}</auto-migrate-extension>
+      <ind-rounding-specs>"""
+
+    ind_rounding = data.loc[0, "independent-rounding-specs"]
+    if isinstance(ind_rounding, list):
+        i = 1
+        for rounding in ind_rounding:
+            spec_xml = (
+                spec_xml
+                + f"""\n   <ind-rounding-spec position="{i}">{rounding['value']}</ind-rounding-spec>"""
+            )
+            i = i + 1
+    spec_xml2 = f"""\n  </ind-rounding-specs>
+      <dep-rounding-spec>{data.loc[0,'dependent-rounding-spec']}</dep-rounding-spec>"""
+    try:
+        spec_xml2 += f"""
+      <description>{data.loc[0,'description']}</description>"""
+    except Exception:
+        spec_xml2 += """
+      <description/>"""
+    spec_xml2 += """
+     </rating-spec>"""
+
+    spec_xml = spec_xml + spec_xml2
+
+    return spec_xml
 
 
 def store_rating_spec(data: str, fail_if_exists: Optional[bool] = True) -> None:

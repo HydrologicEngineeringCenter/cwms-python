@@ -13,7 +13,7 @@ from cwms.cwms_types import JSON, Data
 
 
 def get_location_levels(
-    level_id_mask: str = "*",
+    level_id_mask: Optional[str] = None,
     office_id: Optional[str] = None,
     unit: Optional[str] = None,
     datum: Optional[str] = None,
@@ -58,13 +58,13 @@ def get_location_levels(
         "level-id-mask": level_id_mask,
         "unit": unit,
         "datum": datum,
-        "begin": begin.isoformat() if begin else "",
-        "end": end.isoformat() if end else "",
+        "begin": begin.isoformat() if begin else None,
+        "end": end.isoformat() if end else None,
         "page": page,
         "page-size": page_size,
     }
-    response = api.get(endpoint, params)
-    return Data(response)
+    response = api.get(endpoint=endpoint, params=params)
+    return Data(json=response, selector="levels")
 
 
 def get_location_level(
@@ -167,6 +167,35 @@ def delete_location_level(
         "cascade-delete": cascade_delete,
     }
     return api.delete(endpoint, params)
+
+
+def update_location_level(
+    data: JSON, level_id: str, effective_date: Optional[datetime] = None
+) -> None:
+    """
+    Parameters
+    ----------
+    data : dict
+        The JSON data dictionary containing the updated location level information.
+    level_id : str
+        The ID of the location level to be updated.
+    effective_date : datetime, optional
+        The effective date of the location level to be updated.
+        If the datetime has a timezone it will be used, otherwise it is assumed to be in UTC.
+
+    """
+    if data is None:
+        raise ValueError(
+            "Cannot update a location level without a JSON data dictionary"
+        )
+    if level_id is None:
+        raise ValueError("Cannot update a location level without an id")
+    endpoint = f"levels/{level_id}"
+
+    params = {
+        "effective-date": (effective_date.isoformat() if effective_date else None),
+    }
+    return api.patch(endpoint, data, params)
 
 
 def get_level_as_timeseries(

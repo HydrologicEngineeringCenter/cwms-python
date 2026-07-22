@@ -1,0 +1,143 @@
+volumes:
+  oracle_data_1:
+  auth_data:
+services:
+  db:
+    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:latest-dev
+    environment:
+      #- ORACLE_DATABASE=FREEPDB1
+      - ORACLE_PASSWORD=badSYSpassword
+      - CWMS_PASSWORD=simplecwmspasswD1
+      - OFFICE_ID=HQ
+      - OFFICE_EROC=s0
+    ports: ["1526:1521"]
+    healthcheck:
+      test: ["CMD", "tnsping", "FREEPDB1"]
+      interval: 30s
+      timeout: 50s
+      retries: 50
+      start_period: 40m
+  db_webuser_permissions:
+    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:latest-dev
+    restart: "no"
+    environment:
+      - DB_HOST_PORT=db:1521
+      - DB_NAME=/FREEPDB1
+      - CWMS_PASSWORD=simplecwmspasswD1
+      - SYS_PASSWORD=badSYSpassword
+      # set to HQ/q0 for any national system work
+      - OFFICE_ID=HQ
+      - OFFICE_EROC=s0
+      - INSTALLONCE=1
+      - QUIET=1
+    command: >
+      sh -xc "sqlplus CWMS_20/$$CWMS_PASSWORD@$$DB_HOST_PORT$$DB_NAME @/setup_sql/users
+      $$OFFICE_EROC"
+    volumes: [./compose_files/sql:/setup_sql:ro]
+    depends_on:
+      db:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      traefik:
+        condition: service_healthy
+
+  data-api:
+    depends_on:
+      auth:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      db_webuser_permissions:
+        condition: service_completed_successfully
+      traefik:
+        condition: service_healthy
+    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:latest}
+    restart: unless-stopped
+    volumes:
+      - ./compose_files/pki/certs:/conf/
+      - ./compose_files/tomcat/logging.properties:/usr/local/tomcat/conf/logging.properties:ro
+    environment:
+      - CDA_JDBC_DRIVER=oracle.jdbc.driver.OracleDriver
+      - CDA_JDBC_URL=jdbc:oracle:thin:@db/FREEPDB1
+      - CDA_JDBC_USERNAME=s0webtest
+      - CDA_JDBC_PASSWORD=simplecwmspasswD1
+      - CDA_POOL_INIT_SIZE=5
+      - CDA_POOL_MAX_ACTIVE=10
+      - CDA_POOL_MAX_IDLE=5
+      - CDA_POOL_MIN_IDLE=2
+      - cwms.dataapi.access.provider=MultipleAccessManager
+      - cwms.dataapi.access.providers=KeyAccessManager,OpenID
+      - cwms.dataapi.access.openid.create_users=true
+      - cwms.dataapi.access.openid.wellKnownUrl=http://auth:${APP_PORT:-8082}/auth/realms/cwms/.well-known/openid-configuration
+      - cwms.dataapi.access.openid.altAuthUrl=http://localhost:${APP_PORT:-8082}
+      - cwms.dataapi.access.openid.useAltWellKnown=true
+      - cwms.dataapi.access.openid.issuer=http://localhost:${APP_PORT:-8082}/auth/realms/cwms
+    expose: [7000]
+    healthcheck:
+      test: ["CMD", "/usr/bin/curl", "-I", "localhost:7000/cwms-data/offices/HEC"]
+      interval: 5s
+      timeout: 1s
+      retries: 100
+      start_period: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.data-api.rule=PathPrefix(`/cwms-data`)"
+      - "traefik.http.routers.data-api.entryPoints=web"
+
+  auth:
+    image: quay.io/keycloak/keycloak:26.5
+    command: ["start-dev", "--import-realm"]
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.0\\\
+          r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_FEATURES=admin-fine-grained-authz
+      - KC_HTTP_PORT=8082
+      - KC_HOSTNAME_STRICT=false
+      - KC_PROXY=none
+      - KC_HTTP_ENABLED=true
+      - KC_HTTP_RELATIVE_PATH=/auth
+      - KC_HOSTNAME=http://localhost:8082
+      - KC_DB=dev-file
+      - APP_PORT=${APP_PORT:-8082}
+    volumes:
+      - ./compose_files/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.entryPoints=web"
+      - "traefik.http.services.auth.loadbalancer.server.port=8082"
+    depends_on:
+      traefik:
+        condition: service_healthy
+
+  # Proxy for HTTPS for OpenID
+  traefik:
+    image: traefik:v3.6.2
+    ports: ["${APP_PORT:-8082}:80"]
+    expose: ["8080"]
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"]
+    healthcheck:
+      test: traefik healthcheck --ping
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--ping"
+      - "--log.level=DEBUG"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=PathPrefix(`/traefik`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+

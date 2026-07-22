@@ -7,14 +7,6 @@ import cwms.api as api
 from cwms.cwms_types import JSON, Data
 
 
-def get_location_group(loc_group_id: str, category_id: str, office_id: str) -> Data:
-    endpoint = f"location/group/{loc_group_id}"
-    params = {"office": office_id, "category-id": category_id}
-
-    response = api.get(endpoint, params, api_version=1)
-    return Data(response, selector="assigned-locations")
-
-
 def get_location(location_id: str, office_id: str, unit: str = "EN") -> Data:
     """
     Get location data for a single location
@@ -46,20 +38,44 @@ def get_location(location_id: str, office_id: str, unit: str = "EN") -> Data:
 
 def get_locations(
     office_id: Optional[str] = None,
-    loc_ids: Optional[str] = None,
-    units: Optional[str] = None,
+    location_ids: Optional[str] = None,
+    units: Optional[str] = "EN",
     datum: Optional[str] = None,
 ) -> Data:
+    """
+    Get location data for a single location
+
+    Parameters
+    ----------
+        location_id: str
+            Specifies the name(s) of the location(s) whose data is to be included in the response. This parameter is a Posix regular expression matching against the id
+        office_id : str
+            The ID of the office that the locations belongs to.
+        unit: string, optional, default is EN
+            The unit or unit system of the response. Defaults to EN. Valid values
+            for the unit field are:
+                1. EN. English unit system.
+                2. SI. SI unit system.
+                3. Other.
+        Datum: string, optional, default is None
+            Specifies the elevation datum of the response. This field affects only vertical datum. Valid values for this field are:
+                1.) NAVD88 The elevation values will in the specified or default units above the NAVD-88 datum.
+                2.) NGVD29 The elevation values will be in the specified or default units above the NGVD-29 datum.
+    Returns
+    -------
+        cwms data type.  data.json will return the JSON output and data.df will return a dataframe
+
+    """
     endpoint = "locations"
     params = {
         "office": office_id,
-        "names": loc_ids,
-        "units": units,
+        "names": location_ids,
+        "unit": units,
         "datum": datum,
     }
 
     response = api.get(endpoint, params)
-    return Data(response, selector="locations.locations")
+    return Data(response)
 
 
 def ExpandLocations(df: DataFrame) -> DataFrame:
@@ -79,6 +95,7 @@ def ExpandLocations(df: DataFrame) -> DataFrame:
 def delete_location(
     location_id: str,
     office_id: Optional[str] = None,
+    cascade_delete: Optional[bool] = False,
 ) -> None:
     """
     Deletes location data with the given ID and office ID.
@@ -89,6 +106,8 @@ def delete_location(
             The ID of the office that the data belongs to.
         loc_ids : str
             The ID of the location that the data belongs to.
+        cascade_delete: bool
+            Whether to delete all data associated with location.
 
     Returns
     -------
@@ -103,12 +122,13 @@ def delete_location(
     endpoint = f"locations/{location_id}"
     params = {
         "office": office_id,
+        "cascade-delete": cascade_delete,
     }
 
     return api.delete(endpoint, params=params)
 
 
-def store_location(data: JSON) -> None:
+def store_location(data: JSON, fail_if_exists: bool = True) -> None:
     """
     This method is used to store and update location's data through CWMS Data API.
 
@@ -117,6 +137,10 @@ def store_location(data: JSON) -> None:
         data : dict
             A dictionary representing the JSON data to be stored.
             If the `data` value is None, a `ValueError` will be raised.
+        fail_if_exists : bool, optional
+            A boolean value indicating whether to fail if the outlet already exists.
+            Default is True.
+
 
     Returns
     -------
@@ -128,8 +152,8 @@ def store_location(data: JSON) -> None:
         raise ValueError("Storing location requires a JSON data dictionary")
 
     endpoint = "locations"
-
-    return api.post(endpoint, data)
+    params = {"fail-if-exists": fail_if_exists}
+    return api.post(endpoint, data, params=params)
 
 
 def update_location(location_id: str, data: JSON) -> None:

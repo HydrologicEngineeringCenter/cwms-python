@@ -20,6 +20,24 @@ Then import the package:
 import cwms
 ```
 
+### Authentication
+
+`cwms.init_session()` supports both CDA API keys and Keycloak access tokens.
+Use `api_key=` for the headless CDA API key flow, or `token=` for an OIDC access
+token such as one saved by [`cwms-cli login`]().
+
+```python
+import cwms
+
+cwms.init_session(
+    api_root="https://cwms-data.usace.army.mil/cwms-data/",
+    token="ACCESS_TOKEN",
+)
+```
+
+If both `token` and `api_key` are provided, `cwms-python` will use the token
+and log a warning.
+
 ## Getting Started
 
 ```python
@@ -71,3 +89,13 @@ print(json)
   ['2024-04-23T10:00:00', 86.57999999999997, 3]],
  'version-date': None}
 ```
+
+## TimeSeries Profile API Compatibility Warning
+
+Currently, the TimeSeries Profile API may not be fully supported
+until a new version of cwms-data-access is released with the updated 
+endpoint implementation.
+
+## Contributing
+
+Please view the contribution documentation here: [CONTRIBUTING.md]

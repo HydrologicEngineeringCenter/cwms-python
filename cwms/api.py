@@ -1,13 +1,13 @@
-""" Session management and REST functions for CWMS Data API.
+"""Session management and REST functions for CWMS Data API.
 
 This module provides functions for making REST calls to the CWMS Data API (CDA). These
 functions should be used internally to interact with the API. The user should not have to
 interact with these directly.
 
 The `init_session()` function can be used to specify an alternative root URL, and to
-provide an authentication key (if required). If `init_session()` is not called, the
-default root URL (see `API_ROOT` below) will be used, and no authentication keys will be
-included when making API calls.
+provide an authentication key or bearer token (if required). If `init_session()` is not
+called, the default root URL (see `API_ROOT` below) will be used, and no authentication
+headers will be included when making API calls.
 
 Example: Initializing a session
 
@@ -16,6 +16,9 @@ Example: Initializing a session
 
     # Specify an alternate URL and an auth key
     init_session(api_root="https://example.com/cwms-data", api_key="API_KEY")
+
+    # Specify an alternate URL and an OIDC bearer token
+    init_session(api_root="https://example.com/cwms-data", token="ACCESS_TOKEN")
 
 Functions which make API calls that _may_ return a JSON response will return a `dict`
 containing the deserialized data. If the API response does not include data, an empty
@@ -26,14 +29,18 @@ which includes the response object and provides some hints to the user on how to
 the error.
 """
 
+import base64
 import json
 import logging
+from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
-from requests import Response
+from requests import Response, adapters
+from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
+from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
 
@@ -41,8 +48,26 @@ from cwms.cwms_types import JSON, RequestParams
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
 
-# Initialize a non-authenticated session with the default root URL.
+# Initialize a non-authenticated session with the default root URL and set default pool connections.
+
+retry_strategy = Retry(
+    total=6,
+    backoff_factor=0.5,
+    status_forcelist=[
+        403,
+        429,
+        502,
+        503,
+        504,
+    ],  # Example: also retry on these HTTP status codes
+    allowed_methods=["GET", "PUT", "POST", "PATCH", "DELETE"],  # Methods to retry
+    raise_on_status=False,
+)
 SESSION = sessions.BaseUrlSession(base_url=API_ROOT)
+adapter = adapters.HTTPAdapter(
+    pool_connections=100, pool_maxsize=100, max_retries=retry_strategy
+)
+SESSION.mount("https://", adapter)
 
 
 class InvalidVersion(Exception):
@@ -52,15 +77,19 @@ class InvalidVersion(Exception):
 class ApiError(Exception):
     """CWMS Data Api Error.
 
-    This class is a light wrapper around a `requests.Response` object. Its primary purpose
-    is to generate an error message that includes the request URL and provide additional
-    information to the user to help them resolve the error.
+    Light wrapper around a response-like object (e.g., requests.Response or a
+    test stub with url, status_code, reason, and content attributes). Produces
+    a concise, single-line error message with an optional hint.
     """
 
-    def __init__(self, response: Response):
+    def __init__(self, response: Response, message: Optional[str] = None):
         self.response = response
+        self.message = message
 
     def __str__(self) -> str:
+        if self.message:
+            return self.message
+
         # Include the request URL in the error message.
         message = f"CWMS API Error ({self.response.url})"
 
@@ -71,51 +100,117 @@ class ApiError(Exception):
         message += "."
 
         # Add additional context to help the user resolve the issue.
-        if hint := self.hint():
+        hint = self.hint()
+        if hint:
             message += f" {hint}"
 
-        if content := self.response.content:
-            message += f" {content.decode('utf8')}"
+        # Optional content (decoded if bytes)
+        content = getattr(self.response, "content", None)
+        if content:
+            if isinstance(content, bytes):
+                try:
+                    text = content.decode("utf-8", errors="replace")
+                except Exception:
+                    text = repr(content)
+            else:
+                text = str(content)
+            message += f" {text}"
 
         return message
 
     def hint(self) -> str:
-        """Return a message with additional information on how to resolve the error."""
+        """Return a short hint based on HTTP status code."""
+        status = getattr(self.response, "status_code", None)
 
-        if self.response.status_code == 400:
+        if status == 429:
+            return "Too many requests made."
+        if status == 400:
             return "Check that your parameters are correct."
-        elif self.response.status_code == 404:
+        if status == 404:
             return "May be the result of an empty query."
-        else:
-            return ""
+
+        # No hint for other codes
+        return ""
+
+
+class NotFoundError(ApiError):
+    """Raised when a requested CDA resource does not exist."""
+
+
+class PermissionError(ApiError):
+    """Raised when the CDA request is not authorized for the current caller."""
+
+
+def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
+    """Return the original retry cause when requests wraps it in RetryError."""
+
+    current: Exception = error
+    cause = error.__cause__
+    while isinstance(cause, Exception):
+        current = cause
+        cause = cause.__cause__
+
+    if current is error and error.args:
+        first_arg = error.args[0]
+        if isinstance(first_arg, Exception):
+            current = first_arg
+            reason = getattr(current, "reason", None)
+            while isinstance(reason, Exception):
+                current = reason
+                reason = getattr(current, "reason", None)
+
+    return current
 
 
 def init_session(
-    *, api_root: Optional[str] = None, api_key: Optional[str] = None
+    *,
+    api_root: Optional[str] = None,
+    api_key: Optional[str] = None,
+    token: Optional[str] = None,
+    pool_connections: int = 100,
 ) -> BaseUrlSession:
-    """Specify a root URL and authentication key for the CWMS Data API.
+    """Specify a root URL and authentication credentials for the CWMS Data API.
 
     This function can be used to change the root URL used when interacting with the CDA.
-    All API calls made after this function is called will use the specified URL. If an
-    authentication key is given it will be included in all future request headers.
+    All API calls made after this function is called will use the specified URL. If
+    authentication credentials are given they will be included in all future request
+    headers.
 
     Keyword Args:
         api_root (optional): The root URL for the CWMS Data API.
         api_key (optional): An authentication key.
+        token (optional): A Keycloak access token. If both token and api_key are
+            provided, token is used.
 
     Returns:
         Returns the updated session object.
     """
 
     global SESSION
-
     if api_root:
+        # Ensure the API_ROOT ends with a single slash
+        api_root = api_root.rstrip("/") + "/"
         logging.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
-
-    if api_key:
-        logging.debug(f"Setting authorization key: api_key={api_key}")
-        SESSION.headers.update({"Authorization": api_key})
+        adapter = adapters.HTTPAdapter(
+            pool_connections=pool_connections,
+            pool_maxsize=pool_connections,
+            max_retries=retry_strategy,
+        )
+        SESSION.mount("https://", adapter)
+    if token:
+        if api_key:
+            logging.warning(
+                "Both token and api_key were provided to init_session(); using token for Authorization."
+            )
+        # Ensure we don't provide the bearer text twice
+        if token.lower().startswith("bearer "):
+            token = token[7:]
+        SESSION.headers.update({"Authorization": "Bearer " + token})
+    elif api_key:
+        if api_key.startswith("apikey "):
+            api_key = api_key.replace("apikey ", "")
+        SESSION.headers.update({"Authorization": "apikey " + api_key})
 
     return SESSION
 
@@ -180,19 +275,35 @@ def get_xml(
     Raises:
         ApiError: If an error response is return by the API.
     """
+    # Wrap the primary get for backwards compatibility
+    return get(endpoint=endpoint, params=params, api_version=api_version)
 
-    headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.get(endpoint, params=params, headers=headers)
 
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
-
+def _process_response(response: Response) -> Any:
     try:
+        # Avoid case sensitivity issues with the content type header
+        content_type = response.headers.get("Content-Type", "").lower()
+        # Most CDA content is JSON
+        if "application/json" in content_type or not content_type:
+            return cast(JSON, response.json())
+        # Use automatic charset detection with .text
+        if "text/plain" in content_type or "text/" in content_type:
+            return response.text
+        if content_type.startswith("image/"):
+            return base64.b64encode(response.content).decode("utf-8")
+        # Handle excel content types
+        if content_type in [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ]:
+            return response.content
+        # Fallback for remaining content types
         return response.content.decode("utf-8")
     except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response as xml: {error}")
-        return {}
+        logging.error(
+            f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
+        )
+        return response.text
 
 
 def get(
@@ -200,7 +311,7 @@ def get(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
-) -> JSON:
+) -> Any:
     """Make a GET request to the CWMS Data API.
 
     Args:
@@ -219,17 +330,78 @@ def get(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.get(endpoint, params=params, headers=headers)
-
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
-
     try:
-        return cast(JSON, response.json())
-    except JSONDecodeError as error:
-        logging.error(f"Error decoding CDA response as json: {error}")
-        return {}
+        with SESSION.get(endpoint, params=params, headers=headers) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+            return _process_response(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
+
+
+def get_with_paging(
+    selector: str,
+    endpoint: str,
+    params: RequestParams,
+    *,
+    api_version: int = API_VERSION,
+) -> Any:
+    """Make a GET request to the CWMS Data API with paging.
+
+    Args:
+        endpoint: The CDA endpoint for the record(s).
+        selector: The json key that will be merged though each page call
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The deserialized JSON response data.
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+
+    first_pass = True
+    while (params["page"] is not None) or first_pass:
+        temp = get(endpoint, params, api_version=api_version)
+        if first_pass:
+            response = temp
+        else:
+            response[selector] = response[selector] + temp[selector]
+        if "next-page" in temp.keys():
+            params["page"] = temp["next-page"]
+        else:
+            params["page"] = None
+        first_pass = False
+    return response
+
+
+def _post_function(
+    endpoint: str,
+    data: Any,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> Any:
+
+    # post requires different headers than get for
+    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+    if isinstance(data, dict) or isinstance(data, list):
+        data = json.dumps(data)
+    try:
+        with SESSION.post(
+            endpoint, params=params, headers=headers, data=data
+        ) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+            return response
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def post(
@@ -251,23 +423,43 @@ def post(
             the default API_VERSION will be used.
 
     Returns:
-        The deserialized JSON response data.
+        None
+
+    Raises:
+        ApiError: If an error response is return by the API.
+    """
+    _post_function(endpoint=endpoint, data=data, params=params, api_version=api_version)
+
+
+def post_with_returned_data(
+    endpoint: str,
+    data: Any,
+    params: Optional[RequestParams] = None,
+    *,
+    api_version: int = API_VERSION,
+) -> Any:
+    """Make a POST request to the CWMS Data API.
+
+    Args:
+        endpoint: The CDA endpoint for the record type.
+        data: A dict containing the new record data. Must be JSON-serializable.
+        params (optional): Query parameters for the request.
+
+    Keyword Args:
+        api_version (optional): The CDA version to use for the request. If not specified,
+            the default API_VERSION will be used.
+
+    Returns:
+        The response data.
 
     Raises:
         ApiError: If an error response is return by the API.
     """
 
-    # post requires different headers than get for
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-
-    if isinstance(data, dict):
-        data = json.dumps(data)
-
-    response = SESSION.post(endpoint, params=params, headers=headers, data=data)
-
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    response = _post_function(
+        endpoint=endpoint, data=data, params=params, api_version=api_version
+    )
+    return _process_response(response)
 
 
 def patch(
@@ -296,16 +488,18 @@ def patch(
     """
 
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
-    if data is None:
-        response = SESSION.patch(endpoint, params=params, headers=headers)
-    else:
-        if isinstance(data, dict):
-            data = json.dumps(data)
-        response = SESSION.patch(endpoint, params=params, headers=headers, data=data)
 
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    if data and isinstance(data, dict) or isinstance(data, list):
+        data = json.dumps(data)
+    try:
+        with SESSION.patch(
+            endpoint, params=params, headers=headers, data=data
+        ) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None
 
 
 def delete(
@@ -329,8 +523,10 @@ def delete(
     """
 
     headers = {"Accept": api_version_text(api_version)}
-    response = SESSION.delete(endpoint, params=params, headers=headers)
-
-    if response.status_code < 200 or response.status_code >= 300:
-        logging.error(f"CDA Error: response={response}")
-        raise ApiError(response)
+    try:
+        with SESSION.delete(endpoint, params=params, headers=headers) as response:
+            if not response.ok:
+                logging.error(f"CDA Error: response={response}")
+                raise ApiError(response)
+    except RequestsRetryError as error:
+        raise _unwrap_retry_error(error) from None

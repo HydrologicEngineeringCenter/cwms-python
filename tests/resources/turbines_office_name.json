@@ -1,0 +1,55 @@
+{
+    "project-id": {
+        "office-id": "SWT",
+        "name": "KEYS"
+    },
+    "change-date": 1738713600000,
+    "protected": false,
+    "discharge-computation-type": {
+        "office-id": "SWT",
+        "display-value": "R",
+        "tooltip": "Reported by powerhouse",
+        "active": true
+    },
+    "reason-type": {
+        "office-id": "SWT",
+        "display-value": "S",
+        "tooltip": "Scheduled release to meet loads",
+        "active": true
+    },
+    "notes": "from SCADA",
+    "new-total-discharge-override": 0,
+    "old-total-discharge-override": 0,
+    "discharge-units": "cfs",
+    "tailwater-elevation": 637.7499999999999,
+    "elevation-units": "ft",
+    "settings": [
+        {
+            "type": "turbine-setting",
+            "location-id": {
+                "office-id": "SWT",
+                "name": "KEYS-Turbine1"
+            },
+            "discharge-units": "cfs",
+            "old-discharge": 0,
+            "new-discharge": 0,
+            "generation-units": "MW",
+            "scheduled-load": 0,
+            "real-power": 0
+        },
+        {
+            "type": "turbine-setting",
+            "location-id": {
+                "office-id": "SWT",
+                "name": "KEYS-Turbine2"
+            },
+            "discharge-units": "cfs",
+            "old-discharge": 0,
+            "new-discharge": 0,
+            "generation-units": "MW",
+            "scheduled-load": 0,
+            "real-power": 0
+        }
+    ],
+    "pool-elevation": 723.12
+}
