@@ -7,6 +7,7 @@ import pytest
 
 import cwms.api as api
 import cwms.properties.properties as properties
+from cwms.api import ApiError
 
 TEST_OFFICE = "SPK"
 TEST_CATEGORY = "PytestCategory"
@@ -105,5 +106,5 @@ def test_delete_property():
     properties.delete_property(temp_name, TEST_OFFICE, TEST_CATEGORY)
 
     # Verify it was deleted
-    with pytest.raises(api.ApiError):
+    with pytest.raises(ApiError):
         properties.get_property(temp_name, TEST_OFFICE, TEST_CATEGORY)
