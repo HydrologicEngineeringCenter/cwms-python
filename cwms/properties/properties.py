@@ -38,7 +38,7 @@ def get_properties(
         "name-mask": name_mask,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -71,7 +71,7 @@ def get_property(
         "default-value": default_value,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -137,7 +137,7 @@ def update_property(name: str, data: JSON) -> None:
     if data is None:
         raise ValueError("Cannot update a property without JSON data")
 
-    return api.patch(endpoint, data)
+    return api.patch(endpoint, data, api_version=1)
 
 
 def delete_property(name: str, office: str, category_id: str) -> None:
@@ -165,4 +165,4 @@ def delete_property(name: str, office: str, category_id: str) -> None:
         "category-id": category_id,
     }
 
-    return api.delete(endpoint, params)
+    return api.delete(endpoint, params, api_version=1)
