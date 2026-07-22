@@ -85,6 +85,7 @@ def create_property(data: JSON) -> None:
             Property data to be stored.
             Example:
             {
+                "office-id": "string",
                 "name": "string",
                 "category": "string",
                 "value": 0,
@@ -116,6 +117,7 @@ def update_property(name: str, data: JSON) -> None:
             Property data to be updated.
             Example:
             {
+                "office-id": "string",
                 "name": "string",
                 "category": "string",
                 "value": 0,
