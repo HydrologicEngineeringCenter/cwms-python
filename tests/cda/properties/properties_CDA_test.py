@@ -106,5 +106,9 @@ def test_delete_property():
     properties.delete_property(temp_name, TEST_OFFICE, TEST_CATEGORY)
 
     # Verify it was deleted
-    with pytest.raises(ApiError):
-        properties.get_property(temp_name, TEST_OFFICE, TEST_CATEGORY)
+    data = properties.get_property(temp_name, TEST_OFFICE, TEST_CATEGORY)
+    assert data.json.get("name") == temp_name
+    assert data.json.get("value") is None
+    assert data.json.get("comment") is None
+    assert data.json.get("category") == TEST_CATEGORY
+    assert data.json.get("office-id") == TEST_OFFICE

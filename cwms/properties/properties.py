@@ -88,8 +88,8 @@ def create_property(data: JSON) -> None:
                 "office-id": "string",
                 "name": "string",
                 "category": "string",
-                "value": "string,
-                "comment": "string
+                "value": "string",
+                "comment": "string"
             }
 
     Returns
@@ -121,7 +121,7 @@ def update_property(name: str, data: JSON) -> None:
                 "name": "string",
                 "category": "string",
                 "value": "string",
-                "comment": "string
+                "comment": "string"
             }
 
     Returns
