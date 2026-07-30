@@ -166,6 +166,9 @@ def _call_with_retry(fn: Any, *args: Any, attempts: int = _CHUNK_ATTEMPTS) -> An
         try:
             return fn(*args)
         except Exception as e:
+            status_code = getattr(getattr(e, "response", None), "status_code", None)
+            if status_code == 404:
+                raise
             if i == attempts - 1:
                 raise
             logging.warning(f"chunk attempt {i + 1}/{attempts} failed: {e}")
