@@ -44,6 +44,26 @@ from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
 
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+
+from opentelemetry import trace, baggage
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+#from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
+
+trace.set_tracer_provider(TracerProvider())
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+
+tracer = trace.get_tracer(__name__)
+
+# Propagate the current W3CTraceContext to the request.
+def request_hook(span, request):
+    TraceContextTextMapPropagator().inject(request.headers, None)
+
+RequestsInstrumentor().instrument(tracer = tracer, tracer_provider = trace.get_tracer_provider(), request_hook = request_hook)
+
 # Specify the default API root URL and version.
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
