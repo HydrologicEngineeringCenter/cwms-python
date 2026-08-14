@@ -1,0 +1,16 @@
+[
+    {
+        "name": "TestProperty1",
+        "office-id": "SWT",
+        "category-id": "TestCategory",
+        "value": "Value1",
+        "comment": "Comment1"
+    },
+    {
+        "name": "TestProperty2",
+        "office-id": "SWT",
+        "category-id": "TestCategory",
+        "value": "Value2",
+        "comment": "Comment2"
+    }
+]
