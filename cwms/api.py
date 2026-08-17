@@ -36,7 +36,7 @@ from http import HTTPStatus
 from json import JSONDecodeError
 from typing import Any, Optional, cast
 
-from requests import Response, adapters
+from requests import Request, Response, adapters
 from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
@@ -45,22 +45,28 @@ from urllib3.util.retry import Retry
 from cwms.cwms_types import JSON, RequestParams
 
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
-
-
-from opentelemetry import trace, baggage
+from opentelemetry import propagate, trace, baggage
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 #from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
+LOGGER = logging.getLogger(__name__)
 
 trace.set_tracer_provider(TracerProvider())
-trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+#trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+
+LoggingInstrumentor().instrument(inject_trace_context=True)
 
 tracer = trace.get_tracer(__name__)
 
+propagate.set_global_textmap(TraceContextTextMapPropagator())
+
 # Propagate the current W3CTraceContext to the request.
-def request_hook(span, request):
-    TraceContextTextMapPropagator().inject(request.headers, None)
+def request_hook(span: trace.Span, request: Request):
+    ctx = trace.set_span_in_context(span)
+    propagate.get_global_textmap().inject(request.headers, ctx)
 
 RequestsInstrumentor().instrument(tracer = tracer, tracer_provider = trace.get_tracer_provider(), request_hook = request_hook)
 

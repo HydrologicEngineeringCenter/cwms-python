@@ -43,3 +43,10 @@ comments_min_spaces_from_content = 1
 whitelines = 1
 explicit_start = false
 preserve_quotes = true
+
+
+[tool.pytest.ini_options]
+log_cli = true
+log_format = "%(levelname)s:%(name)s:%(message)s - %(otelSpanID)s %(otelTraceID)s %(otelServiceName)s %(otelTraceSampled)s"
+log_file = "tests/run.log"
+log_file_level = "DEBUG"
