@@ -1,7 +1,11 @@
 name: Code Check
 
 # Run the workflow on all branches.
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   # Run basic code quality checks.
