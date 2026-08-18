@@ -54,6 +54,8 @@ from opentelemetry import propagate, trace
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
 # Propagate the current W3CTraceContext to the request.
@@ -61,7 +63,9 @@ def request_hook(span: trace.Span, request: Request):
     ctx = trace.set_span_in_context(span)
     propagate.get_global_textmap().inject(request.headers, ctx)
 
-trace.set_tracer_provider(TracerProvider(resource=Resource.create(attributes = {SERVICE_NAME:"cwms-python"})))
+provider = TracerProvider(resource=Resource.create(attributes = {SERVICE_NAME:"cwms-python"}))
+provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+trace.set_tracer_provider(provider)
 LoggingInstrumentor().instrument(inject_trace_context=True)
 
 tracer = trace.get_tracer(__name__)
@@ -332,7 +336,7 @@ def _process_response(response: Response) -> Any:
         )
         return response.text
 
-
+@tracer.start_as_current_span("get")
 def get(
     endpoint: str,
     params: Optional[RequestParams] = None,
@@ -355,20 +359,24 @@ def get(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
+    span = trace.get_current_span()
+    span.set_attribute("endpoint", endpoint)
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
-            sentHeaders = repr(response.request.headers)
-            LOGGER.debug(f"request headers ={sentHeaders}")
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status = trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
             return _process_response(response)
     except RequestsRetryError as error:
+        span.set_status(status = trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
 
-
+@tracer.start_as_current_span("get-paging")
 def get_with_paging(
     selector: str,
     endpoint: str,
@@ -395,6 +403,8 @@ def get_with_paging(
     """
 
     first_pass = True
+    current_span = trace.get_current_span()
+    current_span.set_attribute("page", "first")
     while (params["page"] is not None) or first_pass:
         temp = get(endpoint, params, api_version=api_version)
         if first_pass:
@@ -403,12 +413,14 @@ def get_with_paging(
             response[selector] = response[selector] + temp[selector]
         if "next-page" in temp.keys():
             params["page"] = temp["next-page"]
+            current_span.set_attribute("page", params["page"])
         else:
             params["page"] = None
+            current_span.set_attribute("page", "last")
         first_pass = False
     return response
 
-
+@tracer.start_as_current_span("post")
 def _post_function(
     endpoint: str,
     data: Any,
@@ -416,7 +428,8 @@ def _post_function(
     *,
     api_version: int = API_VERSION,
 ) -> Any:
-
+    span = trace.get_current_span()
+    span.set_attribute("endpoint", endpoint)
     # post requires different headers than get for
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
     if isinstance(data, dict) or isinstance(data, list):
@@ -427,9 +440,14 @@ def _post_function(
         ) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status = trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
             return response
     except RequestsRetryError as error:
+        span.set_status(status = trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
 
 
@@ -459,7 +477,7 @@ def post(
     """
     _post_function(endpoint=endpoint, data=data, params=params, api_version=api_version)
 
-
+@tracer.start_as_current_span("post_with_return")
 def post_with_returned_data(
     endpoint: str,
     data: Any,
@@ -490,7 +508,7 @@ def post_with_returned_data(
     )
     return _process_response(response)
 
-
+@tracer.start_as_current_span("patch")
 def patch(
     endpoint: str,
     data: Optional[Any] = None,
@@ -515,7 +533,8 @@ def patch(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
+    span = trace.get_current_span()
+    span.set_attribute("endpoint", endpoint)
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
 
     if data and isinstance(data, dict) or isinstance(data, list):
@@ -526,11 +545,16 @@ def patch(
         ) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status = trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
     except RequestsRetryError as error:
+        span.set_status(status = trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
 
-
+@tracer.start_as_current_span("delete")
 def delete(
     endpoint: str,
     params: Optional[RequestParams] = None,
@@ -550,12 +574,18 @@ def delete(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
+    span = trace.get_current_span()
+    span.set_attribute("endpoint", endpoint)
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.delete(endpoint, params=params, headers=headers) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status = trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
     except RequestsRetryError as error:
+        span.set_status(status = trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
