@@ -1,7 +1,7 @@
 import concurrent.futures
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple, Final
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame
@@ -11,6 +11,7 @@ from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+
 
 def get_multi_timeseries_df(
     ts_ids: list[str],
