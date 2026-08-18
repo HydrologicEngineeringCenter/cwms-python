@@ -34,7 +34,7 @@ import json
 import logging
 from http import HTTPStatus
 from json import JSONDecodeError
-from typing import Any, Optional, cast
+from typing import Any, Optional, cast, Final
 
 from requests import Request, Response, adapters
 from requests.exceptions import RetryError as RequestsRetryError
@@ -44,29 +44,30 @@ from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
 
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+
+
+
+# Setup telemetry
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry import propagate, trace, baggage
+from opentelemetry import propagate, trace
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-#from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
-LOGGER = logging.getLogger(__name__)
+# Propagate the current W3CTraceContext to the request.
+def request_hook(span: trace.Span, request: Request):
+    ctx = trace.set_span_in_context(span)
+    propagate.get_global_textmap().inject(request.headers, ctx)
 
-trace.set_tracer_provider(TracerProvider())
-#trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
-
+trace.set_tracer_provider(TracerProvider(resource=Resource.create(attributes = {SERVICE_NAME:"cwms-python"})))
 LoggingInstrumentor().instrument(inject_trace_context=True)
 
 tracer = trace.get_tracer(__name__)
 
 propagate.set_global_textmap(TraceContextTextMapPropagator())
 
-# Propagate the current W3CTraceContext to the request.
-def request_hook(span: trace.Span, request: Request):
-    ctx = trace.set_span_in_context(span)
-    propagate.get_global_textmap().inject(request.headers, ctx)
 
 RequestsInstrumentor().instrument(tracer = tracer, tracer_provider = trace.get_tracer_provider(), request_hook = request_hook)
 
@@ -216,7 +217,7 @@ def init_session(
     if api_root:
         # Ensure the API_ROOT ends with a single slash
         api_root = api_root.rstrip("/") + "/"
-        logging.debug(f"Initializing root URL: api_root={api_root}")
+        LOGGER.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
         adapter = adapters.HTTPAdapter(
             pool_connections=pool_connections,
@@ -226,7 +227,7 @@ def init_session(
         SESSION.mount("https://", adapter)
     if token:
         if api_key:
-            logging.warning(
+            LOGGER.warning(
                 "Both token and api_key were provided to init_session(); using token for Authorization."
             )
         # Ensure we don't provide the bearer text twice
@@ -326,7 +327,7 @@ def _process_response(response: Response) -> Any:
         # Fallback for remaining content types
         return response.content.decode("utf-8")
     except JSONDecodeError as error:
-        logging.error(
+        LOGGER.error(
             f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
         )
         return response.text
@@ -358,6 +359,8 @@ def get(
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
+            sentHeaders = repr(response.request.headers)
+            LOGGER.debug(f"request headers ={sentHeaders}")
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
                 raise ApiError(response)
