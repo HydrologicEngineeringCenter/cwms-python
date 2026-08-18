@@ -51,27 +51,13 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # Setup telemetry
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry import propagate, trace
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-
-from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
 # Propagate the current W3CTraceContext to the request.
 def request_hook(span: trace.Span, request: Request):
     ctx = trace.set_span_in_context(span)
     propagate.get_global_textmap().inject(request.headers, ctx)
 
-provider = TracerProvider(resource=Resource.create(attributes = {SERVICE_NAME:"cwms-python"}))
-provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
-trace.set_tracer_provider(provider)
-LoggingInstrumentor().instrument(inject_trace_context=True)
-
 tracer = trace.get_tracer(__name__)
-
-propagate.set_global_textmap(TraceContextTextMapPropagator())
-
 
 RequestsInstrumentor().instrument(tracer = tracer, tracer_provider = trace.get_tracer_provider(), request_hook = request_hook)
 
@@ -360,7 +346,6 @@ def get(
         ApiError: If an error response is return by the API.
     """
     span = trace.get_current_span()
-    span.set_attribute("endpoint", endpoint)
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
@@ -429,7 +414,6 @@ def _post_function(
     api_version: int = API_VERSION,
 ) -> Any:
     span = trace.get_current_span()
-    span.set_attribute("endpoint", endpoint)
     # post requires different headers than get for
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
     if isinstance(data, dict) or isinstance(data, list):
@@ -534,7 +518,6 @@ def patch(
         ApiError: If an error response is return by the API.
     """
     span = trace.get_current_span()
-    span.set_attribute("endpoint", endpoint)
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
 
     if data and isinstance(data, dict) or isinstance(data, list):
@@ -575,7 +558,6 @@ def delete(
         ApiError: If an error response is return by the API.
     """
     span = trace.get_current_span()
-    span.set_attribute("endpoint", endpoint)
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.delete(endpoint, params=params, headers=headers) as response:
