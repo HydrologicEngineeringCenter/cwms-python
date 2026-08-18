@@ -54,7 +54,7 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 
 # Propagate the current W3CTraceContext to the request.
-def request_hook(span: trace.Span, request: Request):
+def request_hook(span: trace.Span, request: Request) -> None:
     ctx = trace.set_span_in_context(span)
     propagate.get_global_textmap().inject(request.headers, ctx)
 
