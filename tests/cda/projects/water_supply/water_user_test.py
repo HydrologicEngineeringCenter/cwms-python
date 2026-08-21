@@ -18,6 +18,11 @@ TEST_ENTITY_NAME2 = "Test User 2"
 TEST_ENTITY_NAME3 = "Test User 3"
 TEST_ENTITY_NAME4 = "Test User 4"
 TEST_ENTITY_NAME5 = "Test User 5"
+PUBLIC_NAME = "Test Public Pump Name"
+LONG_NAME = "Test Long Name"
+LOCATION_TYPE = "Test Location Type"
+DESCRIPTION = "Test Description"
+MAP_LABEL = "Test Map Label"
 
 PROJECT_LOCATION = {
     "office-id": TEST_OFFICE,
