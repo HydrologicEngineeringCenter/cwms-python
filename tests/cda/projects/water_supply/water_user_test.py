@@ -6,6 +6,7 @@ import pandas.testing as pdt
 import pytest
 
 import cwms
+import cwms.locations.physical_locations as pl
 import cwms.projects.water_supply.water_users as wu
 
 TEST_OFFICE = "SPK"
@@ -18,15 +19,45 @@ TEST_ENTITY_NAME3 = "Test User 3"
 TEST_ENTITY_NAME4 = "Test User 4"
 TEST_ENTITY_NAME5 = "Test User 5"
 
+PROJECT_LOCATION = {
+    "office-id": TEST_OFFICE,
+    "name": TEST_PROJECT_ID,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PROJECT",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
 
 def _cleanup():
     wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
     wu.delete_water_user(TEST_OFFICE2, TEST_PROJECT_ID, TEST_ENTITY_NAME3)
 
+    pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
     _cleanup()
+
+    pl.store_location(PROJECT_LOCATION, False)
 
     water_user = {
         "entity-name": TEST_ENTITY_NAME,

@@ -31,6 +31,32 @@ WATER_USER = {
     "water-right": TEST_WATER_RIGHT,
 }
 
+PROJECT_LOCATION = {
+    "office-id": TEST_OFFICE,
+    "name": TEST_PROJECT_ID,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PROJECT",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
 PUMP_LOCATION1 = {
     "office-id": TEST_OFFICE,
     "name": PUMP_LOCATION_ID2,
@@ -222,6 +248,7 @@ def _cleanup():
     pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
+    pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -232,6 +259,7 @@ def setup_data():
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
+    pl.store_location(PROJECT_LOCATION, False)
     wc.create_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, WATER_CONTRACT, False
     )

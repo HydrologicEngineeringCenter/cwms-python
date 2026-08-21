@@ -122,7 +122,7 @@ def create_water_user(
     endpoint = f"projects/{office_id}/{project_id}/water-user"
     params = {"fail-if-exists": fail_if_exists}
 
-    return api.post(endpoint, data, params, api_version=1)
+    api.post(endpoint, data, params, api_version=1)
 
 
 def delete_water_user(office_id: str, project_id: str, water_user: str) -> None:
@@ -163,7 +163,7 @@ def delete_water_user(office_id: str, project_id: str, water_user: str) -> None:
 
 def update_water_user(
     office_id: str, project_id: str, water_user: str, data: JSON, name: str
-) -> Data:
+) -> None:
     """
     Updates a water user in CWMS.
 
@@ -182,8 +182,7 @@ def update_water_user(
 
     Returns
     -------
-    Data
-        The JSON response from CWMS Data API wrapped in a Data object.
+    None
 
     Raises
     ------
