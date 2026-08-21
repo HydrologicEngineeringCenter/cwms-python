@@ -72,7 +72,7 @@ def get_water_users(office_id: str, project_id: str) -> Data:
     ServerError
         If a 500-level error occurs.
     """
-    if not all([office_id, project_id, water_user]):
+    if not all([office_id, project_id]):
         raise ValueError("Office and Project ID must be provided.")
 
     endpoint = f"projects/{office_id}/{project_id}/water-users"
@@ -158,8 +158,7 @@ def delete_water_user(office_id: str, project_id: str, water_user: str) -> None:
 
     endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}"
 
-    response = api.delete(endpoint, api_version=1)
-    return Data(response)
+    api.delete(endpoint, api_version=1)
 
 
 def update_water_user(
@@ -205,5 +204,4 @@ def update_water_user(
     endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}"
     params = {"name": name}
 
-    response = api.patch(endpoint, data, params, api_version=1)
-    return Data(response)
+    api.patch(endpoint, data, params, api_version=1)

@@ -45,7 +45,8 @@ def get_lock(name: str, office_id: str, unit: Optional[str] = "SI") -> Data:
 
     params = {"office": office_id, "unit": unit}
 
-    return api.get(endpoint, params, api_version=1)
+    response = api.get(endpoint, params, api_version=1)
+    return Data(response)
 
 
 def get_locks(office_id: str, project_id: str) -> Data:
@@ -82,7 +83,8 @@ def get_locks(office_id: str, project_id: str) -> Data:
 
     params = {"office": office_id, "project": project_id}
 
-    return api.get(endpoint, params, api_version=1)
+    response = api.get(endpoint, params, api_version=1)
+    return Data(response)
 
 
 def create_lock(data: JSON, fail_if_exists: bool = True) -> None:
