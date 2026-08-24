@@ -5,8 +5,8 @@ import cwms.locations.lookups as lookups
 from cwms.cwms_types import Data
 
 OFFICE_ID = "SPK"
-CATEGORY = "USACE"
-PREFIX = "L"
+CATEGORY = "AT_EMBANK_STRUCTURE_TYPE"
+PREFIX = "STRUCTURE_TYPE"
 DISPLAY_VALUE = "Test Lookup"
 TOOLTIP = "Test Tooltip"
 
