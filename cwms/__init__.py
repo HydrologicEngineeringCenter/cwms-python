@@ -10,6 +10,7 @@ from cwms.levels.location_levels import *
 from cwms.levels.specified_levels import *
 from cwms.locations.gate_changes import *
 from cwms.locations.location_groups import *
+from cwms.locations.lookups import *
 from cwms.locations.physical_locations import *
 from cwms.measurements.measurements import *
 from cwms.outlets.outlets import *
