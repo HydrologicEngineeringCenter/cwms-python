@@ -80,8 +80,8 @@ GATE_CHANGE = {
 
 
 def _cleanup():
-    pl.delete_location(TEST_PROJECT_LOCATION)
-    pl.delete_location(TEST_LOCATION)
+    pl.delete_location(TEST_PROJECT_LOCATION, TEST_OFFICE)
+    pl.delete_location(TEST_LOCATION, TEST_OFFICE)
 
 
 @pytest.fixture(scope="module", autouse=True)
