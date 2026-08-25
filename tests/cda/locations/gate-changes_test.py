@@ -86,7 +86,10 @@ def _cleanup():
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
-    _cleanup()
+    try:
+        _cleanup()
+    except Exception:
+        pass
 
     pl.store_location(TEST_PROJECT_LOCATION, False)
     pl.store_location(TEST_LOCATION, False)
@@ -100,7 +103,7 @@ def init_session():
 def test_create_get_gate_change():
     gc.store_gate_change(GATE_CHANGE, False)
     data = gc.get_all_gate_changes(
-        TEST_OFFICE, TEST_PROJECT_ID, "", "", True, True, "SI", 10
+        TEST_OFFICE, TEST_PROJECT_ID, START, END, True, True, "SI", 10
     )
     found = False
     for item in data:
@@ -114,7 +117,9 @@ def test_catalog_gate_changes():
     new_loc = TEST_LOCATION_ID + "_new"
     GATE_CHANGE2["project-id"]["name"] = new_loc
     gc.store_gate_change(GATE_CHANGE2, False)
-    data = gc.get_all_gate_changes(TEST_OFFICE, new_loc, "", "", True, True, "SI", 10)
+    data = gc.get_all_gate_changes(
+        TEST_OFFICE, new_loc, START, END, True, True, "SI", 10
+    )
     found = False
     assert len(data) >= 1
     for item in data:

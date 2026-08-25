@@ -144,7 +144,7 @@ def store_gate_change(
     params = {
         "fail-if-exists": fail_if_exists,
     }
-    return api.post(endpoint, data=gate_change_data, params=params)
+    return api.post(endpoint, data=gate_change_data, params=params, api_version=1)
 
 
 def delete_gate_change(
