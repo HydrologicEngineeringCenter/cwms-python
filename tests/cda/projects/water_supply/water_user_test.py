@@ -60,7 +60,10 @@ def _cleanup():
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
-    _cleanup()
+    try:
+        _cleanup()
+    except Exception:
+        pass
 
     pl.store_location(PROJECT_LOCATION, False)
 

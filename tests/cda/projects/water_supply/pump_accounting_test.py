@@ -253,7 +253,10 @@ def _cleanup():
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
-    _cleanup()
+    try:
+        _cleanup()
+    except Exception:
+        pass
 
     wu.create_water_user(WATER_USER, TEST_OFFICE, TEST_PROJECT_ID, False)
     pl.store_location(PUMP_LOCATION1, False)
