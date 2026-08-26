@@ -83,7 +83,7 @@ def test_update_lookup():
     new_tooltip = "Updated Tooltip"
     data = {
         "office-id": OFFICE_ID,
-        "display-value": new_display_value,
+        "display-value": DISPLAY_VALUE,
         "tooltip": new_tooltip,
         "active": True,
     }
