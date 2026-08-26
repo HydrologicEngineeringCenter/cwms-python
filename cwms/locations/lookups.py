@@ -83,7 +83,7 @@ def create_lookup(data: JSON, category: str, prefix: str) -> None:
     api.post(ENDPOINT, data, params, api_version=1)
 
 
-def update_lookup(data: JSON, name: str, category: str, prefix: str) -> None:
+def update_lookup(data: JSON, category: str, prefix: str) -> None:
     """
     Updates a specified lookup entry.
 
@@ -92,8 +92,6 @@ def update_lookup(data: JSON, name: str, category: str, prefix: str) -> None:
     data : JSON
         A dictionary representing the JSON data to be stored.
         If the `data` value is None, a `ValueError` will be raised.
-    name : str
-        Specifies the location type to update
     category : str
         Specifies the category of the lookup.
     prefix : str
@@ -114,12 +112,13 @@ def update_lookup(data: JSON, name: str, category: str, prefix: str) -> None:
     ServerError
         If a 500 range error code response is returned from the server.
     """
-    if not all([name, category, prefix]):
-        raise ValueError("Name, Category, and Prefix must be specified")
+    if not all([category, prefix]):
+        raise ValueError("Category and Prefix must be specified")
     if not data:
         raise ValueError("Data must be specified")
 
-    endpoint = f"{ENDPOINT}/{name}"
+    # Note that the path parameter is unused in CDA
+    endpoint = f"{ENDPOINT}/{category}"
     params = {"category": category, "prefix": prefix}
     api.patch(endpoint, data, params, api_version=1)
 

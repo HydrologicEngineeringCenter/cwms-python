@@ -50,9 +50,9 @@ def test_get_all_lookups():
     found = False
     found2 = False
     for item in result.json:
-        if item.get("display-value") == new_display_value:
+        if item["display-value"] == new_display_value:
             found = True
-        if item.get("display-value") == DISPLAY_VALUE:
+        if item["display-value"] == DISPLAY_VALUE:
             found2 = True
     assert (
         found
@@ -73,35 +73,29 @@ def test_create_lookup():
     result = lookups.get_all_lookups(CATEGORY, PREFIX, OFFICE_ID)
     found = False
     for item in result.json:
-        if item.get("display-value") == display_value:
+        if item["display-value"] == display_value:
             found = True
             break
     assert found, f"Lookup with display-value {display_value} not found after creation"
 
 
 def test_update_lookup():
-    new_display_value = DISPLAY_VALUE + " Updated"
+    new_tooltip = "Updated Tooltip"
     data = {
         "office-id": OFFICE_ID,
         "display-value": new_display_value,
-        "tooltip": "Updated Tooltip",
+        "tooltip": new_tooltip,
         "active": True,
     }
-    # The name parameter in update_lookup corresponds to the display-value of the item to update
-    lookups.update_lookup(data, DISPLAY_VALUE, CATEGORY, PREFIX)
+    lookups.update_lookup(data, CATEGORY, PREFIX)
 
     result = lookups.get_all_lookups(CATEGORY, PREFIX, OFFICE_ID)
     found = False
     for item in result.json:
-        if item.get("display-value") == new_display_value:
+        if item["tooltip"] == new_tooltip:
             found = True
             break
-    assert found, f"Lookup with updated display-value {new_display_value} not found"
-
-    try:
-        lookups.delete_lookup(new_display_value, CATEGORY, PREFIX, OFFICE_ID)
-    except Exception:
-        pass
+    assert found, f"Lookup with updated display-value {DISPLAY_VALUE} not found"
 
 
 def test_delete_lookup():
@@ -119,7 +113,7 @@ def test_delete_lookup():
     result = lookups.get_all_lookups(CATEGORY, PREFIX, office)
     found = False
     for item in result.json:
-        if item.get("display-value") == DISPLAY_VALUE:
+        if item["display-value"] == DISPLAY_VALUE:
             found = True
             break
     assert (
