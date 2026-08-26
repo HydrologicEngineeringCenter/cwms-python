@@ -87,7 +87,7 @@ def get_projects(
         "page": page,
         "page-size": page_size,
     }
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -208,7 +208,7 @@ def rename_project(office_id: str, old_name: str, new_name: str) -> None:
 
     endpoint = f"projects/{old_name}"
     params = {"office": office_id, "name": new_name}
-    api.patch(endpoint=endpoint, params=params)
+    api.patch(endpoint=endpoint, params=params, api_version=1)
 
 
 def store_project(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
@@ -243,7 +243,7 @@ def store_project(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
 
     endpoint = "projects"
     params = {"fail-if-exists": fail_if_exists}
-    api.post(endpoint, data, params)
+    api.post(endpoint, data, params, api_version=1)
 
 
 def status_update(
@@ -306,4 +306,4 @@ def status_update(
         "begin": (begin.isoformat() if begin else None),
         "end": (end.isoformat() if end else None),
     }
-    api.post(endpoint, None, params)
+    api.post(endpoint, None, params, api_version=1)
