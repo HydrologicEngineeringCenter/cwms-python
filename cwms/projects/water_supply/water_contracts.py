@@ -90,8 +90,6 @@ def get_water_contracts(office_id: str, project_id: str, water_user: str) -> Dat
 
 
 def create_water_contract(
-    office_id: str,
-    project_id: str,
     water_user: str,
     data: JSON,
     fail_if_exists: bool = True,
@@ -102,10 +100,6 @@ def create_water_contract(
 
     Parameters
     ----------
-    office_id : str
-        The office Id the contract is associated with. (Path)
-    project_id : str
-        The project Id the contract is associated with. (Path)
     water_user : str
         The water user the contract is associated with. (Path)
     data : JSON
@@ -132,12 +126,13 @@ def create_water_contract(
     ServerError
         If a 500-level error occurs.
     """
-    if not all([office_id, project_id, water_user]):
-        raise ValueError("Office, project_id, and water_user must be provided.")
+    if not water_user:
+        raise ValueError("Water User must be provided.")
     if not data:
         raise ValueError("Data must be provided and cannot be empty.")
 
-    endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}/contracts"
+    # Note the office ID and project ID are not used by CDA
+    endpoint = f"projects/{water_user}/{water_user}/water-user/{water_user}/contracts"
     params = {
         "fail-if-exists": fail_if_exists,
         "ignore-nulls": ignore_nulls,

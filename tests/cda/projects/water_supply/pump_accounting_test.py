@@ -263,9 +263,7 @@ def setup_data():
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
     pl.store_location(PROJECT_LOCATION, False)
-    wc.create_water_contract(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, WATER_CONTRACT, False
-    )
+    wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
 
 
 @pytest.fixture(autouse=True)
