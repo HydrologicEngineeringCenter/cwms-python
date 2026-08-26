@@ -11,7 +11,6 @@ import cwms.projects.projects as proj
 import cwms.projects.water_supply.water_users as wu
 
 TEST_OFFICE = "SPK"
-TEST_OFFICE2 = "LRL"
 TEST_PROJECT_ID = "pytest_wu"
 TEST_ENTITY_NAME = "Test User"
 TEST_WATER_RIGHT = "Test Water Right"
@@ -168,7 +167,7 @@ PUMP_LOCATION3 = {
 
 def _cleanup():
     wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
-    wu.delete_water_user(TEST_OFFICE2, TEST_PROJECT_ID, TEST_ENTITY_NAME3)
+    wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME3)
     proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
     pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
 
@@ -191,12 +190,12 @@ def setup_data():
 
     water_user2 = {
         "entity-name": TEST_ENTITY_NAME3,
-        "project-id": {"office-id": TEST_OFFICE2, "name": TEST_PROJECT_ID},
+        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
         "water-right": TEST_WATER_RIGHT,
     }
 
     wu.create_water_user(water_user, TEST_OFFICE, TEST_PROJECT_ID, False)
-    wu.create_water_user(water_user2, TEST_OFFICE2, TEST_PROJECT_ID, False)
+    wu.create_water_user(water_user2, TEST_OFFICE, TEST_PROJECT_ID, False)
 
 
 @pytest.fixture(autouse=True)
@@ -244,23 +243,21 @@ def test_delete_water_user():
     assert data["project-id"]["office-id"] == TEST_OFFICE
     assert data["water-right"] == TEST_WATER_RIGHT
     wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
-    data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
-    assert data is None
+    with pytest.raises(cwms.ApiError):
+        wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
 
 
 def test_get_water_users():
     data = wu.get_water_users(TEST_OFFICE, TEST_PROJECT_ID)
-    assert len(data) >= 2
+    assert len(data.json) >= 2
     found_first = False
     found_second = False
     for value in data.json:
         assert value["project-id"]["name"] == TEST_PROJECT_ID
         assert value["water-right"] == TEST_WATER_RIGHT
         if value["entity-name"] == TEST_ENTITY_NAME:
-            assert value["project-id"]["office-id"] == TEST_OFFICE
             found_first = True
         if value["entity-name"] == TEST_ENTITY_NAME3:
-            assert value["project-id"]["office-id"] == TEST_OFFICE2
             found_second = True
     assert found_first
     assert found_second

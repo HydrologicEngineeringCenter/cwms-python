@@ -75,7 +75,7 @@ def get_water_users(office_id: str, project_id: str) -> Data:
     if not all([office_id, project_id]):
         raise ValueError("Office and Project ID must be provided.")
 
-    endpoint = f"projects/{office_id}/{project_id}/water-users"
+    endpoint = f"projects/{office_id}/{project_id}/water-user"
 
     response = api.get(endpoint, api_version=1)
     return Data(response)
