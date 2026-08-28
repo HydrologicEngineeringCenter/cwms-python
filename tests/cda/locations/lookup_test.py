@@ -29,6 +29,8 @@ def _cleanup():
 def setup_data():
     _cleanup()
     lookups.create_lookup(LOOKUP_DATA, CATEGORY, PREFIX)
+    yield
+    _cleanup()
 
 
 @pytest.fixture(autouse=True)
