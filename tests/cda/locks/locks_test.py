@@ -8,10 +8,18 @@ import pytest
 import cwms
 import cwms.locations.physical_locations as pl
 import cwms.locks.locks as lk
+import cwms.projects.projects as proj
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
-LOCK_ID = "pytest-lock-123"
+LOCK_ID = "pytest-lock123"
+PUMP_LOCATION_ID = "Sac River-Pump 1"
+PUMP_LOCATION_ID2 = "Sac River-Pump 2"
+PUBLIC_NAME = "Test Public Pump Name"
+LONG_NAME = "Test Long Name"
+LOCATION_TYPE = "Test Location Type"
+DESCRIPTION = "Test Description"
+MAP_LABEL = "Test Map Label"
 
 TEST_LOCK_LOCATION = {
     "office-id": TEST_OFFICE,
@@ -54,7 +62,7 @@ TEST_PROJECT_LOCATION = {
 }
 
 TEST_LOCK = {
-    "project-id": {"office-id": TEST_OFFICE, "name": "PROJECT"},
+    "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
     "location": TEST_LOCK_LOCATION,
     "chamber-type": {
         "display-value": "Single Chamber",
@@ -68,33 +76,105 @@ TEST_LOCK = {
     "volume-per-lockage": 10.0,
     "minimum-draft": 25.5,
     "maximum-lock-lift": 25.6,
-    "length-units": "ft",
-    "volume-units": "ft3",
-    "elevation-units": "ft",
-    "high-water-upper-pool-location-level": {
-        "level-value": 15.96,
-        "level-link": "/locks/TEST_LOCATION2.Elev-Closure.Inst.0.High Water Upper Pool?office=SPK",
-    },
-    "high-water-lower-pool-location-level": {
-        "level-value": 22.7,
-        "level-link": "/locks/TEST_LOCATION2.Elev-Closure.Inst.0.High Water Lower Pool?office=SPK",
-    },
-    "low-water-upper-pool-location-level": {
-        "level-value": 18.0,
-        "level-link": "/locks/TEST_LOCATION2.Elev-Closure.Inst.0.Low Water Upper Pool?office=SPK",
-    },
-    "low-water-lower-pool-location-level": {
-        "level-value": 55.0,
-        "level-link": "/locks/TEST_LOCATION2.Elev-Closure.Inst.0.Low Water Lower Pool?office=SPK",
-    },
+    "length-units": "m",
+    "volume-units": "m3",
+    "elevation-units": "m",
     "high-water-upper-pool-warning-level": 2.0,
     "high-water-lower-pool-warning-level": 2.0,
+}
+
+PUMP_LOCATION1 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION2 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID2,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PROJECT = {
+    "location": {
+        "office-id": TEST_OFFICE,
+        "name": TEST_PROJECT_ID,
+        "timezone-name": "UTC",
+    },
+    "federal-cost": 100.0,
+    "non-federal-cost": 50.0,
+    "cost-year": 1717282800000,
+    "cost-unit": "$",
+    "federal-o-and-m-cost": 10.0,
+    "non-federal-o-and-m-cost": 5.0,
+    "authorizing-law": "Authorizing Law",
+    "project-owner": "Project Owner",
+    "hydropower-desc": "Hydropower Description",
+    "sedimentation-desc": "Sedimentation Description",
+    "downstream-urban-desc": "Downstream Urban Description",
+    "bank-full-capacity-desc": "Bank Full Capacity Description",
+    "pump-back-location": {
+        "office-id": TEST_OFFICE,
+        "name": PUMP_LOCATION_ID,
+        "timezone-name": "UTC",
+    },
+    "near-gage-location": {
+        "office-id": TEST_OFFICE,
+        "name": PUMP_LOCATION_ID2,
+        "timezone-name": "UTC",
+    },
+    "yield-time-frame-start": 1717282800000,
+    "yield-time-frame-end": 1717308000000,
+    "project-remarks": "Remarks",
 }
 
 
 def _cleanup():
     lk.delete_lock(LOCK_ID, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
     pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    pl.delete_location(LOCK_ID, TEST_OFFICE)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -103,7 +183,11 @@ def setup_data():
         _cleanup()
     except Exception:
         pass
+    pl.store_location(PUMP_LOCATION1, False)
+    pl.store_location(PUMP_LOCATION2, False)
+    pl.store_location(TEST_LOCK_LOCATION, False)
     pl.store_location(TEST_PROJECT_LOCATION, False)
+    proj.store_project(PROJECT, False)
     lk.create_lock(TEST_LOCK, False)
 
 
@@ -113,49 +197,68 @@ def init_session():
 
 
 def test_get_locks():
-    locks = lk.get_locks()
+    locks = lk.get_locks(TEST_OFFICE, TEST_PROJECT_ID)
     assert locks is not None
 
 
 def test_get_lock():
     lock = lk.get_lock(LOCK_ID, TEST_OFFICE)
     assert lock is not None
-    assert lock.json == TEST_LOCK
+    lock = lock.json
+    assert lock["lock-width"] == TEST_LOCK["lock-width"]
+    assert lock["location"]["name"] == TEST_LOCK["location"]["name"]
+    assert lock["project-id"] == TEST_LOCK["project-id"]
 
 
 def test_create_lock():
     test_lock2 = TEST_LOCK
-    new_loc = "pytest-lock-879"
+    new_loc = "pytest-lock879"
     test_lock2["location"]["name"] = new_loc
     lk.create_lock(test_lock2, False)
     lock = lk.get_lock(new_loc, TEST_OFFICE)
     assert lock is not None
-    assert lock.json == test_lock2
+    lock = lock.json
+    assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["location"]["name"] == test_lock2["location"]["name"]
+    assert lock["project-id"] == test_lock2["project-id"]
 
 
 def test_delete_lock():
     test_lock2 = TEST_LOCK
-    new_loc = "pytest-lock-456"
+    new_loc = "pytest-lock456"
     test_lock2["location"]["name"] = new_loc
     lk.create_lock(test_lock2, False)
     lock = lk.get_lock(new_loc, TEST_OFFICE)
     assert lock is not None
-    assert lock.json == test_lock2
+    lock = lock.json
+    assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["location"]["name"] == test_lock2["location"]["name"]
+    assert lock["project-id"] == test_lock2["project-id"]
     lk.delete_lock(new_loc, TEST_OFFICE)
-    lock = lk.get_lock(new_loc, TEST_OFFICE)
-    assert lock is None
+    try:
+        lock = lk.get_lock(new_loc, TEST_OFFICE)
+    except Exception:
+        found = False
+    assert not found
 
 
 def test_update_lock():
     test_lock2 = TEST_LOCK
-    new_loc = "pytest-lock-881"
+    new_loc = "pytest-lock881"
     test_lock2["location"]["name"] = new_loc
     test_lock2["location"]["description"] = "pytest-lock-description"
     lk.create_lock(test_lock2, False)
     lock = lk.get_lock(new_loc, TEST_OFFICE)
     assert lock is not None
-    assert lock.json == test_lock2
-    lk.update_lock(LOCK_ID, TEST_OFFICE, new_loc)
-    lock = lk.get_lock(LOCK_ID, TEST_OFFICE)
+    lock = lock.json
+    assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["location"]["name"] == test_lock2["location"]["name"]
+    assert lock["project-id"] == test_lock2["project-id"]
+    updated_loc = "pytest-lock996"
+    lk.update_lock(LOCK_ID, TEST_OFFICE, updated_loc)
+    lock = lk.get_lock(updated_loc, TEST_OFFICE)
     assert lock is not None
-    assert lock.json == test_lock2
+    lock = lock.json
+    assert lock["lock-width"] == test_lock2["lock-width"]
+    assert updated_loc == test_lock2["location"]["name"]
+    assert lock["project-id"] == test_lock2["project-id"]

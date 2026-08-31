@@ -81,7 +81,7 @@ def get_locks(office_id: str, project_id: str) -> Data:
 
     endpoint = "projects/locks"
 
-    params = {"office": office_id, "project": project_id}
+    params = {"office": office_id, "project-id": project_id}
 
     response = api.get(endpoint, params, api_version=1)
     return Data(response)
