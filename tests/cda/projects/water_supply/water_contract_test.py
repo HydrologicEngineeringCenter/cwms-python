@@ -6,6 +6,7 @@ import pandas.testing as pdt
 import pytest
 
 import cwms
+import cwms.locations.lookups as lk
 import cwms.locations.physical_locations as pl
 import cwms.projects.projects as proj
 import cwms.projects.water_supply.water_contracts as wc
@@ -24,6 +25,8 @@ LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
 DESCRIPTION = "Test Description"
 MAP_LABEL = "Test Map Label"
+LOOKUP_CATEGORY = "AT_WS_CONTRACT_TYPE"
+LOOKUP_PREFIX = "WS_CONTRACT_TYPE"
 
 WATER_USER = {
     "entity-name": TEST_ENTITY_NAME,
@@ -168,16 +171,18 @@ PUMP_LOCATION3 = {
     "elevation-units": "m",
 }
 
+CONTRACT_LOOKUP = {
+    "office-id": TEST_OFFICE,
+    "display-value": "Test Display Value",
+    "tooltip": "Test Tooltip",
+    "active": True,
+}
+
 WATER_CONTRACT = {
     "office-id": TEST_OFFICE,
     "water-user": WATER_USER,
     "contract-id": {"office-id": TEST_OFFICE, "name": TEST_CONTRACT_ID},
-    "contract-type": {
-        "office-id": TEST_OFFICE,
-        "display-value": "Test Display Value",
-        "tooltip": "Test Tooltip",
-        "active": True,
-    },
+    "contract-type": CONTRACT_LOOKUP,
     "contract-effective-date": 158000,
     "contract-expiration-date": 167000,
     "contracted-storage": 200000.5,
@@ -199,6 +204,7 @@ def _cleanup():
     pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
     pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    lk.delete_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX, TEST_OFFICE)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -214,6 +220,7 @@ def setup_data():
     pl.store_location(PUMP_LOCATION3, False)
     proj.store_project(PROJECT, False)
     wu.create_water_user(WATER_USER, TEST_OFFICE, TEST_PROJECT_ID, False)
+    lk.create_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX)
 
 
 @pytest.fixture(autouse=True)
@@ -266,7 +273,7 @@ def test_get_water_contracts():
         elif item["contract-id"]["name"] == "Addendum Contract":
             assert item == WATER_CONTRACT2
         else:
-            assert False, "Unexpected contract found in list"
+            pytest.fail("Unexpected contract found in list")
 
 
 def test_update_water_contract():

@@ -110,7 +110,7 @@ def test_delete_lookup():
     }
     lookups.create_lookup(data, CATEGORY, PREFIX)
 
-    lookups.delete_lookup(DISPLAY_VALUE, CATEGORY, PREFIX, office)
+    lookups.delete_lookup(CATEGORY, PREFIX, office)
 
     result = lookups.get_all_lookups(CATEGORY, PREFIX, office)
     found = False
