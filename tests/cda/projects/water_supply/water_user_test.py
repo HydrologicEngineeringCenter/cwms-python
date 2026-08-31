@@ -18,7 +18,7 @@ TEST_ENTITY_NAME2 = "Test User 2"
 TEST_ENTITY_NAME3 = "Test User 3"
 TEST_ENTITY_NAME4 = "Test User 4"
 TEST_ENTITY_NAME5 = "Test User 5"
-TEST_ENTITY_NAME5 = "California DWR"
+TEST_ENTITY_NAME6 = "California DWR"
 PUBLIC_NAME = "Test Public Pump Name"
 LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
@@ -73,12 +73,12 @@ PROJECT = {
     "downstream-urban-desc": "Downstream Urban Description",
     "bank-full-capacity-desc": "Bank Full Capacity Description",
     "pump-back-location": {
-        "office-id": "SPK",
+        "office-id": TEST_OFFICE,
         "name": PUMP_LOCATION_ID,
         "timezone-name": "UTC",
     },
     "near-gage-location": {
-        "office-id": "SPK",
+        "office-id": TEST_OFFICE,
         "name": PUMP_LOCATION_ID2,
         "timezone-name": "UTC",
     },

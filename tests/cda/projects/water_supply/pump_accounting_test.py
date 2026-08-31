@@ -7,6 +7,7 @@ import pytest
 
 import cwms
 import cwms.locations.physical_locations as pl
+import cwms.projects.projects as proj
 import cwms.projects.water_supply.accounting as ac
 import cwms.projects.water_supply.water_contracts as wc
 import cwms.projects.water_supply.water_users as wu
@@ -55,6 +56,39 @@ PROJECT_LOCATION = {
     "map-label": MAP_LABEL,
     "bounding-office-id": TEST_OFFICE,
     "elevation-units": "m",
+}
+
+PROJECT = {
+    "location": {
+        "office-id": TEST_OFFICE,
+        "name": TEST_PROJECT_ID,
+        "timezone-name": "UTC",
+    },
+    "federal-cost": 100.0,
+    "non-federal-cost": 50.0,
+    "cost-year": 1717282800000,
+    "cost-unit": "$",
+    "federal-o-and-m-cost": 10.0,
+    "non-federal-o-and-m-cost": 5.0,
+    "authorizing-law": "Authorizing Law",
+    "project-owner": "Project Owner",
+    "hydropower-desc": "Hydropower Description",
+    "sedimentation-desc": "Sedimentation Description",
+    "downstream-urban-desc": "Downstream Urban Description",
+    "bank-full-capacity-desc": "Bank Full Capacity Description",
+    "pump-back-location": {
+        "office-id": TEST_OFFICE,
+        "name": PUMP_LOCATION_ID,
+        "timezone-name": "UTC",
+    },
+    "near-gage-location": {
+        "office-id": TEST_OFFICE,
+        "name": PUMP_LOCATION_ID2,
+        "timezone-name": "UTC",
+    },
+    "yield-time-frame-start": 1717282800000,
+    "yield-time-frame-end": 1717308000000,
+    "project-remarks": "Remarks",
 }
 
 PUMP_LOCATION1 = {
@@ -245,6 +279,7 @@ def _cleanup():
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
     wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
+    proj.delete_project(TEST_OFFICE, TEST_PROJECT_ID)
     pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
@@ -263,6 +298,7 @@ def setup_data():
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
     pl.store_location(PROJECT_LOCATION, False)
+    proj.store_project(PROJECT, False)
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
 
 

@@ -260,5 +260,5 @@ def test_update_lock():
     assert lock is not None
     lock = lock.json
     assert lock["lock-width"] == test_lock2["lock-width"]
-    assert updated_loc == test_lock2["location"]["name"]
+    assert lock["location"]["name"] == updated_loc
     assert lock["project-id"] == test_lock2["project-id"]

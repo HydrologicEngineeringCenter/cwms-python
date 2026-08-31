@@ -16,6 +16,9 @@ TEST_OFFICE = "SPK"
 PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUMP_LOCATION_ID3 = "Sac River-Pump 3"
+PUMP_LOCATION_ID4 = "Sac River-Pump 4"
+PUMP_LOCATION_ID5 = "Sac River-Pump 5"
+PUMP_LOCATION_ID6 = "Sac River-Pump 6"
 TEST_CONTRACT_ID = "Sac River Pumps"
 TEST_PROJECT_ID = "Sacramento Delta"
 TEST_ENTITY_NAME = "California DWR"
@@ -171,6 +174,162 @@ PUMP_LOCATION3 = {
     "elevation-units": "m",
 }
 
+PUMP_LOCATION4 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID4,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION5 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID5,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION6 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID6,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION7 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID7,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION8 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID8,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION9 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID9,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
 CONTRACT_LOOKUP = {
     "office-id": TEST_OFFICE,
     "display-value": "Test Display Value",
@@ -203,6 +362,12 @@ def _cleanup():
     pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID4, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID5, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID6, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID7, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID8, TEST_OFFICE)
+    pl.delete_location(PUMP_LOCATION_ID9, TEST_OFFICE)
     pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
     lk.delete_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX, TEST_OFFICE)
 
@@ -218,6 +383,12 @@ def setup_data():
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
+    pl.store_location(PUMP_LOCATION4, False)
+    pl.store_location(PUMP_LOCATION5, False)
+    pl.store_location(PUMP_LOCATION6, False)
+    pl.store_location(PUMP_LOCATION7, False)
+    pl.store_location(PUMP_LOCATION8, False)
+    pl.store_location(PUMP_LOCATION9, False)
     proj.store_project(PROJECT, False)
     wu.create_water_user(WATER_USER, TEST_OFFICE, TEST_PROJECT_ID, False)
     lk.create_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX)
@@ -247,6 +418,9 @@ def test_delete_water_contract():
     WATER_CONTRACT2 = WATER_CONTRACT
     new_contract_name = "Temporary Contract"
     WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
+    WATER_CONTRACT2["pump-out-location"]["location"] = PUMP_LOCATION4
+    WATER_CONTRACT2["pump-in-location"]["location"] = PUMP_LOCATION5
+    WATER_CONTRACT2["pump-out-below-location"]["location"] = PUMP_LOCATION6
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
@@ -255,15 +429,22 @@ def test_delete_water_contract():
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
-    data = wc.get_water_contract(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
-    )
-    assert data is None
+    found = True
+    try:
+        data = wc.get_water_contract(
+            TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
+        )
+    except Exception:
+        found = False
+    assert not found
 
 
 def test_get_water_contracts():
     WATER_CONTRACT2 = WATER_CONTRACT
     WATER_CONTRACT2["contract-id"]["name"] = "Addendum Contract"
+    WATER_CONTRACT2["pump-out-location"]["location"] = PUMP_LOCATION7
+    WATER_CONTRACT2["pump-in-location"]["location"] = PUMP_LOCATION8
+    WATER_CONTRACT2["pump-out-below-location"]["location"] = PUMP_LOCATION9
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contracts(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
     assert len(data) == 2
