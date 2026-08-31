@@ -2,8 +2,10 @@ import pytest
 
 import cwms
 import cwms.locations.gate_changes as gc
+import cwms.locations.lookups as lk
 import cwms.locations.physical_locations as pl
 import cwms.projects.projects as proj
+from tests.cda.locations.lookup_test import PREFIX
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
@@ -102,6 +104,20 @@ PUMP_LOCATION2 = {
     "elevation-units": "m",
 }
 
+LOOKUP1 = {
+    "office-id": TEST_OFFICE,
+    "display-value": "A",
+    "tooltip": "Adjusted by an automated method",
+    "active": True,
+}
+
+LOOKUP2 = {
+    "office-id": TEST_OFFICE,
+    "display-value": "O",
+    "tooltip": "Other release",
+    "active": True,
+}
+
 GATE_CHANGE = [
     {
         "type": "gate-change",
@@ -109,18 +125,8 @@ GATE_CHANGE = [
         "change-date": 1704096000000,
         "pool-elevation": 3.0,
         "protected": True,
-        "discharge-computation-type": {
-            "office-id": TEST_OFFICE,
-            "display-value": "A",
-            "tooltip": "Adjusted by an automated method",
-            "active": True,
-        },
-        "reason-type": {
-            "office-id": TEST_OFFICE,
-            "display-value": "O",
-            "tooltip": "Other release",
-            "active": True,
-        },
+        "discharge-computation-type": LOOKUP1,
+        "reason-type": LOOKUP2,
         "notes": "Test notes",
         "new-total-discharge-override": 1.0,
         "old-total-discharge-override": 2.0,
@@ -160,12 +166,12 @@ PROJECT = {
     "bank-full-capacity-desc": "Bank Full Capacity Description",
     "pump-back-location": {
         "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION,
+        "name": PUMP_LOCATION_ID,
         "timezone-name": "UTC",
     },
     "near-gage-location": {
         "office-id": "SPK",
-        "name": PUMP_LOCATION2,
+        "name": PUMP_LOCATION_ID2,
         "timezone-name": "UTC",
     },
     "yield-time-frame-start": 1717282800000,
