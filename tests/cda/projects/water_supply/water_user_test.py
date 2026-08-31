@@ -18,6 +18,7 @@ TEST_ENTITY_NAME2 = "Test User 2"
 TEST_ENTITY_NAME3 = "Test User 3"
 TEST_ENTITY_NAME4 = "Test User 4"
 TEST_ENTITY_NAME5 = "Test User 5"
+TEST_ENTITY_NAME5 = "California DWR"
 PUBLIC_NAME = "Test Public Pump Name"
 LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
@@ -166,10 +167,38 @@ PUMP_LOCATION3 = {
 
 
 def _cleanup():
-    wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
-    wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME3)
-    proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
-    pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME3)
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME2)
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5)
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME6)
+    except Exception:
+        pass
+    try:
+        proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -278,21 +307,20 @@ def test_update_water_user():
     assert data["project-id"]["office-id"] == TEST_OFFICE
     assert data["water-right"] == TEST_WATER_RIGHT
 
-    new_name = "New Water User"
     water_rights = "Restricted Water Rights"
 
     updated_user = {
-        "entity-name": new_name,
+        "entity-name": TEST_ENTITY_NAME6,
         "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
         "water-right": water_rights,
     }
 
     wu.update_water_user(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5, updated_user, new_name
+        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5, updated_user, TEST_ENTITY_NAME6
     )
-    data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, new_name)
+    data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME6)
     data = data.json
-    assert data["entity-name"] == new_name
+    assert data["entity-name"] == TEST_ENTITY_NAME6
     assert data["project-id"]["name"] == TEST_PROJECT_ID
     assert data["project-id"]["office-id"] == TEST_OFFICE
     assert data["water-right"] == water_rights
