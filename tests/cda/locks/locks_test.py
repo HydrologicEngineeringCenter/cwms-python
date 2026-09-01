@@ -12,7 +12,7 @@ import cwms.projects.projects as proj
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
-LOCK_ID = "pytest-lock123"
+LOCK_ID = "pytest2lock123"
 PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUBLIC_NAME = "Test Public Pump Name"
@@ -20,6 +20,9 @@ LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
 DESCRIPTION = "Test Description"
 MAP_LABEL = "Test Map Label"
+NEW_LOCK1 = "pytestlock881"
+NEW_LOCK2 = "pytestlock996"
+NEW_LOCK3 = "pytestlock879"
 
 TEST_LOCK_LOCATION = {
     "office-id": TEST_OFFICE,
@@ -190,6 +193,18 @@ def _cleanup():
         pl.delete_location(LOCK_ID, TEST_OFFICE)
     except Exception:
         pass
+    try:
+        pl.delete_location(NEW_LOCK1, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(NEW_LOCK2, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(NEW_LOCK3, TEST_OFFICE)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -200,7 +215,10 @@ def setup_data():
         pass
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
-    # pl.store_location(TEST_LOCK_LOCATION, False)
+    try:
+        pl.store_location(TEST_LOCK_LOCATION, False)
+    except Exception:
+        pass
     pl.store_location(TEST_PROJECT_LOCATION, False)
     proj.store_project(PROJECT, False)
     lk.create_lock(TEST_LOCK, False)
@@ -227,7 +245,7 @@ def test_get_lock():
 
 def test_create_lock():
     test_lock2 = TEST_LOCK
-    new_loc = "pytest-lock879"
+    new_loc = NEW_LOCK3
     test_lock2["location"]["name"] = new_loc
     lk.create_lock(test_lock2, False)
     lock = lk.get_lock(new_loc, TEST_OFFICE)
@@ -259,7 +277,7 @@ def test_delete_lock():
 
 def test_update_lock():
     test_lock2 = TEST_LOCK
-    new_loc = "pytest-lock881"
+    new_loc = NEW_LOCK1
     test_lock2["location"]["name"] = new_loc
     test_lock2["location"]["description"] = "pytest-lock-description"
     lk.create_lock(test_lock2, False)
@@ -269,7 +287,7 @@ def test_update_lock():
     assert lock["lock-width"] == test_lock2["lock-width"]
     assert lock["location"]["name"] == test_lock2["location"]["name"]
     assert lock["project-id"] == test_lock2["project-id"]
-    updated_loc = "pytest-lock996"
+    updated_loc = NEW_LOCK2
     lk.update_lock(LOCK_ID, TEST_OFFICE, updated_loc)
     lock = lk.get_lock(updated_loc, TEST_OFFICE)
     assert lock is not None

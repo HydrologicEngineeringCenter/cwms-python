@@ -20,6 +20,8 @@ TEST_WATER_RIGHT = "CA Water Rights Permit #12345"
 PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUMP_LOCATION_ID3 = "Sac River-Pump 3"
+PUMP_LOCATION_ID4 = "Sac River-Pump 4"
+PUMP_LOCATION_ID5 = "Sac River-Pump 5"
 PUBLIC_NAME = "Test Public Pump Name"
 LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
@@ -78,12 +80,12 @@ PROJECT = {
     "bank-full-capacity-desc": "Bank Full Capacity Description",
     "pump-back-location": {
         "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID,
+        "name": PUMP_LOCATION_ID4,
         "timezone-name": "UTC",
     },
     "near-gage-location": {
         "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID2,
+        "name": PUMP_LOCATION_ID5,
         "timezone-name": "UTC",
     },
     "yield-time-frame-start": 1717282800000,
@@ -93,7 +95,7 @@ PROJECT = {
 
 PUMP_LOCATION1 = {
     "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID2,
+    "name": PUMP_LOCATION_ID,
     "latitude": 0,
     "longitude": 0,
     "active": True,
@@ -119,7 +121,7 @@ PUMP_LOCATION1 = {
 
 PUMP_LOCATION2 = {
     "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID3,
+    "name": PUMP_LOCATION_ID2,
     "latitude": 0,
     "longitude": 0,
     "active": True,
@@ -145,7 +147,7 @@ PUMP_LOCATION2 = {
 
 PUMP_LOCATION3 = {
     "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID,
+    "name": PUMP_LOCATION_ID3,
     "latitude": 0,
     "longitude": 0,
     "active": True,

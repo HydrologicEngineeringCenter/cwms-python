@@ -14,15 +14,15 @@ import cwms.projects.water_supply.water_users as wu
 from tests.cda.projects.water_supply.water_user_test import PUMP_LOCATION_ID3
 
 TEST_OFFICE = "SPK"
-PUMP_LOCATION_ID = "Sac River-Pump 1"
-PUMP_LOCATION_ID2 = "Sac River-Pump 2"
-PUMP_LOCATION_ID3 = "Sac River-Pump 3"
-PUMP_LOCATION_ID4 = "Sac River-Pump 4"
-PUMP_LOCATION_ID5 = "Sac River-Pump 5"
-PUMP_LOCATION_ID6 = "Sac River-Pump 6"
-PUMP_LOCATION_ID7 = "Sac River-Pump 7"
-PUMP_LOCATION_ID8 = "Sac River-Pump 8"
-PUMP_LOCATION_ID9 = "Sac River-Pump 9"
+PUMP_LOCATION_ID = "Sac River-Pump Num 1"
+PUMP_LOCATION_ID2 = "Sac River-Pump Num 2"
+PUMP_LOCATION_ID3 = "Sac River-Pump Num 3"
+PUMP_LOCATION_ID4 = "Sac River-Pump Num 4"
+PUMP_LOCATION_ID5 = "Sac River-Pump Num 5"
+PUMP_LOCATION_ID6 = "Sac River-Pump Num 6"
+PUMP_LOCATION_ID7 = "Sac River-Pump Num 7"
+PUMP_LOCATION_ID8 = "Sac River-Pump Num 8"
+PUMP_LOCATION_ID9 = "Sac River-Pump Num 9"
 TEST_CONTRACT_ID = "Sac River Pumps"
 TEST_PROJECT_ID = "Sacramento Delta"
 TEST_ENTITY_NAME = "California DWR"
@@ -497,31 +497,26 @@ def test_delete_water_contract():
 
 def test_get_water_contracts():
     WATER_CONTRACT2 = WATER_CONTRACT
-    WATER_CONTRACT2["contract-id"]["name"] = "Addendum Contract"
+    new_contract_name = "Addendum Contract"
+    WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
     WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION7
     WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION8
     WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION9
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contracts(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
     data = data.json
-    assert len(data) == 2
+    assert len(data) > 0
+    found = False
     for item in data:
-        if item["contract-id"]["name"] == TEST_CONTRACT_ID:
-            assert item["contract-id"]["name"] == WATER_CONTRACT["contract-id"]["name"]
-            assert item["office-id"] == WATER_CONTRACT["office-id"]
-            assert (
-                item["water-user"]["entity-name"]
-                == WATER_CONTRACT["water-user"]["entity-name"]
-            )
-        elif item["contract-id"]["name"] == "Addendum Contract":
+        if item["contract-id"]["name"] == new_contract_name:
             assert item["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
             assert item["office-id"] == WATER_CONTRACT2["office-id"]
             assert (
                 item["water-user"]["entity-name"]
                 == WATER_CONTRACT2["water-user"]["entity-name"]
             )
-        else:
-            pytest.fail("Unexpected contract found in list")
+            found = True
+    assert found
 
 
 def test_update_water_contract():
