@@ -5,7 +5,8 @@ import cwms.locations.gate_changes as gc
 import cwms.locations.lookups as lk
 import cwms.locations.physical_locations as pl
 import cwms.projects.projects as proj
-from tests.cda.locations.lookup_test import PREFIX
+from cwms import cwms_types
+from cwms.cwms_types import DeleteMethod
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
@@ -19,6 +20,10 @@ LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
 DESCRIPTION = "Test Description"
 MAP_LABEL = "Test Map Label"
+CATEGORY = "AT_GATE_CH_COMPUTATION_CODE"
+PREFIX = "DISCHARGE_COMP"
+CATEGORY1 = "AT_GATE_RELEASE_REASON_CODE"
+PREFIX1 = "RELEASE_REASON"
 
 TEST_PROJECT_LOCATION = {
     "name": TEST_PROJECT_ID,
@@ -113,8 +118,8 @@ LOOKUP1 = {
 
 LOOKUP2 = {
     "office-id": TEST_OFFICE,
-    "display-value": "O",
-    "tooltip": "Other release",
+    "display-value": "E",
+    "tooltip": "Estimated by user",
     "active": True,
 }
 
@@ -181,11 +186,13 @@ PROJECT = {
 
 
 def _cleanup():
-    proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
+    proj.delete_project(TEST_OFFICE, TEST_PROJECT_ID, DeleteMethod.DELETE_ALL)
     pl.delete_location(TEST_PROJECT_LOCATION, TEST_OFFICE)
     pl.delete_location(TEST_LOCATION, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION1, TEST_OFFICE)
     pl.delete_location(PUMP_LOCATION2, TEST_OFFICE)
+    lk.delete_lookup(CATEGORY, PREFIX, TEST_OFFICE)
+    lk.delete_lookup(CATEGORY1, PREFIX1, TEST_OFFICE)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -199,6 +206,8 @@ def setup_data():
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(TEST_PROJECT_LOCATION, False)
     pl.store_location(TEST_LOCATION, False)
+    lk.create_lookup(LOOKUP1, CATEGORY, PREFIX)
+    lk.create_lookup(LOOKUP2, CATEGORY1, PREFIX1)
     proj.store_project(PROJECT, False)
 
 
