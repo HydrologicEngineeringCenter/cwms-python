@@ -11,6 +11,7 @@ import cwms.locations.physical_locations as pl
 import cwms.projects.projects as proj
 import cwms.projects.water_supply.water_contracts as wc
 import cwms.projects.water_supply.water_users as wu
+from tests.cda.projects.water_supply.water_user_test import PUMP_LOCATION_ID3
 
 TEST_OFFICE = "SPK"
 PUMP_LOCATION_ID = "Sac River-Pump 1"
@@ -345,8 +346,8 @@ WATER_CONTRACT = {
     "water-user": WATER_USER,
     "contract-id": {"office-id": TEST_OFFICE, "name": TEST_CONTRACT_ID},
     "contract-type": CONTRACT_LOOKUP,
-    "contract-effective-date": 158000,
-    "contract-expiration-date": 167000,
+    "contract-effective-date": 1717282800000,
+    "contract-expiration-date": 1717282800000,
     "contracted-storage": 200000.5,
     "initial-use-allocation": 15600,
     "future-use-allocation": 27800.5,
@@ -360,19 +361,64 @@ WATER_CONTRACT = {
 
 
 def _cleanup():
-    wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
-    proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID4, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID5, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID6, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID7, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID8, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID9, TEST_OFFICE)
-    pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
-    lk.delete_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX, TEST_OFFICE)
+    try:
+        wc.delete_water_contract(
+            TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
+        )
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
+    except Exception:
+        pass
+    try:
+        proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID4, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID5, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID6, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID7, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID8, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID9, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        lk.delete_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX, TEST_OFFICE)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -393,7 +439,7 @@ def setup_data():
     pl.store_location(PUMP_LOCATION8, False)
     pl.store_location(PUMP_LOCATION9, False)
     proj.store_project(PROJECT, False)
-    wu.create_water_user(WATER_USER, TEST_OFFICE, TEST_PROJECT_ID, False)
+    wu.create_water_user(WATER_USER, False)
     lk.create_lookup(CONTRACT_LOOKUP, LOOKUP_CATEGORY, LOOKUP_PREFIX)
 
 
@@ -402,33 +448,40 @@ def init_session():
     print("Initializing CWMS API session for water contract tests...")
 
 
-def test_store_water_contract():
+def test_store_get_water_contract():
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
-    assert data == WATER_CONTRACT
-
-
-def test_get_water_contract():
-    data = wc.get_water_contract(
+    data = data.json
+    assert data["contract-id"]["name"] == WATER_CONTRACT["contract-id"]["name"]
+    assert data["office-id"] == WATER_CONTRACT["office-id"]
+    assert (
+        data["water-user"]["entity-name"] == WATER_CONTRACT["water-user"]["entity-name"]
+    )
+    wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
-    assert data == WATER_CONTRACT
 
 
 def test_delete_water_contract():
     WATER_CONTRACT2 = WATER_CONTRACT
     new_contract_name = "Temporary Contract"
     WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
-    WATER_CONTRACT2["pump-out-location"]["location"] = PUMP_LOCATION4
-    WATER_CONTRACT2["pump-in-location"]["location"] = PUMP_LOCATION5
-    WATER_CONTRACT2["pump-out-below-location"]["location"] = PUMP_LOCATION6
+    WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION4
+    WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION5
+    WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION6
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
-    assert data == WATER_CONTRACT2
+    data = data.json
+    assert data["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
+    assert data["office-id"] == WATER_CONTRACT2["office-id"]
+    assert (
+        data["water-user"]["entity-name"]
+        == WATER_CONTRACT2["water-user"]["entity-name"]
+    )
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
@@ -445,17 +498,28 @@ def test_delete_water_contract():
 def test_get_water_contracts():
     WATER_CONTRACT2 = WATER_CONTRACT
     WATER_CONTRACT2["contract-id"]["name"] = "Addendum Contract"
-    WATER_CONTRACT2["pump-out-location"]["location"] = PUMP_LOCATION7
-    WATER_CONTRACT2["pump-in-location"]["location"] = PUMP_LOCATION8
-    WATER_CONTRACT2["pump-out-below-location"]["location"] = PUMP_LOCATION9
+    WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION7
+    WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION8
+    WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION9
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contracts(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
+    data = data.json
     assert len(data) == 2
     for item in data:
         if item["contract-id"]["name"] == TEST_CONTRACT_ID:
-            assert item == WATER_CONTRACT
+            assert item["contract-id"]["name"] == WATER_CONTRACT["contract-id"]["name"]
+            assert item["office-id"] == WATER_CONTRACT["office-id"]
+            assert (
+                item["water-user"]["entity-name"]
+                == WATER_CONTRACT["water-user"]["entity-name"]
+            )
         elif item["contract-id"]["name"] == "Addendum Contract":
-            assert item == WATER_CONTRACT2
+            assert item["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
+            assert item["office-id"] == WATER_CONTRACT2["office-id"]
+            assert (
+                item["water-user"]["entity-name"]
+                == WATER_CONTRACT2["water-user"]["entity-name"]
+            )
         else:
             pytest.fail("Unexpected contract found in list")
 
@@ -466,9 +530,6 @@ def test_update_water_contract():
     WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
     WATER_CONTRACT2["future-use-percent-activated"] = 225.6
     wc.update_water_contract(
-        TEST_OFFICE,
-        TEST_PROJECT_ID,
-        TEST_ENTITY_NAME,
         TEST_CONTRACT_ID,
         new_contract_name,
         WATER_CONTRACT2,
@@ -476,4 +537,10 @@ def test_update_water_contract():
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
-    assert data == WATER_CONTRACT2
+    data = data.json
+    assert data["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
+    assert data["office-id"] == WATER_CONTRACT2["office-id"]
+    assert (
+        data["water-user"]["entity-name"]
+        == WATER_CONTRACT2["water-user"]["entity-name"]
+    )

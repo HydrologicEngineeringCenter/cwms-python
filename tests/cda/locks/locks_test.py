@@ -170,11 +170,26 @@ PROJECT = {
 
 
 def _cleanup():
-    lk.delete_lock(LOCK_ID, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
-    pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
-    pl.delete_location(LOCK_ID, TEST_OFFICE)
+    try:
+        lk.delete_lock(LOCK_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(LOCK_ID, TEST_OFFICE)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -185,7 +200,7 @@ def setup_data():
         pass
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
-    pl.store_location(TEST_LOCK_LOCATION, False)
+    # pl.store_location(TEST_LOCK_LOCATION, False)
     pl.store_location(TEST_PROJECT_LOCATION, False)
     proj.store_project(PROJECT, False)
     lk.create_lock(TEST_LOCK, False)

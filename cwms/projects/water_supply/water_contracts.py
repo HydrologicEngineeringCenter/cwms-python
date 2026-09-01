@@ -45,7 +45,7 @@ def get_water_contract(
             "Office, project_id, water_user, and contract_name must be provided."
         )
 
-    endpoint = f"projects/{office_id}/{project_id}/water-users/{water_user}/contracts/{contract_name}"
+    endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}/contracts/{contract_name}"
 
     response = api.get(endpoint, api_version=1)
     return Data(response)
@@ -83,7 +83,7 @@ def get_water_contracts(office_id: str, project_id: str, water_user: str) -> Dat
     if not all([office_id, project_id, water_user]):
         raise ValueError("Office, project_id, and water_user must be provided.")
 
-    endpoint = f"projects/{office_id}/{project_id}/water-users/{water_user}/contracts"
+    endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}/contracts"
 
     response = api.get(endpoint, api_version=1)
     return Data(response)
@@ -184,16 +184,13 @@ def delete_water_contract(
             "Office, Project ID, Water User, and Contract Name must be provided."
         )
 
-    endpoint = f"projects/{office_id}/{project_id}/water-users/{water_user}/contracts/{contract_name}"
+    endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}/contracts/{contract_name}"
     params = {"method": method.name}
 
     api.delete(endpoint, params, api_version=1)
 
 
 def update_water_contract(
-    office_id: str,
-    project_id: str,
-    water_user: str,
     contract_name: str,
     new_contract_name: str,
     data: JSON,
@@ -203,12 +200,6 @@ def update_water_contract(
 
     Parameters
     ----------
-    office_id : str
-        The office Id the contract is associated with. (Path)
-    project_id : str
-        The project Id the contract is associated with. (Path)
-    water_user : str
-        The water user the contract is associated with. (Path)
     contract_name : str
         The name of the contract to be updated. (Path)
     new_contract_name : str
@@ -231,14 +222,12 @@ def update_water_contract(
     ServerError
         If a 500-level error occurs.
     """
-    if not all([office_id, project_id, water_user, contract_name, new_contract_name]):
-        raise ValueError(
-            "Office, Project ID, Contract Name, New Contract Name, and Water User must be provided."
-        )
+    if not all([contract_name, new_contract_name]):
+        raise ValueError("Contract Name and New Contract Name must be provided.")
     if not data:
         raise ValueError("Data must be provided and cannot be empty.")
 
-    endpoint = f"projects/{office_id}/{project_id}/water-user/{water_user}/contracts/{contract_name}"
+    endpoint = f"projects/{contract_name}/{contract_name}/water-user/{contract_name}/contracts/{contract_name}"
 
     params = {"contract-name": new_contract_name}
 

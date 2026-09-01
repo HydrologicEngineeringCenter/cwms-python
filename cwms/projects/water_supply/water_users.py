@@ -81,18 +81,12 @@ def get_water_users(office_id: str, project_id: str) -> Data:
     return Data(response)
 
 
-def create_water_user(
-    data: JSON, office_id: str, project_id: str, fail_if_exists: bool = True
-) -> None:
+def create_water_user(data: JSON, fail_if_exists: bool = True) -> None:
     """
     Stores a water user to CWMS.
 
     Parameters
     ----------
-    office_id : str
-        The office Id the contract is associated with. (Path)
-    project_id : str
-        The project Id the contract is associated with. (Path)
     data : JSON
         Water user successfully stored to CWMS. (Body)
     fail_if_exists : bool, optional
@@ -114,12 +108,10 @@ def create_water_user(
     ServerError
         If a 500-level error occurs.
     """
-    if not all([office_id, project_id]):
-        raise ValueError("Office and project_id must be provided.")
     if not data:
         raise ValueError("Data must be provided and cannot be empty.")
 
-    endpoint = f"projects/{office_id}/{project_id}/water-user"
+    endpoint = "projects/office/project/water-user"
     params = {"fail-if-exists": fail_if_exists}
 
     api.post(endpoint, data, params, api_version=1)

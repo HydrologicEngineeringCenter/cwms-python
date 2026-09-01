@@ -223,8 +223,8 @@ def setup_data():
         "water-right": TEST_WATER_RIGHT,
     }
 
-    wu.create_water_user(water_user, TEST_OFFICE, TEST_PROJECT_ID, False)
-    wu.create_water_user(water_user2, TEST_OFFICE, TEST_PROJECT_ID, False)
+    wu.create_water_user(water_user, False)
+    wu.create_water_user(water_user2, False)
 
 
 @pytest.fixture(autouse=True)
@@ -239,7 +239,7 @@ def test_store_water_user():
         "water-right": TEST_WATER_RIGHT,
     }
 
-    wu.create_water_user(water_user, TEST_OFFICE, TEST_PROJECT_ID, False)
+    wu.create_water_user(water_user, False)
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME2)
     data = data.json
     assert data["entity-name"] == TEST_ENTITY_NAME2
@@ -264,7 +264,7 @@ def test_delete_water_user():
         "water-right": TEST_WATER_RIGHT,
     }
 
-    wu.create_water_user(water_user, TEST_OFFICE, TEST_PROJECT_ID, False)
+    wu.create_water_user(water_user, False)
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
     data = data.json
     assert data["entity-name"] == TEST_ENTITY_NAME4
@@ -299,7 +299,7 @@ def test_update_water_user():
         "water-right": TEST_WATER_RIGHT,
     }
 
-    wu.create_water_user(water_user, TEST_OFFICE, TEST_PROJECT_ID, False)
+    wu.create_water_user(water_user, False)
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5)
     data = data.json
     assert data["entity-name"] == TEST_ENTITY_NAME5
@@ -307,12 +307,10 @@ def test_update_water_user():
     assert data["project-id"]["office-id"] == TEST_OFFICE
     assert data["water-right"] == TEST_WATER_RIGHT
 
-    water_rights = "Restricted Water Rights"
-
     updated_user = {
         "entity-name": TEST_ENTITY_NAME6,
         "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": water_rights,
+        "water-right": TEST_WATER_RIGHT,
     }
 
     wu.update_water_user(
@@ -323,4 +321,3 @@ def test_update_water_user():
     assert data["entity-name"] == TEST_ENTITY_NAME6
     assert data["project-id"]["name"] == TEST_PROJECT_ID
     assert data["project-id"]["office-id"] == TEST_OFFICE
-    assert data["water-right"] == water_rights

@@ -293,7 +293,7 @@ def setup_data():
     except Exception:
         pass
 
-    wu.create_water_user(WATER_USER, TEST_OFFICE, TEST_PROJECT_ID, False)
+    wu.create_water_user(WATER_USER, False)
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
@@ -309,7 +309,11 @@ def init_session():
 
 def test_create_get_accounting():
     ac.store_pump_accounting(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_CONTRACT_ID, PUMP_ACCOUNTING
+        TEST_OFFICE,
+        TEST_PROJECT_ID,
+        TEST_ENTITY_NAME,
+        TEST_CONTRACT_ID,
+        PUMP_ACCOUNTING,
     )
     data = ac.get_pump_accounting(
         TEST_OFFICE,
