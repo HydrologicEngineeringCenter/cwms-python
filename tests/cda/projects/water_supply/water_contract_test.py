@@ -372,47 +372,47 @@ def _cleanup():
     except Exception:
         pass
     try:
-        proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE)
+        proj.delete_project(TEST_PROJECT_ID, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID4, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID4, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID5, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID5, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID6, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID6, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID7, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID7, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID8, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID8, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID9, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID9, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE, True)
     except Exception:
         pass
     try:
@@ -458,9 +458,6 @@ def test_store_get_water_contract():
     assert data["office-id"] == WATER_CONTRACT["office-id"]
     assert (
         data["water-user"]["entity-name"] == WATER_CONTRACT["water-user"]["entity-name"]
-    )
-    wc.delete_water_contract(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
 
 
@@ -520,22 +517,21 @@ def test_get_water_contracts():
 
 
 def test_update_water_contract():
+    wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
     WATER_CONTRACT2 = WATER_CONTRACT
     new_contract_name = "Additional Contract"
-    WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
     WATER_CONTRACT2["future-use-percent-activated"] = 225.6
-    wc.update_water_contract(
-        TEST_CONTRACT_ID,
-        new_contract_name,
-        WATER_CONTRACT2,
-    )
+    wc.update_water_contract(TEST_CONTRACT_ID, new_contract_name, WATER_CONTRACT2)
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
     data = data.json
-    assert data["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
+    assert data["contract-id"]["name"] == new_contract_name
     assert data["office-id"] == WATER_CONTRACT2["office-id"]
     assert (
         data["water-user"]["entity-name"]
         == WATER_CONTRACT2["water-user"]["entity-name"]
+    )
+    wc.delete_water_contract(
+        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )

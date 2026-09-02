@@ -123,12 +123,16 @@ def update_lookup(data: JSON, category: str, prefix: str) -> None:
     api.patch(endpoint, data, params, api_version=1)
 
 
-def delete_lookup(category: str, prefix: str, office_id: str) -> None:
+def delete_lookup(
+    display_value: str, category: str, prefix: str, office_id: str
+) -> None:
     """
     Deletes a specified lookup entry.
 
     Parameters
     ----------
+    display_value : str
+        Specifies the display value of the lookup type to be deleted.
     category : str
         Specifies the category id of the lookup type to be deleted.
     prefix : str
@@ -151,9 +155,9 @@ def delete_lookup(category: str, prefix: str, office_id: str) -> None:
     ServerError
         If a 500 range error code response is returned from the server.
     """
-    if not all([category, prefix, office_id]):
+    if not all([display_value, category, prefix, office_id]):
         raise ValueError("Category, Prefix, and Office ID must be specified")
 
-    endpoint = f"{ENDPOINT}/{category}"
+    endpoint = f"{ENDPOINT}/{display_value}"
     params = {"category": category, "prefix": prefix, "office": office_id}
     api.delete(endpoint, params, api_version=1)

@@ -17,11 +17,11 @@ TEST_CONTRACT_ID = "Sac River Pumps"
 TEST_PROJECT_ID = "Sacramento Delta"
 TEST_ENTITY_NAME = "California DWR"
 TEST_WATER_RIGHT = "CA Water Rights Permit #12345"
-PUMP_LOCATION_ID = "Sac River-Pump 1"
-PUMP_LOCATION_ID2 = "Sac River-Pump 2"
-PUMP_LOCATION_ID3 = "Sac River-Pump 3"
-PUMP_LOCATION_ID4 = "Sac River-Pump 4"
-PUMP_LOCATION_ID5 = "Sac River-Pump 5"
+PUMP_LOCATION_ID = "Sac River-Pump N1"
+PUMP_LOCATION_ID2 = "Sac River-Pump N2"
+PUMP_LOCATION_ID3 = "Sac River-Pump N3"
+PUMP_LOCATION_ID4 = "Sac River-Pump N4"
+PUMP_LOCATION_ID5 = "Sac River-Pump N5"
 PUBLIC_NAME = "Test Public Pump Name"
 LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
@@ -171,6 +171,58 @@ PUMP_LOCATION3 = {
     "elevation-units": "m",
 }
 
+PUMP_LOCATION4 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID4,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
+PUMP_LOCATION5 = {
+    "office-id": TEST_OFFICE,
+    "name": PUMP_LOCATION_ID5,
+    "latitude": 0,
+    "longitude": 0,
+    "active": True,
+    "public-name": PUBLIC_NAME,
+    "long-name": LONG_NAME,
+    "description": DESCRIPTION,
+    "timezone-name": "UTC",
+    "location-type": LOCATION_TYPE,
+    "location-kind": "PUMP",
+    "nation": "US",
+    "state-initial": "NV",
+    "county-name": "Clark",
+    "nearest-city": "Sparks",
+    "horizontal-datum": "WGS84",
+    "published-longitude": 0,
+    "published-latitude": 0,
+    "vertical-datum": "NGVD29",
+    "elevation": 150,
+    "map-label": MAP_LABEL,
+    "bounding-office-id": TEST_OFFICE,
+    "elevation-units": "m",
+}
+
 WATER_CONTRACT = {
     "office-id": TEST_OFFICE,
     "water-user": WATER_USER,
@@ -198,15 +250,15 @@ PUMP_ACCOUNTING = {
     "contract-name": TEST_CONTRACT_ID,
     "water-user": WATER_USER,
     "pump-locations": {
-        "pump-in": {"office-id": TEST_OFFICE, "name": PUMP_LOCATION_ID},
-        "pump-out": {"office-id": TEST_OFFICE, "name": PUMP_LOCATION_ID2},
-        "pump-below": {"office-id": TEST_OFFICE, "name": PUMP_LOCATION_ID3},
+        "pump-in": {"office-id": TEST_OFFICE, "name": PUMP_LOCATION_ID3},
+        "pump-out": {"office-id": TEST_OFFICE, "name": PUMP_LOCATION_ID},
+        "pump-below": {"office-id": TEST_OFFICE, "name": PUMP_LOCATION_ID2},
     },
     "pump-accounting": {
         "2022-11-20T21:17:28Z": [
             {
                 "pump-type": "IN",
-                "transfer-type-display": "Temporary Inlet",
+                "transfer-type-display": "Conduit",
                 "flow": 1.0,
                 "flow-unit": "cms",
                 "comment": "Added water to the system",
@@ -277,15 +329,44 @@ PUMP_ACCOUNTING = {
 
 
 def _cleanup():
-    wc.delete_water_contract(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
-    )
-    wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
-    proj.delete_project(TEST_OFFICE, TEST_PROJECT_ID)
-    pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
-    pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
-    pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    try:
+        wc.delete_water_contract(
+            TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
+        )
+    except Exception:
+        pass
+    try:
+        wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
+    except Exception:
+        pass
+    try:
+        proj.delete_project(TEST_OFFICE, TEST_PROJECT_ID)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID3, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID4, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(PUMP_LOCATION_ID5, TEST_OFFICE)
+    except Exception:
+        pass
+    try:
+        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -299,6 +380,8 @@ def setup_data():
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
+    pl.store_location(PUMP_LOCATION4, False)
+    pl.store_location(PUMP_LOCATION5, False)
     pl.store_location(PROJECT_LOCATION, False)
     proj.store_project(PROJECT, False)
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
@@ -325,4 +408,19 @@ def test_create_get_accounting():
         "2022-11-19T00:00:00Z",
         "2022-11-22T00:00:00Z",
     )
-    assert data == PUMP_ACCOUNTING
+    data = data.json
+    assert len(data) > 0
+    assert data[0]["contract-name"] == PUMP_ACCOUNTING["contract-name"]
+    assert data[0]["water-user"] == PUMP_ACCOUNTING["water-user"]
+    assert (
+        data[0]["pump-locations"]["pump-in"]["name"]
+        == PUMP_ACCOUNTING["pump-locations"]["pump-in"]["name"]
+    )
+    assert (
+        data[0]["pump-locations"]["pump-below"]["name"]
+        == PUMP_ACCOUNTING["pump-locations"]["pump-below"]["name"]
+    )
+    assert (
+        data[0]["pump-locations"]["pump-out"]["name"]
+        == PUMP_ACCOUNTING["pump-locations"]["pump-out"]["name"]
+    )

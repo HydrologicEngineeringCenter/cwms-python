@@ -7,6 +7,8 @@ from cwms.cwms_types import Data
 OFFICE_ID = "SPK"
 CATEGORY = "AT_EMBANK_STRUCTURE_TYPE"
 PREFIX = "STRUCTURE_TYPE"
+CATEGORY1 = "AT_WS_CONTRACT_TYPE"
+PREFIX1 = "WS_CONTRACT_TYPE"
 DISPLAY_VALUE = "Test Lookup"
 TOOLTIP = "Test Tooltip"
 
@@ -101,18 +103,11 @@ def test_update_lookup():
 
 
 def test_delete_lookup():
-    office = "LRL"
-    data = {
-        "office-id": office,
-        "display-value": DISPLAY_VALUE,
-        "tooltip": TOOLTIP,
-        "active": True,
-    }
-    lookups.create_lookup(data, CATEGORY, PREFIX)
+    lookups.create_lookup(LOOKUP_DATA, CATEGORY1, PREFIX1)
 
-    lookups.delete_lookup(CATEGORY, PREFIX, office)
+    lookups.delete_lookup(DISPLAY_VALUE, CATEGORY1, PREFIX1, OFFICE_ID)
 
-    result = lookups.get_all_lookups(CATEGORY, PREFIX, office)
+    result = lookups.get_all_lookups(CATEGORY1, PREFIX1, OFFICE_ID)
     found = False
     for item in result.json:
         if item["display-value"] == DISPLAY_VALUE:
