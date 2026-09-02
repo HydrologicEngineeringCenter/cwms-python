@@ -376,7 +376,6 @@ def setup_data():
     except Exception:
         pass
 
-    wu.create_water_user(WATER_USER, False)
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
@@ -384,6 +383,7 @@ def setup_data():
     pl.store_location(PUMP_LOCATION5, False)
     pl.store_location(PROJECT_LOCATION, False)
     proj.store_project(PROJECT, False)
+    wu.create_water_user(WATER_USER, False)
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
 
 
