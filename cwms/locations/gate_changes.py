@@ -62,7 +62,7 @@ def get_all_gate_changes(
         "unit-system": unit_system,
         "page-size": page_size,
     }
-    response = api.get(endpoint, params=params)
+    response = api.get(endpoint, params=params, api_version=1)
     return Data(response)
 
 
@@ -182,4 +182,4 @@ def delete_gate_change(
         "override-protection": override_protection,
     }
 
-    return api.delete(endpoint, params=params)
+    return api.delete(endpoint, params=params, api_version=1)

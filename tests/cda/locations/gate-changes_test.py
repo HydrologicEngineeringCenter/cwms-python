@@ -1,9 +1,13 @@
+from datetime import datetime
+
 import pytest
 
 import cwms
 import cwms.locations.gate_changes as gc
+import cwms.locations.location_groups as lg
 import cwms.locations.lookups as lk
 import cwms.locations.physical_locations as pl
+import cwms.outlets.outlets as out
 import cwms.projects.projects as proj
 from cwms import cwms_types
 from cwms.cwms_types import DeleteMethod
@@ -11,8 +15,8 @@ from cwms.cwms_types import DeleteMethod
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
 TEST_LOCATION_ID = "BIGH-CG100"
-START = "2024-01-01T00:00:00Z"
-END = "2024-01-02T00:00:00Z"
+START = datetime.fromisoformat("2024-01-01T00:00:00Z")
+END = datetime.fromisoformat("2024-01-02T00:00:00Z")
 PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUBLIC_NAME = "Test Public Pump Name"
@@ -24,6 +28,9 @@ CATEGORY = "AT_GATE_CH_COMPUTATION_CODE"
 PREFIX = "DISCHARGE_COMP"
 CATEGORY1 = "AT_GATE_RELEASE_REASON_CODE"
 PREFIX1 = "RELEASE_REASON"
+TEST_OUTLET_ID = ""
+OUTLET_CATEGORY_ID = "Rating"
+OUTLET_GROUP_ID = "Rating-BIGH-TG1"
 
 TEST_PROJECT_LOCATION = {
     "name": TEST_PROJECT_ID,
@@ -55,6 +62,7 @@ TEST_LOCATION = {
     "long-name": "A pytest-generated location",
     "timezone-name": "America/Chicago",
     "nation": "US",
+    "elevation-units": "m",
 }
 
 PUMP_LOCATION1 = {
@@ -121,6 +129,15 @@ LOOKUP2 = {
     "display-value": "E",
     "tooltip": "Estimated by user",
     "active": True,
+}
+
+OUTLET = {
+    "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
+    "location": TEST_LOCATION,
+    "rating-category-id": {"office-id": TEST_OFFICE, "name": OUTLET_CATEGORY_ID},
+    "rating-group-id": {"office-id": TEST_OFFICE, "name": OUTLET_GROUP_ID},
+    "rating-spec-id": TEST_PROJECT_ID
+    + ".Opening-ConduitGate,Elev;Flow-ConduitGate.Standard.Production",
 }
 
 GATE_CHANGE = [
@@ -191,6 +208,10 @@ def _cleanup():
     except Exception:
         pass
     try:
+        out.delete_outlet(TEST_OFFICE, TEST_OUTLET_ID, DeleteMethod.DELETE_ALL)
+    except Exception:
+        pass
+    try:
         pl.delete_location(TEST_PROJECT_LOCATION, TEST_OFFICE)
     except Exception:
         pass
@@ -207,29 +228,34 @@ def _cleanup():
     except Exception:
         pass
     try:
-        lk.delete_lookup(CATEGORY, PREFIX, TEST_OFFICE)
+        lk.delete_lookup("E", CATEGORY1, PREFIX1, TEST_OFFICE)
     except Exception:
         pass
-    try:
-        lk.delete_lookup(CATEGORY1, PREFIX1, TEST_OFFICE)
-    except Exception:
-        pass
+
+
+def createRatingSpec():
+    group = lg.get_location_group(OUTLET_GROUP_ID, OUTLET_CATEGORY_ID, TEST_OFFICE)
+    group = group.json
+    group["shared-loc-alias-id"] = (
+        TEST_PROJECT_ID
+        + ".Opening-ConduitGate,Elev;Flow-ConduitGate.Standard.Production"
+    )
+    lg.delete_location_group(OUTLET_GROUP_ID, OUTLET_CATEGORY_ID, TEST_OFFICE, True)
+    lg.store_location_groups(group)
 
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_data():
-    try:
-        _cleanup()
-    except Exception:
-        pass
+    _cleanup()
 
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(TEST_PROJECT_LOCATION, False)
     pl.store_location(TEST_LOCATION, False)
-    lk.create_lookup(LOOKUP1, CATEGORY, PREFIX)
     lk.create_lookup(LOOKUP2, CATEGORY1, PREFIX1)
     proj.store_project(PROJECT, False)
+    out.store_outlet(OUTLET, False)
+    createRatingSpec()
 
 
 @pytest.fixture(autouse=True)
@@ -245,48 +271,49 @@ def test_create_get_gate_change():
     data = data.json
     found = False
     for item in data:
-        print(item)
-        if data == item:
+        if item["change-date"] == GATE_CHANGE[0]["change-date"]:
             found = True
     assert found
 
 
 def test_catalog_gate_changes():
     GATE_CHANGE2 = GATE_CHANGE
-    GATE_CHANGE2[0]["change-date"] = 1704097000000
+    date = 1704097000000
+    GATE_CHANGE2[0]["change-date"] = date
     gc.store_gate_change(GATE_CHANGE2, False)
     data = gc.get_all_gate_changes(
-        TEST_OFFICE, new_loc, START, END, True, True, "SI", 10
+        TEST_OFFICE, TEST_PROJECT_ID, START, END, True, True, "SI", 10
     )
+    data = data.json
     found = False
     assert len(data) >= 1
     for item in data:
-        print(item)
-        if data == item:
+        if item["change-date"] == date:
             found = True
     assert found
 
 
 def test_delete_gate_change():
     GATE_CHANGE2 = GATE_CHANGE
-    GATE_CHANGE2[0]["change-date"] = 1804097000000
+    date = 1704124800000
+    GATE_CHANGE2[0]["change-date"] = date
     gc.store_gate_change(GATE_CHANGE2, False)
     data = gc.get_all_gate_changes(
-        TEST_OFFICE, new_loc, START, END, True, True, "SI", 10
+        TEST_OFFICE, TEST_PROJECT_ID, START, END, True, True, "SI", 10
     )
     data = data.json
     found = False
     assert len(data) >= 1
     for item in data:
         print(item)
-        if data == item:
+        if item["change-date"] == date:
             found = True
     assert found
-    gc.delete_gate_change(TEST_OFFICE, TEST_PROJECT_ID, START, END)
+    gc.delete_gate_change(TEST_OFFICE, TEST_PROJECT_ID, START, END, True)
     found = False
     try:
         data = gc.get_all_gate_changes(
-            TEST_OFFICE, new_loc, START, END, True, True, "SI", 10
+            TEST_OFFICE, TEST_PROJECT_ID, START, END, True, True, "SI", 10
         )
     except Exception:
         pass
