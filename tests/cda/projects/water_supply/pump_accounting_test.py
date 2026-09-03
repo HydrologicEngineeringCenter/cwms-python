@@ -6,11 +6,13 @@ import pandas.testing as pdt
 import pytest
 
 import cwms
+import cwms.locations.lookups as lk
 import cwms.locations.physical_locations as pl
 import cwms.projects.projects as proj
 import cwms.projects.water_supply.accounting as ac
 import cwms.projects.water_supply.water_contracts as wc
 import cwms.projects.water_supply.water_users as wu
+from cwms import DeleteMethod
 
 TEST_OFFICE = "SPK"
 TEST_CONTRACT_ID = "Sac River Pumps"
@@ -27,6 +29,9 @@ LONG_NAME = "Test Long Name"
 LOCATION_TYPE = "Test Location Type"
 DESCRIPTION = "Test Description"
 MAP_LABEL = "Test Map Label"
+CATEGORY = "AT_WS_CONTRACT_TYPE"
+PREFIX = "WS_CONTRACT_TYPE"
+DISPLAY_VALUE = "Test Display Value"
 
 WATER_USER = {
     "entity-name": TEST_ENTITY_NAME,
@@ -223,16 +228,18 @@ PUMP_LOCATION5 = {
     "elevation-units": "m",
 }
 
+LOOKUP = {
+    "office-id": TEST_OFFICE,
+    "display-value": DISPLAY_VALUE,
+    "tooltip": "Test Tooltip",
+    "active": True,
+}
+
 WATER_CONTRACT = {
     "office-id": TEST_OFFICE,
     "water-user": WATER_USER,
     "contract-id": {"office-id": TEST_OFFICE, "name": TEST_CONTRACT_ID},
-    "contract-type": {
-        "office-id": TEST_OFFICE,
-        "display-value": "Test Display Value",
-        "tooltip": "Test Tooltip",
-        "active": True,
-    },
+    "contract-type": LOOKUP,
     "contract-effective-date": 158000,
     "contract-expiration-date": 167000,
     "contracted-storage": 200000.5,
@@ -331,7 +338,11 @@ PUMP_ACCOUNTING = {
 def _cleanup():
     try:
         wc.delete_water_contract(
-            TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
+            TEST_OFFICE,
+            TEST_PROJECT_ID,
+            TEST_ENTITY_NAME,
+            TEST_CONTRACT_ID,
+            DeleteMethod.DELETE_ALL,
         )
     except Exception:
         pass
@@ -367,6 +378,10 @@ def _cleanup():
         pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
     except Exception:
         pass
+    try:
+        lk.delete_lookup(DISPLAY_VALUE, CATEGORY, PREFIX, TEST_OFFICE)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -376,6 +391,7 @@ def setup_data():
     except Exception:
         pass
 
+    lk.create_lookup(LOOKUP, CATEGORY, PREFIX)
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
     pl.store_location(PUMP_LOCATION3, False)
