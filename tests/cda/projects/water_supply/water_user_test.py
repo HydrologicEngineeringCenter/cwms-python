@@ -283,6 +283,7 @@ def test_get_water_users():
     found_second = False
     for value in data.json:
         assert value["project-id"]["name"] == TEST_PROJECT_ID
+        assert value["project-id"]["office-id"] == TEST_OFFICE
         assert value["water-right"] == TEST_WATER_RIGHT
         if value["entity-name"] == TEST_ENTITY_NAME:
             found_first = True
@@ -321,3 +322,4 @@ def test_update_water_user():
     assert data["entity-name"] == TEST_ENTITY_NAME6
     assert data["project-id"]["name"] == TEST_PROJECT_ID
     assert data["project-id"]["office-id"] == TEST_OFFICE
+    assert data["water-right"] == TEST_WATER_RIGHT

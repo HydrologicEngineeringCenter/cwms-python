@@ -434,10 +434,37 @@ def test_create_get_accounting():
         == PUMP_ACCOUNTING["pump-locations"]["pump-in"]["name"]
     )
     assert (
+        data[0]["pump-locations"]["pump-in"]["office-id"]
+        == PUMP_ACCOUNTING["pump-locations"]["pump-in"]["office-id"]
+    )
+    assert (
         data[0]["pump-locations"]["pump-below"]["name"]
         == PUMP_ACCOUNTING["pump-locations"]["pump-below"]["name"]
+    )
+    assert (
+        data[0]["pump-locations"]["pump-below"]["office-id"]
+        == PUMP_ACCOUNTING["pump-locations"]["pump-below"]["office-id"]
     )
     assert (
         data[0]["pump-locations"]["pump-out"]["name"]
         == PUMP_ACCOUNTING["pump-locations"]["pump-out"]["name"]
     )
+    assert (
+        data[0]["pump-locations"]["pump-out"]["office-id"]
+        == PUMP_ACCOUNTING["pump-locations"]["pump-out"]["office-id"]
+    )
+    assert "2022-11-20T21:17:28Z" in data[0]["pump-accounting"]
+    records = data[0]["pump-accounting"]["2022-11-20T21:17:28Z"]
+    expected_records = PUMP_ACCOUNTING["pump-accounting"]["2022-11-20T21:17:28Z"]
+    assert len(records) == len(expected_records)
+    for i in range(len(expected_records)):
+        for j in range(len(records)):
+            if records[j]["pump-type"] == expected_records[i]["pump-type"]:
+                assert records[j]["pump-type"] == expected_records[i]["pump-type"]
+                assert (
+                    records[j]["transfer-type-display"]
+                    == expected_records[i]["transfer-type-display"]
+                )
+                assert records[j]["flow"] == expected_records[i]["flow"]
+                assert records[j]["flow-unit"] == expected_records[i]["flow-unit"]
+                assert records[j]["comment"] == expected_records[i]["comment"]

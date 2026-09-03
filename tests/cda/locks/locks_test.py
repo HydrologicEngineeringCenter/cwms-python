@@ -9,10 +9,11 @@ import cwms
 import cwms.locations.physical_locations as pl
 import cwms.locks.locks as lk
 import cwms.projects.projects as proj
+from cwms import DeleteMethod
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
-LOCK_ID = "pytest2lock123"
+LOCK_ID = "pytest2lock14"
 PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUBLIC_NAME = "Test Public Pump Name"
@@ -174,35 +175,35 @@ PROJECT = {
 
 def _cleanup():
     try:
-        lk.delete_lock(LOCK_ID, TEST_OFFICE)
+        pl.delete_location(LOCK_ID, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE)
+        lk.delete_lock(LOCK_ID, TEST_OFFICE, DeleteMethod.DELETE_ALL)
     except Exception:
         pass
     try:
-        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE)
+        pl.delete_location(PUMP_LOCATION_ID2, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(LOCK_ID, TEST_OFFICE)
+        pl.delete_location(TEST_PROJECT_ID, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(NEW_LOCK1, TEST_OFFICE)
+        pl.delete_location(NEW_LOCK1, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(NEW_LOCK2, TEST_OFFICE)
+        pl.delete_location(NEW_LOCK2, TEST_OFFICE, True)
     except Exception:
         pass
     try:
-        pl.delete_location(NEW_LOCK3, TEST_OFFICE)
+        pl.delete_location(NEW_LOCK3, TEST_OFFICE, True)
     except Exception:
         pass
 
@@ -215,10 +216,7 @@ def setup_data():
         pass
     pl.store_location(PUMP_LOCATION1, False)
     pl.store_location(PUMP_LOCATION2, False)
-    try:
-        pl.store_location(TEST_LOCK_LOCATION, False)
-    except Exception:
-        pass
+    pl.store_location(TEST_LOCK_LOCATION, False)
     pl.store_location(TEST_PROJECT_LOCATION, False)
     proj.store_project(PROJECT, False)
     lk.create_lock(TEST_LOCK, False)
@@ -232,6 +230,14 @@ def init_session():
 def test_get_locks():
     locks = lk.get_locks(TEST_OFFICE, TEST_PROJECT_ID)
     assert locks is not None
+    data = locks.json
+    assert len(data) > 0
+    found = False
+    for lock in data:
+        if lock["location"]["name"] == LOCK_ID:
+            found = True
+            assert lock["project-id"] == TEST_LOCK["project-id"]
+    assert found
 
 
 def test_get_lock():
@@ -239,6 +245,15 @@ def test_get_lock():
     assert lock is not None
     lock = lock.json
     assert lock["lock-width"] == TEST_LOCK["lock-width"]
+    assert lock["lock-length"] == TEST_LOCK["lock-length"]
+    assert lock["normal-lock-lift"] == TEST_LOCK["normal-lock-lift"]
+    assert lock["volume-per-lockage"] == TEST_LOCK["volume-per-lockage"]
+    assert lock["minimum-draft"] == TEST_LOCK["minimum-draft"]
+    assert lock["maximum-lock-lift"] == TEST_LOCK["maximum-lock-lift"]
+    assert lock["length-units"] == TEST_LOCK["length-units"]
+    assert lock["volume-units"] == TEST_LOCK["volume-units"]
+    assert lock["elevation-units"] == TEST_LOCK["elevation-units"]
+    assert lock["chamber-type"] == TEST_LOCK["chamber-type"]
     assert lock["location"]["name"] == TEST_LOCK["location"]["name"]
     assert lock["project-id"] == TEST_LOCK["project-id"]
 
@@ -252,8 +267,23 @@ def test_create_lock():
     assert lock is not None
     lock = lock.json
     assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["lock-length"] == test_lock2["lock-length"]
+    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
+    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
+    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
+    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
+    assert lock["length-units"] == test_lock2["length-units"]
+    assert lock["volume-units"] == test_lock2["volume-units"]
+    assert lock["elevation-units"] == test_lock2["elevation-units"]
+    assert lock["chamber-type"] == test_lock2["chamber-type"]
     assert lock["location"]["name"] == test_lock2["location"]["name"]
     assert lock["project-id"] == test_lock2["project-id"]
+    lk.delete_lock(new_loc, TEST_OFFICE)
+    try:
+        lock = lk.get_lock(new_loc, TEST_OFFICE)
+    except Exception:
+        found = False
+    assert not found
 
 
 def test_delete_lock():
@@ -265,6 +295,15 @@ def test_delete_lock():
     assert lock is not None
     lock = lock.json
     assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["lock-length"] == test_lock2["lock-length"]
+    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
+    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
+    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
+    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
+    assert lock["length-units"] == test_lock2["length-units"]
+    assert lock["volume-units"] == test_lock2["volume-units"]
+    assert lock["elevation-units"] == test_lock2["elevation-units"]
+    assert lock["chamber-type"] == test_lock2["chamber-type"]
     assert lock["location"]["name"] == test_lock2["location"]["name"]
     assert lock["project-id"] == test_lock2["project-id"]
     lk.delete_lock(new_loc, TEST_OFFICE)
@@ -285,6 +324,15 @@ def test_update_lock():
     assert lock is not None
     lock = lock.json
     assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["lock-length"] == test_lock2["lock-length"]
+    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
+    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
+    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
+    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
+    assert lock["length-units"] == test_lock2["length-units"]
+    assert lock["volume-units"] == test_lock2["volume-units"]
+    assert lock["elevation-units"] == test_lock2["elevation-units"]
+    assert lock["chamber-type"] == test_lock2["chamber-type"]
     assert lock["location"]["name"] == test_lock2["location"]["name"]
     assert lock["project-id"] == test_lock2["project-id"]
     updated_loc = NEW_LOCK2
@@ -293,5 +341,15 @@ def test_update_lock():
     assert lock is not None
     lock = lock.json
     assert lock["lock-width"] == test_lock2["lock-width"]
+    assert lock["lock-length"] == test_lock2["lock-length"]
+    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
+    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
+    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
+    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
+    assert lock["length-units"] == test_lock2["length-units"]
+    assert lock["volume-units"] == test_lock2["volume-units"]
+    assert lock["elevation-units"] == test_lock2["elevation-units"]
+    assert lock["chamber-type"] == test_lock2["chamber-type"]
     assert lock["location"]["name"] == updated_loc
     assert lock["project-id"] == test_lock2["project-id"]
+    lk.delete_lock(updated_loc, TEST_OFFICE)

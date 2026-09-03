@@ -455,9 +455,62 @@ def test_store_get_water_contract():
     )
     data = data.json
     assert data["contract-id"]["name"] == WATER_CONTRACT["contract-id"]["name"]
+    assert (
+        data["contract-id"]["office-id"] == WATER_CONTRACT["contract-id"]["office-id"]
+    )
     assert data["office-id"] == WATER_CONTRACT["office-id"]
     assert (
         data["water-user"]["entity-name"] == WATER_CONTRACT["water-user"]["entity-name"]
+    )
+    assert (
+        data["water-user"]["project-id"] == WATER_CONTRACT["water-user"]["project-id"]
+    )
+    assert (
+        data["water-user"]["water-right"] == WATER_CONTRACT["water-user"]["water-right"]
+    )
+    assert data["contract-type"] == WATER_CONTRACT["contract-type"]
+    assert data["contract-effective-date"] == WATER_CONTRACT["contract-effective-date"]
+    assert (
+        data["contract-expiration-date"] == WATER_CONTRACT["contract-expiration-date"]
+    )
+    assert data["contracted-storage"] == WATER_CONTRACT["contracted-storage"]
+    assert data["initial-use-allocation"] == WATER_CONTRACT["initial-use-allocation"]
+    assert data["future-use-allocation"] == WATER_CONTRACT["future-use-allocation"]
+    assert data["storage-units-id"] == WATER_CONTRACT["storage-units-id"]
+    assert (
+        data["future-use-percent-activated"]
+        == WATER_CONTRACT["future-use-percent-activated"]
+    )
+    assert (
+        data["total-alloc-percent-activated"]
+        == WATER_CONTRACT["total-alloc-percent-activated"]
+    )
+    assert (
+        data["pump-out-location"]["pump-type"]
+        == WATER_CONTRACT["pump-out-location"]["pump-type"]
+    )
+    assert (
+        data["pump-out-location"]["pump-location"]["name"]
+        == WATER_CONTRACT["pump-out-location"]["pump-location"]["name"]
+    )
+    assert (
+        data["pump-out-below-location"]["pump-type"]
+        == WATER_CONTRACT["pump-out-below-location"]["pump-type"]
+    )
+    assert (
+        data["pump-out-below-location"]["pump-location"]["name"]
+        == WATER_CONTRACT["pump-out-below-location"]["pump-location"]["name"]
+    )
+    assert (
+        data["pump-in-location"]["pump-type"]
+        == WATER_CONTRACT["pump-in-location"]["pump-type"]
+    )
+    assert (
+        data["pump-in-location"]["pump-location"]["name"]
+        == WATER_CONTRACT["pump-in-location"]["pump-location"]["name"]
+    )
+    wc.delete_water_contract(
+        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
 
 
@@ -474,10 +527,61 @@ def test_delete_water_contract():
     )
     data = data.json
     assert data["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
+    assert (
+        data["contract-id"]["office-id"] == WATER_CONTRACT2["contract-id"]["office-id"]
+    )
     assert data["office-id"] == WATER_CONTRACT2["office-id"]
     assert (
         data["water-user"]["entity-name"]
         == WATER_CONTRACT2["water-user"]["entity-name"]
+    )
+    assert (
+        data["water-user"]["project-id"] == WATER_CONTRACT2["water-user"]["project-id"]
+    )
+    assert (
+        data["water-user"]["water-right"]
+        == WATER_CONTRACT2["water-user"]["water-right"]
+    )
+    assert data["contract-type"] == WATER_CONTRACT2["contract-type"]
+    assert data["contract-effective-date"] == WATER_CONTRACT2["contract-effective-date"]
+    assert (
+        data["contract-expiration-date"] == WATER_CONTRACT2["contract-expiration-date"]
+    )
+    assert data["contracted-storage"] == WATER_CONTRACT2["contracted-storage"]
+    assert data["initial-use-allocation"] == WATER_CONTRACT2["initial-use-allocation"]
+    assert data["future-use-allocation"] == WATER_CONTRACT2["future-use-allocation"]
+    assert data["storage-units-id"] == WATER_CONTRACT2["storage-units-id"]
+    assert (
+        data["future-use-percent-activated"]
+        == WATER_CONTRACT2["future-use-percent-activated"]
+    )
+    assert (
+        data["total-alloc-percent-activated"]
+        == WATER_CONTRACT2["total-alloc-percent-activated"]
+    )
+    assert (
+        data["pump-out-location"]["pump-type"]
+        == WATER_CONTRACT2["pump-out-location"]["pump-type"]
+    )
+    assert (
+        data["pump-out-location"]["pump-location"]["name"]
+        == WATER_CONTRACT2["pump-out-location"]["pump-location"]["name"]
+    )
+    assert (
+        data["pump-out-below-location"]["pump-type"]
+        == WATER_CONTRACT2["pump-out-below-location"]["pump-type"]
+    )
+    assert (
+        data["pump-out-below-location"]["pump-location"]["name"]
+        == WATER_CONTRACT2["pump-out-below-location"]["pump-location"]["name"]
+    )
+    assert (
+        data["pump-in-location"]["pump-type"]
+        == WATER_CONTRACT2["pump-in-location"]["pump-type"]
+    )
+    assert (
+        data["pump-in-location"]["pump-location"]["name"]
+        == WATER_CONTRACT2["pump-in-location"]["pump-location"]["name"]
     )
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
@@ -507,30 +611,147 @@ def test_get_water_contracts():
     for item in data:
         if item["contract-id"]["name"] == new_contract_name:
             assert item["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
+            assert (
+                item["contract-id"]["office-id"]
+                == WATER_CONTRACT2["contract-id"]["office-id"]
+            )
             assert item["office-id"] == WATER_CONTRACT2["office-id"]
             assert (
                 item["water-user"]["entity-name"]
                 == WATER_CONTRACT2["water-user"]["entity-name"]
             )
+            assert (
+                item["water-user"]["project-id"]
+                == WATER_CONTRACT2["water-user"]["project-id"]
+            )
+            assert (
+                item["water-user"]["water-right"]
+                == WATER_CONTRACT2["water-user"]["water-right"]
+            )
+            assert item["contract-type"] == WATER_CONTRACT2["contract-type"]
+            assert (
+                item["contract-effective-date"]
+                == WATER_CONTRACT2["contract-effective-date"]
+            )
+            assert (
+                item["contract-expiration-date"]
+                == WATER_CONTRACT2["contract-expiration-date"]
+            )
+            assert item["contracted-storage"] == WATER_CONTRACT2["contracted-storage"]
+            assert (
+                item["initial-use-allocation"]
+                == WATER_CONTRACT2["initial-use-allocation"]
+            )
+            assert (
+                item["future-use-allocation"]
+                == WATER_CONTRACT2["future-use-allocation"]
+            )
+            assert item["storage-units-id"] == WATER_CONTRACT2["storage-units-id"]
+            assert (
+                item["future-use-percent-activated"]
+                == WATER_CONTRACT2["future-use-percent-activated"]
+            )
+            assert (
+                item["total-alloc-percent-activated"]
+                == WATER_CONTRACT2["total-alloc-percent-activated"]
+            )
+            assert (
+                item["pump-out-location"]["pump-type"]
+                == WATER_CONTRACT2["pump-out-location"]["pump-type"]
+            )
+            assert (
+                item["pump-out-location"]["pump-location"]["name"]
+                == WATER_CONTRACT2["pump-out-location"]["pump-location"]["name"]
+            )
+            assert (
+                item["pump-out-below-location"]["pump-type"]
+                == WATER_CONTRACT2["pump-out-below-location"]["pump-type"]
+            )
+            assert (
+                item["pump-out-below-location"]["pump-location"]["name"]
+                == WATER_CONTRACT2["pump-out-below-location"]["pump-location"]["name"]
+            )
+            assert (
+                item["pump-in-location"]["pump-type"]
+                == WATER_CONTRACT2["pump-in-location"]["pump-type"]
+            )
+            assert (
+                item["pump-in-location"]["pump-location"]["name"]
+                == WATER_CONTRACT2["pump-in-location"]["pump-location"]["name"]
+            )
             found = True
     assert found
+    wc.delete_water_contract(
+        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
+    )
 
 
 def test_update_water_contract():
+    WATER_CONTRACT["pump-out-location"]["pump-location"] = PUMP_LOCATION1
+    WATER_CONTRACT["pump-in-location"]["pump-location"] = PUMP_LOCATION3
+    WATER_CONTRACT["pump-out-below-location"]["pump-location"] = PUMP_LOCATION2
+    WATER_CONTRACT["contract-id"]["name"] = TEST_CONTRACT_ID
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
-    WATER_CONTRACT2 = WATER_CONTRACT
     new_contract_name = "Additional Contract"
-    WATER_CONTRACT2["future-use-percent-activated"] = 225.6
-    wc.update_water_contract(TEST_CONTRACT_ID, new_contract_name, WATER_CONTRACT2)
+    wc.update_water_contract(TEST_CONTRACT_ID, new_contract_name, WATER_CONTRACT)
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
     data = data.json
     assert data["contract-id"]["name"] == new_contract_name
-    assert data["office-id"] == WATER_CONTRACT2["office-id"]
     assert (
-        data["water-user"]["entity-name"]
-        == WATER_CONTRACT2["water-user"]["entity-name"]
+        data["contract-id"]["office-id"] == WATER_CONTRACT["contract-id"]["office-id"]
+    )
+    assert data["office-id"] == WATER_CONTRACT["office-id"]
+    assert (
+        data["water-user"]["entity-name"] == WATER_CONTRACT["water-user"]["entity-name"]
+    )
+    assert (
+        data["water-user"]["project-id"] == WATER_CONTRACT["water-user"]["project-id"]
+    )
+    assert (
+        data["water-user"]["water-right"] == WATER_CONTRACT["water-user"]["water-right"]
+    )
+    assert data["contract-type"] == WATER_CONTRACT["contract-type"]
+    assert data["contract-effective-date"] == WATER_CONTRACT["contract-effective-date"]
+    assert (
+        data["contract-expiration-date"] == WATER_CONTRACT["contract-expiration-date"]
+    )
+    assert data["contracted-storage"] == WATER_CONTRACT["contracted-storage"]
+    assert data["initial-use-allocation"] == WATER_CONTRACT["initial-use-allocation"]
+    assert data["future-use-allocation"] == WATER_CONTRACT["future-use-allocation"]
+    assert data["storage-units-id"] == WATER_CONTRACT["storage-units-id"]
+    assert (
+        data["future-use-percent-activated"]
+        == WATER_CONTRACT["future-use-percent-activated"]
+    )
+    assert (
+        data["total-alloc-percent-activated"]
+        == WATER_CONTRACT["total-alloc-percent-activated"]
+    )
+    assert (
+        data["pump-out-location"]["pump-type"]
+        == WATER_CONTRACT["pump-out-location"]["pump-type"]
+    )
+    assert (
+        data["pump-out-location"]["pump-location"]["name"]
+        == WATER_CONTRACT["pump-out-location"]["pump-location"]["name"]
+    )
+    assert (
+        data["pump-out-below-location"]["pump-type"]
+        == WATER_CONTRACT["pump-out-below-location"]["pump-type"]
+    )
+    assert (
+        data["pump-out-below-location"]["pump-location"]["name"]
+        == WATER_CONTRACT["pump-out-below-location"]["pump-location"]["name"]
+    )
+    assert (
+        data["pump-in-location"]["pump-type"]
+        == WATER_CONTRACT["pump-in-location"]["pump-type"]
+    )
+    assert (
+        data["pump-in-location"]["pump-location"]["name"]
+        == WATER_CONTRACT["pump-in-location"]["pump-location"]["name"]
     )
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
