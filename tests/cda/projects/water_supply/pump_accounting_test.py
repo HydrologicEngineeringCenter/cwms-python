@@ -407,6 +407,7 @@ def test_create_get_accounting():
         TEST_CONTRACT_ID,
         "2022-11-19T00:00:00Z",
         "2022-11-22T00:00:00Z",
+        row_limit=100,
     )
     data = data.json
     assert len(data) > 0
