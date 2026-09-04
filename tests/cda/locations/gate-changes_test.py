@@ -15,8 +15,8 @@ from cwms.cwms_types import DeleteMethod
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
 TEST_LOCATION_ID = "BIGH-CG100"
-START = datetime.fromisoformat("2024-01-01T00:00:00Z")
-END = datetime.fromisoformat("2024-01-02T00:00:00Z")
+START = datetime.fromisoformat("2024-01-01")
+END = datetime.fromisoformat("2024-01-02")
 PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUBLIC_NAME = "Test Public Pump Name"
