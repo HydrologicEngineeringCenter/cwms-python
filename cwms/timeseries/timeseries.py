@@ -1,7 +1,7 @@
 import concurrent.futures
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame
@@ -9,6 +9,8 @@ from pandas import DataFrame
 import cwms.api as api
 from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 def get_multi_timeseries_df(
@@ -83,7 +85,7 @@ def get_multi_timeseries_df(
             }
             return result_dict
         except Exception as e:
-            logging.error(f"Error processing {ts_id}: {e}")
+            LOGGER.error(f"Error processing {ts_id}: {e}")
             return None
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -372,12 +374,12 @@ def get_timeseries(
             # replace begin with begin extent if outside extents
             if begin < begin_extent:
                 begin = begin_extent
-                logging.debug(
+                LOGGER.debug(
                     f"Requested begin was before any data in this timeseries. Reseting to {begin}"
                 )
         except Exception as e:
             # If getting extents fails, fall back to single-threaded mode
-            logging.debug(
+            LOGGER.debug(
                 f"Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
             )
 
@@ -399,7 +401,7 @@ def get_timeseries(
         )
         return Data(response, selector=selector)
     else:
-        logging.debug(
+        LOGGER.debug(
             f"Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
         )
         # fetch the data
@@ -687,7 +689,7 @@ def store_timeseries(
         return api.post(endpoint, data, params)
 
     actual_workers = min(max_workers, len(chunks))
-    logging.debug(
+    LOGGER.debug(
         f"Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
     )
 
@@ -709,7 +711,7 @@ def store_timeseries(
                 start_time = chunk["values"][0][0]
                 end_time = chunk["values"][-1][0]
                 error_msg = f"Error storing chunk from {start_time} to {end_time}: {e}"
-                logging.error(error_msg)
+                LOGGER.error(error_msg)
                 errors.append(error_msg)
                 responses.append({"error": error_msg})
 

@@ -60,3 +60,6 @@ bin/
 
 gradle.properties
 .coverage
+
+# Don't commit test run logs.
+tests/run.log

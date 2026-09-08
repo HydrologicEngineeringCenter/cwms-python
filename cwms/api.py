@@ -34,15 +34,38 @@ import json
 import logging
 from http import HTTPStatus
 from json import JSONDecodeError
-from typing import Any, Optional, cast
+from typing import Any, Final, Optional, cast
 
-from requests import Response, adapters
+from requests import Request, Response, adapters
 from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
 from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+
+
+from opentelemetry import propagate, trace
+
+# Setup telemetry
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+
+# Propagate the current W3CTraceContext to the request.
+def request_hook(span: trace.Span, request: Request) -> None:
+    ctx = trace.set_span_in_context(span)
+    propagate.get_global_textmap().inject(request.headers, ctx)
+
+
+tracer = trace.get_tracer(__name__)
+
+RequestsInstrumentor().instrument(
+    tracer=tracer,
+    tracer_provider=trace.get_tracer_provider(),
+    request_hook=request_hook,
+)
 
 # Specify the default API root URL and version.
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
@@ -190,7 +213,7 @@ def init_session(
     if api_root:
         # Ensure the API_ROOT ends with a single slash
         api_root = api_root.rstrip("/") + "/"
-        logging.debug(f"Initializing root URL: api_root={api_root}")
+        LOGGER.debug(f"Initializing root URL: api_root={api_root}")
         SESSION = sessions.BaseUrlSession(base_url=api_root)
         adapter = adapters.HTTPAdapter(
             pool_connections=pool_connections,
@@ -200,7 +223,7 @@ def init_session(
         SESSION.mount("https://", adapter)
     if token:
         if api_key:
-            logging.warning(
+            LOGGER.warning(
                 "Both token and api_key were provided to init_session(); using token for Authorization."
             )
         # Ensure we don't provide the bearer text twice
@@ -300,12 +323,13 @@ def _process_response(response: Response) -> Any:
         # Fallback for remaining content types
         return response.content.decode("utf-8")
     except JSONDecodeError as error:
-        logging.error(
+        LOGGER.error(
             f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
         )
         return response.text
 
 
+@tracer.start_as_current_span("get")
 def get(
     endpoint: str,
     params: Optional[RequestParams] = None,
@@ -328,18 +352,24 @@ def get(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
+    span = trace.get_current_span()
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status=trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
             return _process_response(response)
     except RequestsRetryError as error:
+        span.set_status(status=trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
 
 
+@tracer.start_as_current_span("get-paging")
 def get_with_paging(
     selector: str,
     endpoint: str,
@@ -366,6 +396,8 @@ def get_with_paging(
     """
 
     first_pass = True
+    current_span = trace.get_current_span()
+    current_span.set_attribute("page", "first")
     while (params["page"] is not None) or first_pass:
         temp = get(endpoint, params, api_version=api_version)
         if first_pass:
@@ -374,12 +406,15 @@ def get_with_paging(
             response[selector] = response[selector] + temp[selector]
         if "next-page" in temp.keys():
             params["page"] = temp["next-page"]
+            current_span.set_attribute("page", params["page"])
         else:
             params["page"] = None
+            current_span.set_attribute("page", "last")
         first_pass = False
     return response
 
 
+@tracer.start_as_current_span("post")
 def _post_function(
     endpoint: str,
     data: Any,
@@ -387,7 +422,7 @@ def _post_function(
     *,
     api_version: int = API_VERSION,
 ) -> Any:
-
+    span = trace.get_current_span()
     # post requires different headers than get for
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
     if isinstance(data, dict) or isinstance(data, list):
@@ -398,9 +433,14 @@ def _post_function(
         ) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status=trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
             return response
     except RequestsRetryError as error:
+        span.set_status(status=trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
 
 
@@ -431,6 +471,7 @@ def post(
     _post_function(endpoint=endpoint, data=data, params=params, api_version=api_version)
 
 
+@tracer.start_as_current_span("post_with_return")
 def post_with_returned_data(
     endpoint: str,
     data: Any,
@@ -462,6 +503,7 @@ def post_with_returned_data(
     return _process_response(response)
 
 
+@tracer.start_as_current_span("patch")
 def patch(
     endpoint: str,
     data: Optional[Any] = None,
@@ -486,7 +528,7 @@ def patch(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
+    span = trace.get_current_span()
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
 
     if data and isinstance(data, dict) or isinstance(data, list):
@@ -497,11 +539,17 @@ def patch(
         ) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status=trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
     except RequestsRetryError as error:
+        span.set_status(status=trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
 
 
+@tracer.start_as_current_span("delete")
 def delete(
     endpoint: str,
     params: Optional[RequestParams] = None,
@@ -521,12 +569,17 @@ def delete(
     Raises:
         ApiError: If an error response is return by the API.
     """
-
+    span = trace.get_current_span()
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.delete(endpoint, params=params, headers=headers) as response:
             if not response.ok:
                 logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+                error = ApiError(response)
+                span.set_status(status=trace.StatusCode.ERROR)
+                span.record_exception(error)
+                raise error
     except RequestsRetryError as error:
+        span.set_status(status=trace.StatusCode.ERROR)
+        span.record_exception(error)
         raise _unwrap_retry_error(error) from None
