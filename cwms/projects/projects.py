@@ -42,7 +42,7 @@ def get_project(office_id: str, name: str) -> Data:
 
     endpoint = f"projects/{name}"
     params = {"office": office_id}
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -129,7 +129,7 @@ def get_project_locations(
         "project-like": project_like,
         "location-kind-like": location_id_like,
     }
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -169,7 +169,7 @@ def delete_project(office_id: str, name: str, delete_method: DeleteMethod) -> No
 
     endpoint = f"projects/{name}"
     params = {"office": office_id, "method": delete_method.name}
-    api.delete(endpoint, params)
+    api.delete(endpoint, params, api_version=1)
 
 
 def rename_project(office_id: str, old_name: str, new_name: str) -> None:

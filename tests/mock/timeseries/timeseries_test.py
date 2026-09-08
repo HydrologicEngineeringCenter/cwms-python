@@ -251,6 +251,27 @@ def test_get_timeseries_paging(requests_mock):
     assert data.df.shape == (30, 3)
 
 
+def test_call_with_retry_does_not_retry_404():
+    class ResponseStub:
+        url = "https://mockwebserver.cwms.gov/timeseries"
+        status_code = 404
+        reason = "Not Found"
+        content = b""
+
+    call_count = 0
+
+    def failing_call():
+        nonlocal call_count
+        call_count += 1
+        raise cwms.api.ApiError(ResponseStub())
+
+    with pytest.raises(cwms.api.ApiError) as exc_info:
+        timeseries._call_with_retry(failing_call)
+
+    assert exc_info.value.response.status_code == 404
+    assert call_count == 1
+
+
 def test_get_timeseries_group_default(requests_mock):
     group_id = "USGS TS Data Acquisition"
     category_id = "Data Acquisition"

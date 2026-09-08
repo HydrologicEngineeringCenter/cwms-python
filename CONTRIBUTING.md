@@ -79,6 +79,46 @@ passed, bearer token auth takes precedence.
 
     > **Note:** If you are running other instances of CDA or Oracle on your machine, they may use different ports. Always verify which ports are in use and update your configuration files accordingly to avoid conflicts.
 
+    #### Selecting CDA and Database Versions
+
+    Local Compose defaults to CDA `develop-nightly` and database/schema-installer
+    `latest-dev`. Override the image references in a local, uncommitted `.env`
+    file when reproducing a particular environment, for example:
+
+    ```dotenv
+    CWMS_DATA_API_IMAGE=ghcr.io/usace/cwms-data-api:2026.05.12-i
+    CWMS_DATABASE_IMAGE=ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:26.02.17
+    CWMS_SCHEMA_INSTALLER_IMAGE=ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:26.02.17
+    ```
+
+    Keep the database and schema-installer tags together. Use a separate Compose
+    project for each database version, so the test data and containers are isolated:
+
+    ```sh
+    docker compose -p cwms-python-release pull
+    docker compose -p cwms-python-release up -d --wait --wait-timeout 2400
+    ```
+
+    Use the same project name for subsequent `ps`, `logs`, and `down` commands.
+    Stop the previous stack before starting another one using the same host ports.
+
+    The integration workflow in `.github/workflows/CDA-testing.yml` tests every
+    combination of three CDA images and three database versions on Python 3.9
+    and 3.13 (18 jobs):
+
+    | Lane | CDA tag | Database and schema-installer tag |
+    | --- | --- | --- |
+    | latest | `develop-nightly` | `latest-dev` |
+    | production | `2026.05.12-i` | `26.02.17` |
+    | test | `2026.08.31-testd` | `26.07.16-RC02` |
+
+    These release pins are maintained in the workflow; update them when the
+    target environments change. CDA and database are independent matrix axes,
+    so testing includes mixed versions, not only the three same-lane pairs.
+    Each job starts a disposable local stack, waits for backend health, and
+    uses the hashed test keys seeded by `compose_files/sql/users.sql`. CI never
+    runs these destructive integration tests against the deployed environments.
+
 3. **Run Tests Against CDA**  
     Once the services are running, execute the tests:
     ```sh
