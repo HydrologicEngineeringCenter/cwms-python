@@ -9,12 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set Up Python
+        id: setup-python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       # Unlike the code-check workflow, this job requires the dev dependencies to be
       # installed to make sure we have the necessary, tools, stub files, etc.
@@ -22,10 +23,11 @@ jobs:
         uses: abatilo/actions-poetry@v4
 
       - name: Cache Virtual Environment
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ./.venv
-          key: ${{ runner.os }}-py3.12-venv-${{ hashFiles('poetry.lock') }}
+          key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{
+            hashFiles('poetry.lock') }}
 
       - name: Install Dependencies
         run: poetry install

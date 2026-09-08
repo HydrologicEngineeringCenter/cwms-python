@@ -3,7 +3,7 @@ volumes:
   auth_data:
 services:
   db:
-    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:latest-dev
+    image: ${CWMS_DATABASE_IMAGE:-ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:latest-dev}
     environment:
       #- ORACLE_DATABASE=FREEPDB1
       - ORACLE_PASSWORD=badSYSpassword
@@ -18,7 +18,7 @@ services:
       retries: 50
       start_period: 40m
   db_webuser_permissions:
-    image: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:latest-dev
+    image: ${CWMS_SCHEMA_INSTALLER_IMAGE:-ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:latest-dev}
     restart: "no"
     environment:
       - DB_HOST_PORT=db:1521
@@ -52,14 +52,12 @@ services:
         condition: service_completed_successfully
       traefik:
         condition: service_healthy
-    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:develop-2026.05.30}
+    image: ${CWMS_DATA_API_IMAGE:-ghcr.io/usace/cwms-data-api:develop-nightly}
     restart: unless-stopped
     volumes:
       - ./compose_files/pki/certs:/conf/
-      - ./compose_files/togglz/features.properties:/conf/features.properties:ro
       - ./compose_files/tomcat/logging.properties:/usr/local/tomcat/conf/logging.properties:ro
     environment:
-      - JAVA_OPTS=-Dproperties.file=/conf/features.properties
       - CDA_JDBC_DRIVER=oracle.jdbc.driver.OracleDriver
       - CDA_JDBC_URL=jdbc:oracle:thin:@db/FREEPDB1
       - CDA_JDBC_USERNAME=q0webtest
