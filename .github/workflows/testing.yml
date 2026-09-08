@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Set Up Python
+        id: setup-python
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -25,7 +26,8 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{
+            hashFiles('poetry.lock') }}
 
       - name: Install Dependencies
         run: poetry install
