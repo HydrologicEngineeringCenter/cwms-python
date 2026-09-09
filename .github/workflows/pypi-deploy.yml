@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Run Release Please
         id: release
-        uses: googleapis/release-please-action@v5
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
           target-branch: main
           config-file: release-please-config.json
@@ -51,6 +51,8 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
       - name: Install Dependencies
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
         run: poetry install --no-interaction
       - name: Run Tests
         run: poetry run pytest tests/mock/
@@ -91,7 +93,7 @@ jobs:
       - name: Publish Distribution To PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
       - name: Sign Distribution
-        uses: sigstore/gh-action-sigstore-python@v3.5.0
+        uses: sigstore/gh-action-sigstore-python@790bc6befb9d733738f18d8f895854b453640ec9 # v3.5.0
         with:
           inputs: |
             ./dist/*.tar.gz
