@@ -528,7 +528,7 @@ def store_multi_timeseries_df(
                 DELETE_INSERT.
         override_protection: bool, optional, default is False
             A flag to ignore the protected data quality flag when storing data.
-        multithread: bool, default is false
+        multithread: bool, default is true
             Specifies whether to store chunked time series values using multiple threads.
         max_workers: Int, Optional, default is None
             It is a number of Threads aka size of pool in concurrent.futures.ThreadPoolExecutor.
@@ -536,6 +536,12 @@ def store_multi_timeseries_df(
         Returns
         -------
             None
+
+        Raises
+        ------
+        RuntimeError
+            If any series fails to store. The message identifies failed series;
+            other series may already have been stored successfully.
     """
 
     def store_ts_ids(
@@ -544,24 +550,21 @@ def store_multi_timeseries_df(
         office_id: str,
         version_date: Optional[datetime] = None,
     ) -> None:
-        try:
-            units = data["units"].iloc[0]
-            data_json = timeseries_df_to_json(
-                data=data,
-                ts_id=ts_id,
-                units=units,
-                office_id=office_id,
-                version_date=version_date,
-            )
-            store_timeseries(
-                data=data_json,
-                create_as_ltrs=create_as_ltrs,
-                store_rule=store_rule,
-                override_protection=override_protection,
-                multithread=multithread,
-            )
-        except Exception as e:
-            print(f"Error processing {ts_id}: {e}")
+        units = data["units"].iloc[0]
+        data_json = timeseries_df_to_json(
+            data=data,
+            ts_id=ts_id,
+            units=units,
+            office_id=office_id,
+            version_date=version_date,
+        )
+        store_timeseries(
+            data=data_json,
+            create_as_ltrs=create_as_ltrs,
+            store_rule=store_rule,
+            override_protection=override_protection,
+            multithread=multithread,
+        )
         return None
 
     required_columns = ["date-time", "value", "ts_id", "units"]
@@ -577,7 +580,9 @@ def store_multi_timeseries_df(
         ts_data_all["ts_id"].astype(str) + ":" + ts_data_all["version_date"].astype(str)
     ).unique()
 
+    errors: List[str] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {}
         for unique_tsid in unique_tsids:
             ts_id, version_date = unique_tsid.split(":", 1)
             if version_date != "NaT":
@@ -592,9 +597,21 @@ def store_multi_timeseries_df(
                     (ts_data_all["ts_id"] == ts_id) & ts_data_all["version_date"].isna()
                 ]
             if not data.empty:
-                executor.submit(
+                future = executor.submit(
                     store_ts_ids, ts_data, ts_id, office_id, version_date_dt
                 )
+                futures[future] = unique_tsid
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                errors.append(f"{futures[future]}: {e}")
+
+    if errors:
+        raise RuntimeError(
+            f"{len(errors)} time series failed to store:\n" + "\n".join(errors)
+        )
 
 
 def chunk_timeseries_data(
@@ -686,7 +703,14 @@ def store_timeseries(
     if len(chunks) == 1 or not multithread:
         return api.post(endpoint, data, params)
 
-    actual_workers = min(max_workers, len(chunks))
+    if max_workers <= 0:
+        raise ValueError("max_workers must be greater than 0")
+
+    # A new series must exist before multiple transactions can write its data.
+    # Complete one normal write first, then retain parallelism for the rest.
+    _call_with_retry(api.post, endpoint, chunks[0], params)
+    remaining_chunks = chunks[1:]
+    actual_workers = min(max_workers, len(remaining_chunks))
     logging.debug(
         f"Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
     )
@@ -698,7 +722,7 @@ def store_timeseries(
     with concurrent.futures.ThreadPoolExecutor(max_workers=actual_workers) as executor:
         future_to_chunk = {
             executor.submit(_call_with_retry, api.post, endpoint, chunk, params): chunk
-            for chunk in chunks
+            for chunk in remaining_chunks
         }
 
         for future in concurrent.futures.as_completed(future_to_chunk):
