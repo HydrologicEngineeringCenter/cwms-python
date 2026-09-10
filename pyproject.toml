@@ -17,14 +17,23 @@ authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 python = "^3.9"
 pandas = "^2.1.3"
 requests-toolbelt = "^1.0.0"
-requests = "^2.31.0"
+requests = [
+    {version = "^2.32.4", python = ">=3.9,<3.10"},
+    {version = "^2.33.0", python = ">=3.10"},
+]
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.2.0"
+black = [
+    {version = "^25.1.0", python = ">=3.9,<3.10"},
+    {version = "^26.3.1", python = ">=3.10"},
+]
 isort = "^5.13.2"
 mypy = "^1.9.0"
 pre-commit = "^3.6.2"
-pytest = "^8.1.1"
+pytest = [
+    {version = "^8.3.5", python = ">=3.9,<3.10"},
+    {version = "^9.0.3", python = ">=3.10"},
+]
 requests-mock = "^1.11.0"
 pytest-cov = "^4.1.0"
 pandas-stubs = "^2.2.1.240316"
