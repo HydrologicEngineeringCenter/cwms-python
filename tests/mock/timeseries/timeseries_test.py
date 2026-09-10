@@ -4,6 +4,7 @@
 #  Source may not be released without written approval from HEC
 
 from datetime import datetime
+from datetime import timezone as datetime_timezone
 
 import pandas as pd
 import pytest
@@ -140,7 +141,16 @@ def test_timeseries_df_to_json():
     assert all(data == data2)
 
 
-def test_get_timeseries_unversioned_default(requests_mock):
+def test_get_timeseries_unversioned_default(requests_mock, monkeypatch):
+    monkeypatch.setattr(
+        timeseries,
+        "get_ts_extents",
+        lambda **kwargs: (
+            datetime(2008, 1, 1, tzinfo=datetime_timezone.utc),
+            None,
+            None,
+        ),
+    )
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"
@@ -169,7 +179,16 @@ def test_get_timeseries_unversioned_default(requests_mock):
     assert data.df.shape == (4, 3)
 
 
-def test_get_empty_ts_df(requests_mock):
+def test_get_empty_ts_df(requests_mock, monkeypatch):
+    monkeypatch.setattr(
+        timeseries,
+        "get_ts_extents",
+        lambda **kwargs: (
+            datetime(2008, 1, 1, tzinfo=datetime_timezone.utc),
+            None,
+            None,
+        ),
+    )
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"
@@ -375,7 +394,16 @@ def test_create_timeseries_unversioned_default(requests_mock):
     assert requests_mock.call_count == 1
 
 
-def test_get_timeseries_versioned_default(requests_mock):
+def test_get_timeseries_versioned_default(requests_mock, monkeypatch):
+    monkeypatch.setattr(
+        timeseries,
+        "get_ts_extents",
+        lambda **kwargs: (
+            datetime(2008, 1, 1, tzinfo=datetime_timezone.utc),
+            None,
+            None,
+        ),
+    )
     requests_mock.get(
         f"{_MOCK_ROOT}"
         "/timeseries?office=SWT&"

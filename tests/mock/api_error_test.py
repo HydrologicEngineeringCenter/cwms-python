@@ -41,7 +41,7 @@ def test_api_error_str():
 
     assert (
         str(error)
-        == "CWMS API Error (https://api.example.com/test) Not Found. May be the result of an empty query. incident identifier 34566432"
+        == "CWMS API Error (https://api.example.com/test) 404 Not Found. May be the result of an empty query. incident identifier 34566432"
     )
 
     # The response should not include a reason, since it is not included in the response.
@@ -50,11 +50,11 @@ def test_api_error_str():
 
     assert (
         str(error)
-        == "CWMS API Error (https://api.example.com/test). May be the result of an empty query."
+        == "CWMS API Error (https://api.example.com/test) 404. May be the result of an empty query."
     )
 
-    # In the most minimal case, only the URL is included.
+    # Even without a reason or body, the URL and status are included.
     response = Response(url="https://api.example.com/test", status_code=500)
     error = ApiError(response)
 
-    assert str(error) == "CWMS API Error (https://api.example.com/test)."
+    assert str(error) == "CWMS API Error (https://api.example.com/test) 500."

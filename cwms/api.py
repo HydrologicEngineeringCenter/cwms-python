@@ -33,10 +33,10 @@ import base64
 import json
 import logging
 from http import HTTPStatus
-from json import JSONDecodeError
 from typing import Any, Optional, cast
 
 from requests import Response, adapters
+from requests.exceptions import JSONDecodeError, RequestException
 from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
@@ -47,6 +47,7 @@ from cwms.cwms_types import JSON, RequestParams
 # Specify the default API root URL and version.
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
+logger = logging.getLogger(__name__)
 
 # Initialize a non-authenticated session with the default root URL and set default pool connections.
 
@@ -87,17 +88,19 @@ class ApiError(Exception):
         self.message = message
 
     def __str__(self) -> str:
-        if self.message:
-            return self.message
-
         # Include the request URL in the error message.
-        message = f"CWMS API Error ({self.response.url})"
+        message = f"CWMS API Error ({self.response.url}) {self.response.status_code}"
+        request = getattr(self.response, "request", None)
+        if request is not None:
+            message += f" {request.method}"
 
         # If a reason is provided in the response, add it to the message.
         if reason := self.response.reason:
             message += f" {reason}"
 
         message += "."
+        if self.message:
+            message += f" {self.message}"
 
         # Add additional context to help the user resolve the issue.
         hint = self.hint()
@@ -108,10 +111,7 @@ class ApiError(Exception):
         content = getattr(self.response, "content", None)
         if content:
             if isinstance(content, bytes):
-                try:
-                    text = content.decode("utf-8", errors="replace")
-                except Exception:
-                    text = repr(content)
+                text = content.decode("utf-8", errors="replace")
             else:
                 text = str(content)
             message += f" {text}"
@@ -139,6 +139,22 @@ class NotFoundError(ApiError):
 
 class PermissionError(ApiError):
     """Raised when the CDA request is not authorized for the current caller."""
+
+
+class BatchError(RuntimeError):
+    """A concurrent operation failed; ``failures`` retains every original exception.
+
+    Each failure is a (series or chunk description, exception) pair. Successful
+    writes are not rolled back. This remains compatible with RuntimeError handlers.
+    """
+
+    def __init__(self, message: str, failures: list[tuple[str, Exception]]):
+        self.failures = failures
+        super().__init__(
+            message
+            + "\n"
+            + "\n".join(f"{context}: {error}" for context, error in failures)
+        )
 
 
 def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
@@ -280,6 +296,8 @@ def get_xml(
 
 
 def _process_response(response: Response) -> Any:
+    if not response.content:
+        return {}
     try:
         # Avoid case sensitivity issues with the content type header
         content_type = response.headers.get("Content-Type", "").lower()
@@ -300,10 +318,14 @@ def _process_response(response: Response) -> Any:
         # Fallback for remaining content types
         return response.content.decode("utf-8")
     except JSONDecodeError as error:
-        logging.error(
-            f"Error decoding CDA response as JSON: {error} on line {error.lineno}\n\tFalling back to text"
-        )
-        return response.text
+        raise ApiError(response, "Invalid JSON in CDA response.") from error
+
+
+def _check_response(response: Response, method: str, endpoint: str) -> None:
+    """Record request outcomes without logging credentials or request bodies."""
+    logger.debug("CDA %s %s returned HTTP %s", method, endpoint, response.status_code)
+    if not response.ok:
+        raise ApiError(response)
 
 
 def get(
@@ -332,12 +354,16 @@ def get(
     headers = {"Accept": api_version_text(api_version)}
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
-            if not response.ok:
-                logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+            _check_response(response, "GET", endpoint)
             return _process_response(response)
     except RequestsRetryError as error:
-        raise _unwrap_retry_error(error) from None
+        cause = _unwrap_retry_error(error)
+        if cause is error:
+            raise
+        raise cause from error
+    except RequestException as error:
+        logger.debug("CDA GET %s failed: %s", endpoint, type(error).__name__)
+        raise
 
 
 def get_with_paging(
@@ -396,12 +422,16 @@ def _post_function(
         with SESSION.post(
             endpoint, params=params, headers=headers, data=data
         ) as response:
-            if not response.ok:
-                logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+            _check_response(response, "POST", endpoint)
             return response
     except RequestsRetryError as error:
-        raise _unwrap_retry_error(error) from None
+        cause = _unwrap_retry_error(error)
+        if cause is error:
+            raise
+        raise cause from error
+    except RequestException as error:
+        logger.debug("CDA POST %s failed: %s", endpoint, type(error).__name__)
+        raise
 
 
 def post(
@@ -489,17 +519,21 @@ def patch(
 
     headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
 
-    if data and isinstance(data, dict) or isinstance(data, list):
+    if isinstance(data, (dict, list)):
         data = json.dumps(data)
     try:
         with SESSION.patch(
             endpoint, params=params, headers=headers, data=data
         ) as response:
-            if not response.ok:
-                logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+            _check_response(response, "PATCH", endpoint)
     except RequestsRetryError as error:
-        raise _unwrap_retry_error(error) from None
+        cause = _unwrap_retry_error(error)
+        if cause is error:
+            raise
+        raise cause from error
+    except RequestException as error:
+        logger.debug("CDA PATCH %s failed: %s", endpoint, type(error).__name__)
+        raise
 
 
 def delete(
@@ -507,6 +541,7 @@ def delete(
     params: Optional[RequestParams] = None,
     *,
     api_version: int = API_VERSION,
+    data: Optional[Any] = None,
 ) -> None:
     """Make a DELETE request to the CWMS Data API.
 
@@ -517,16 +552,27 @@ def delete(
     Keyword Args:
         api_version (optional): The CDA version to use for the request. If not specified,
             the default API_VERSION will be used.
+        data (optional): Request body, JSON-encoded for dictionaries and lists.
 
     Raises:
         ApiError: If an error response is return by the API.
     """
 
     headers = {"Accept": api_version_text(api_version)}
+    kwargs: dict[str, Any] = {}
+    if data is not None:
+        headers["Content-Type"] = api_version_text(api_version)
+        kwargs["data"] = json.dumps(data) if isinstance(data, (dict, list)) else data
     try:
-        with SESSION.delete(endpoint, params=params, headers=headers) as response:
-            if not response.ok:
-                logging.error(f"CDA Error: response={response}")
-                raise ApiError(response)
+        with SESSION.delete(
+            endpoint, params=params, headers=headers, **kwargs
+        ) as response:
+            _check_response(response, "DELETE", endpoint)
     except RequestsRetryError as error:
-        raise _unwrap_retry_error(error) from None
+        cause = _unwrap_retry_error(error)
+        if cause is error:
+            raise
+        raise cause from error
+    except RequestException as error:
+        logger.debug("CDA DELETE %s failed: %s", endpoint, type(error).__name__)
+        raise
