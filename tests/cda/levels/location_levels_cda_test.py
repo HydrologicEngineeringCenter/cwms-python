@@ -12,6 +12,7 @@ import pytest
 
 import cwms.levels.location_levels as location_levels
 import cwms.locations.physical_locations as locations
+from cwms.api import ApiError
 
 # Load test location level from tests/cda/resources/location_level.json
 LEVEL_RESOURCE_PATH = Path(__file__).parent.parent / "resources" / "location_level.json"
@@ -116,7 +117,7 @@ def test_delete_loc_level():
         office_id=TEST_OFFICE,
         effective_date=temp_effective_date,
     )
-    # Try to get it, should raise or return None/empty
+    # Only a missing resource or an empty result proves deletion succeeded.
     try:
         level = location_levels.get_location_level(
             level_id=TEST_LEVEL_ID,
@@ -124,9 +125,10 @@ def test_delete_loc_level():
             effective_date=temp_effective_date,
             unit=TEST_UNIT,
         )
+    except ApiError as error:
+        assert error.response.status_code == 404
+    else:
         assert level.df.empty
-    except Exception:
-        pass
 
 
 def test_get_loc_level_ts():

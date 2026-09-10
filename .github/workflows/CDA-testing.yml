@@ -61,7 +61,7 @@ jobs:
 
       # Use actions-poetry to handle installation
       - name: Install Poetry and Dependencies
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8 # v4
 
       # Set Poetry to use an in-project virtual environment
       - name: Configure Poetry for in-project venv
@@ -86,7 +86,7 @@ jobs:
         run: poetry run pytest tests/cda/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
 
       - name: Generate Coverage Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
+        uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95 # v1.3.0
         with:
           filename: out/coverage.xml
           format: markdown
@@ -94,7 +94,7 @@ jobs:
           badge: true
 
       - name: Generate Job Summary
-        uses: x-color/github-actions-job-summary@v0.1.1
+        uses: x-color/github-actions-job-summary@91bbfe6fb3ba53c9d0304991601cf2508e8098a2 # v0.1.1
         with:
           file: ./code-coverage-results.md
           vars: |-
