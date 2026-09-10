@@ -1,114 +1,106 @@
-name: Publish to PyPI
+name: Release Please
 
 on:
   push:
-    tags:
-      - "*"
-  # Allow the workflow to be manually triggered from the Actions tab.
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  tests:
-    name: Test Release
+  release-please:
+    name: Prepare Release
+    if: github.repository == 'HydrologicEngineeringCenter/cwms-python'
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@v7
-
-      - name: Set Up Python
-        uses: actions/setup-python@v6
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
-          python-version: '3.x'
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
+  build-release:
+    name: Test and Build Release
+    runs-on: ubuntu-latest
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    steps:
+      - name: Check Out Release Tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          persist-credentials: false
+      - name: Set Up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
-
-      - name: Cache Virtual Environment
-        uses: actions/cache@v6
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
-
       - name: Install Dependencies
-        run: poetry install
-
-      # The tests should have already been run in the testing workflow, but we run them
-      # again here to make sure that we do not deploy a broken distribution.
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
+        run: poetry install --no-interaction
       - name: Run Tests
         run: poetry run pytest tests/mock/
-
-      # Once the tests have passsed we can build the distribution and store it, so it can
-      # be accessed in the jobs below.
+      - name: Verify Release Version
+        env:
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          poetry run python - <<'PY'
+          import os
+          from importlib.metadata import version
+          assert os.environ['RELEASE_TAG'] == f"v{version('cwms-python')}"
+          PY
       - name: Build Distribution
         run: poetry build
-
       - name: Store Distribution
         uses: actions/upload-artifact@v7
         with:
           name: package-dist
           path: dist/
+          if-no-files-found: error
 
-  deploy-release:
-    name: Publish Release Distribution
+  publish-release:
+    name: Publish Release
     runs-on: ubuntu-latest
-
-    # The distribution will only be published if the tests have passed.
-    needs: [tests] # require tests to pass before deploy runs
-
-    # Set up the environment for trusted publishing on PyPI.
+    needs: [release-please, build-release]
     environment:
       name: release
       url: https://pypi.org/p/cwms-python
-
     permissions:
-      id-token: write # IMPORTANT: mandatory for trusted publishing
-
+      contents: write
+      id-token: write
     steps:
       - name: Download Distribution
         uses: actions/download-artifact@v8
         with:
           name: package-dist
           path: dist/
-
       - name: Publish Distribution To PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
-  # Upload a GitHub release whenever a release distribution is published.
-  github-release:
-    name: Create Signed GitHub Release
-    runs-on: ubuntu-latest
-
-    # GitHub releases are only uploaded for release (tagged) distributions.
-    needs: [deploy-release]
-
-    permissions:
-      contents: write # IMPORTANT: mandatory for making GitHub Releases
-      id-token: write # IMPORTANT: mandatory for sigstore
-
-    steps:
-      - name: Download Distribution
-        uses: actions/download-artifact@v8
-        with:
-          name: package-dist
-          path: dist/
-
       - name: Sign Distribution
-        uses: sigstore/gh-action-sigstore-python@v3.4.0
+        uses: sigstore/gh-action-sigstore-python@790bc6befb9d733738f18d8f895854b453640ec9 # v3.5.0
         with:
           inputs: |
             ./dist/*.tar.gz
             ./dist/*.whl
-
-      - name: Create GitHub Release
+      - name: Upload Release Assets
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          gh release create '${{ github.ref_name }}' \
-            --repo '${{ github.repository }}' \
-            --notes ""
-
-      - name: Upload GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |-
-          gh release upload '${{ github.ref_name }}' dist/** \
-            --repo '${{ github.repository }}'
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: gh release upload "$RELEASE_TAG" dist/** --repo "$GITHUB_REPOSITORY"
+          --clobber
