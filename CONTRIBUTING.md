@@ -192,47 +192,26 @@ merged commits.
 
 ### CI coverage
 
-CI tests Python **3.9** and **latest stable** (`3.x`). Latest stable intentionally
-tracks new Python releases so dependency compatibility problems surface in CI.
+Unit tests and strict type checks run on Python **3.9** and **latest stable**
+(`3.x`) for PRs targeting any branch and pushes to `main`. Formatting and CodeQL
+also run on PRs and main. Feature-branch pushes do not start duplicate checks;
+new PR commits cancel superseded runs. Draft and documentation-only PRs use the
+same straightforward checks as other PRs.
 
-| Event | Validation |
-| --- | --- |
-| Feature branch push without a PR | No automatic tests; use manual CI dispatch |
-| Draft PR | Formatting, unit tests, type checks, CI policy tests, CodeQL |
-| Ready code PR (including stacked PRs) | Lightweight checks plus 6 CDA jobs |
-| Documentation-only PR | Lightweight checks; CDA explicitly skipped |
-| Push/merge to main | Lightweight checks, CodeQL, Release Please; no CDA jobs |
-| Nightly at 08:17 UTC | Lightweight checks plus all 18 CDA combinations |
-| Release created | Test exact tag on latest stable, verify version, build and publish |
+The **CDA integration** workflow runs the full 18-job matrix nightly at 08:17 UTC:
+two Python versions, three CDA versions, and three schema versions. It does not
+run automatically on PRs or merges. Integration failures can therefore surface
+after merge. To check a branch before merging, use **Actions > CDA integration >
+Run workflow** or `gh workflow run CDA-testing.yml --ref <branch>`.
+Inspect failed combinations and backend logs, reproduce using the Compose
+overrides above, and fix the cause rather than dropping failing combinations.
 
-PRs test the proposed merge commit. The six representative CDA jobs pair each
-Python version with production/production, test/test, and latest/latest CDA/schema
-versions. The nightly matrix tests the full cross-product; mismatched-environment
-failures can therefore surface after merge. Image pins live in
-`.github/scripts/ci_policy.py`. Keep them synchronized with the environment pins.
-
-Only root Markdown files and static documentation under `docs/` or `rtd_docs/`
-qualify for the documentation skip. Python/configuration changes, dependencies,
-workflows, fixtures, unknown paths, and uncertain diffs require integration tests.
-Marking a draft ready starts integration testing. New PR updates cancel superseded
-runs; feature-branch pushes do not start a duplicate run.
-
-To run the full matrix on a branch, open **Actions > CI > Run workflow**, select
-the branch and `coverage: full` (the default). Choose `representative` for six jobs.
-Equivalent CLI: `gh workflow run testing.yml --ref <branch> -f coverage=full`.
-For nightly failures, inspect the failing Python/CDA/schema combination and its
-backend logs, reproduce with the documented Compose overrides, and rerun after
-fixing the cause. Do not silently remove a failing combination.
-
-The stable **CI required** check fails if any applicable formatting, unit/type,
-or integration job fails or is cancelled. It permits only the documented CDA
-skips. CodeQL and any existing external checks remain separate protections.
-An administrator must migrate required-check settings after the new checks pass:
-add `CI required` and retain CodeQL/external requirements, then remove obsolete
-individual CI names. Validate both representative and manually dispatched full
-matrices before retiring the old requirements. Keep the review rule separate so
-a review override cannot bypass required checks. Repository rules are not changed
-by these workflow files.
+Release publishing still tests the exact tag on latest stable Python, verifies
+the package version, and builds before publishing. CodeQL retains its weekly run.
+Repository administrators should require the two unit-test checks, formatting,
+and CodeQL (plus existing external requirements). Nightly CDA checks must not be
+required on PRs because they do not run there. These workflow changes do not
+modify repository merge rules.
 
 ### Release flow
 
@@ -268,11 +247,11 @@ unreleased checkout locally, run `poetry install` or install a locally built whe
   Keep any environment approvals required by the repository. If the environment
   restricts deployment branches, allow the default branch: the workflow runs
   there and explicitly checks out the release tag for the build.
-- The workflow uses `GITHUB_TOKEN`. Bot-created release PRs can have workflow
-  runs waiting for approval. A maintainer must approve those runs in Actions;
-  workflow approval is separate from approving the PR. If checks are absent,
-  a maintainer can close and reopen the PR to trigger them. Wait for required
-  checks before merging; do not bypass them.
+- The workflow uses `GITHUB_TOKEN`. GitHub does not start ordinary PR workflows
+  for PRs created by that token. If a release PR is missing checks, a maintainer
+  can close and reopen it to trigger the PR workflows. Wait for required checks
+  before merging; do not bypass them. The title reminder also becomes active
+  only after its workflow is merged into the default branch.
 - A failed publication can leave a GitHub release without a PyPI package or
   assets. Use **Re-run failed jobs** on the original run after fixing the cause;
   a fresh dispatch may find the release already created and skip publishing.

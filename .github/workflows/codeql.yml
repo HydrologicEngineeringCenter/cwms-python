@@ -4,13 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened]
   schedule:
     - cron: '0 0 * * 0'
-
-permissions:
-  contents: read
-  security-events: write
 
 concurrency:
   group: codeql-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref

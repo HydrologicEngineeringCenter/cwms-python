@@ -1,48 +1,109 @@
 name: CDA integration
 
 on:
-  workflow_call:
-    inputs:
-      matrix:
-        description: Explicit Python/CDA/schema combinations selected by CI
-        required: true
-        type: string
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
 
 jobs:
   integration-tests:
-    name: integration-tests (Python ${{ matrix.python }}, CDA ${{ matrix.cda }}, schema
-      ${{ matrix.schema }})
+    name: integration-tests (Python ${{ matrix.python-version }}, CDA ${{ matrix.cda.name }},
+      schema ${{ matrix.schema.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
+
     strategy:
       fail-fast: false
       max-parallel: 6
-      matrix: ${{ fromJSON(inputs.matrix) }}
+      matrix:
+        python-version: ['3.9', '3.x']
+        # Keep the release pins in sync with the environments (see CONTRIBUTING.md).
+        cda:
+          - name: latest
+            image: ghcr.io/usace/cwms-data-api:develop-nightly
+          - name: production
+            image: ghcr.io/usace/cwms-data-api:2026.05.12-i
+          - name: test
+            image: ghcr.io/usace/cwms-data-api:2026.08.31-testd
+        schema:
+          - name: latest
+            tag: latest-dev
+          - name: production
+            tag: '26.02.17'
+          - name: test
+            tag: 26.07.16-RC02
+
     env:
-      CWMS_DATA_API_IMAGE: ${{ matrix.image }}
-      CWMS_DATABASE_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:${{ matrix.tag }}
-      CWMS_SCHEMA_INSTALLER_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:${{ matrix.tag }}
+      CWMS_DATA_API_IMAGE: ${{ matrix.cda.image }}
+      CWMS_DATABASE_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:${{ matrix.schema.tag }}
+      CWMS_SCHEMA_INSTALLER_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:${{ matrix.schema.tag }}
+
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Clean up disk space
+
+      - name: Clean up disk space, so we don't run out.
+        if: runner.os == 'Linux'
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
+
       - name: Set up backend
         run: |
           docker compose pull
           docker compose up -d --wait --wait-timeout 2400
-      - name: Run integration tests
+
+      - name: Set Up Python
+        id: setup-python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Use actions-poetry to handle installation
+      - name: Install Poetry and Dependencies
+        uses: abatilo/actions-poetry@v4
+
+      # Set Poetry to use an in-project virtual environment
+      - name: Configure Poetry for in-project venv
+        run: poetry config virtualenvs.in-project true
+
+          # Poetry will handle installation and caching
+      - name: Cache Python dependencies
+        uses: actions/cache@v6
+        id: cache-poetry-venv
+        with:
+          path: .venv
+          key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-poetry-${{
+            hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
+        run: poetry install --no-root
+
+      # Run pytest and generate coverage report data.
+      - name: Run Tests
         run: poetry run pytest tests/cda/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
-      - name: Summarize coverage
-        run: poetry run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: out/coverage.xml
+          format: markdown
+          output: both
+          badge: true
+
+      - name: Generate Job Summary
+        uses: x-color/github-actions-job-summary@v0.1.1
+        with:
+          file: ./code-coverage-results.md
+          vars: |-
+            empty: empty
+
       - name: Show backend logs on failure
         if: failure()
         run: docker compose logs --no-color --tail 200
+
       - name: Stop test backend
         if: always()
         run: docker compose down --volumes

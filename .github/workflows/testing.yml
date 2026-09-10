@@ -1,88 +1,72 @@
-name: CI
+name: Testing
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
-      - converted_to_draft
   push:
     branches: [main]
-  schedule:
-    - cron: '17 8 * * *'
   workflow_dispatch:
-    inputs:
-      coverage:
-        description: CDA integration coverage
-        type: choice
-        options: [full, representative]
-        default: full
-
-permissions:
-  contents: read
 
 concurrency:
-  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
-    }}
+  group: testing-${{ github.event_name }}-${{ github.event.pull_request.number ||
+    github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  plan:
+  # Run tests and generate code coverage report.
+  run-tests:
+    name: Unit tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    outputs:
-      mode: ${{ steps.plan.outputs.mode }}
-      integration: ${{ steps.plan.outputs.integration }}
-      matrix: ${{ steps.plan.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - name: Select coverage
-        id: plan
-        run: python3 .github/scripts/ci_policy.py plan
-
-  format:
-    uses: ./.github/workflows/code-check.yml
-
-  unit:
-    name: Unit tests (Python ${{ matrix.python }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.9', '3.x']
+        python-version: ['3.9', '3.x']
+
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python
+
+      - name: Set Up Python
+        id: setup-python
+        uses: actions/setup-python@v7
         with:
-          python-version: ${{ matrix.python }}
-      - name: Run tests
-        run: poetry run pytest tests/mock/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
-      - name: Test CI policy
-        run: poetry run python -m unittest discover -s .github/scripts -p 'test_*.py'
-      - name: Check types
-        run: poetry run mypy --strict cwms/
-      - name: Summarize coverage
-        run: poetry run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+          python-version: ${{ matrix.python-version }}
 
-  integration:
-    needs: [plan]
-    if: needs.plan.outputs.integration == 'true'
-    uses: ./.github/workflows/CDA-testing.yml
-    with:
-      matrix: ${{ needs.plan.outputs.matrix }}
+      # Unlike the code-check workflow, this job requires the dev dependencies to be
+      # installed to make sure we have the necessary, tools, stub files, etc.
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v4
 
-  required:
-    name: CI required
-    needs: [plan, format, unit, integration]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Require successful applicable checks
+      - name: Cache Virtual Environment
+        uses: actions/cache@v6
+        with:
+          path: ./.venv
+          key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{
+            hashFiles('poetry.lock') }}
+
+      - name: Install Dependencies
         env:
-          CI_NEEDS: ${{ toJSON(needs) }}
-        run: python3 .github/scripts/ci_policy.py gate
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
+        run: poetry install
+
+      # Run pytest and generate coverage report data.
+      - name: Run Tests
+        run: poetry run pytest tests/mock/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
+
+      # Run mypy with strict mode enabled. Only the main source code is type checked (test
+      # and example code is excluded).
+      - name: Check Types
+        run: poetry run mypy --strict cwms/
+
+      - name: Generate Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: out/coverage.xml
+          format: markdown
+          output: both
+          badge: true
+
+      - name: Generate Job Summary
+        uses: x-color/github-actions-job-summary@v0.1.1
+        with:
+          file: ./code-coverage-results.md
+          vars: |-
+            empty: empty
