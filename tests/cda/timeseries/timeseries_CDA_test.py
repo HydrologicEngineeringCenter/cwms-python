@@ -22,6 +22,7 @@ TEST_TSID_CHUNK_NULLS = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Nu
 TEST_TSID_COPY_NULLS = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Copy-Nulls"
 TS_ID_REV_TEST = TEST_TSID_MULTI.replace("Raw-Multi", "Raw-Rev-Test")
 TEST_TSID_CHUNK_PARTIAL = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Multi-Partial"
+TEST_TSID_MISSING = f"{TEST_LOCATION_ID}.Stage.Inst.15Minutes.0.Raw-Missing-404"
 # Generate 15-minute interval timestamps
 START_DATE_CHUNK_MULTI = datetime(2025, 7, 31, 0, 0, tzinfo=timezone.utc)
 END_DATE_CHUNK_MULTI = datetime(2025, 9, 30, 23, 45, tzinfo=timezone.utc)
@@ -37,6 +38,7 @@ TSIDS = [
     TEST_TSID_CHUNK_NULLS,
     TEST_TSID_COPY_NULLS,
     TEST_TSID_CHUNK_PARTIAL,
+    TEST_TSID_MISSING,
     TEST_TSID_DELETE,
 ]
 
@@ -388,6 +390,33 @@ def test_get_timeseries_partial_chunk_fail_real_api():
     assert "1 of " in error_msg and "chunk(s) failed to fetch" in error_msg
     assert "Failed to fetch data from" in error_msg
     assert "simulated CDA failure" in error_msg
+
+
+def test_get_timeseries_missing_chunk_404_real_api():
+    """A missing time series should fail once with a 404, not retry."""
+
+    max_days = 14
+    chunks = ts.chunk_timeseries_time_range(
+        START_DATE_CHUNK_MULTI,
+        END_DATE_CHUNK_MULTI.replace(tzinfo=timezone.utc),
+        timedelta(days=max_days),
+    )
+    assert len(chunks) > 1, "Test requires multiple chunks to exercise retry scope"
+
+    with pytest.raises(RuntimeError) as exc_info:
+        ts.get_timeseries(
+            ts_id=TEST_TSID_MISSING,
+            office_id=TEST_OFFICE,
+            begin=START_DATE_CHUNK_MULTI,
+            end=END_DATE_CHUNK_MULTI,
+            max_days_per_chunk=max_days,
+            unit="SI",
+        )
+
+    error_msg = str(exc_info.value)
+    assert "chunk(s) failed to fetch" in error_msg
+    assert "Failed to fetch data from" in error_msg
+    assert "Not Found" in error_msg or "404" in error_msg
 
 
 def test_store_timesereis_chunk_to_with_null_values():
