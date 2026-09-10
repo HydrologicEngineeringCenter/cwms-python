@@ -33,13 +33,14 @@ import base64
 import json
 import logging
 from http import HTTPStatus
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 
 from requests import Response, adapters
 from requests.exceptions import JSONDecodeError, RequestException
 from requests.exceptions import RetryError as RequestsRetryError
 from requests_toolbelt import sessions  # type: ignore
 from requests_toolbelt.sessions import BaseUrlSession  # type: ignore
+from urllib3.exceptions import HTTPError as Urllib3HTTPError
 from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
@@ -160,8 +161,13 @@ class BatchError(RuntimeError):
         )
 
 
-def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
-    """Return the original retry cause when requests wraps it in RetryError."""
+def _unwrap_retry_error(
+    error: RequestsRetryError,
+) -> Union[RequestException, Urllib3HTTPError]:
+    """Unwrap transport errors; retain RetryError for other causes.
+
+    Unknown causes remain available through the original wrapper's chain or args.
+    """
 
     current: Exception = error
     cause = error.__cause__
@@ -178,7 +184,9 @@ def _unwrap_retry_error(error: RequestsRetryError) -> Exception:
                 current = reason
                 reason = getattr(current, "reason", None)
 
-    return current
+    if isinstance(current, (RequestException, Urllib3HTTPError)):
+        return current
+    return error
 
 
 def init_session(

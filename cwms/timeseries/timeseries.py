@@ -104,13 +104,12 @@ def get_multi_timeseries_df(
 
     data = pd.DataFrame()
     for row in result_dict:
-        if row:
-            temp_df = row["values"]
-            temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
-            if "version_date" in row.keys():
-                temp_df = temp_df.assign(version_date=row["version_date"])
-            temp_df.dropna(how="all", axis=1, inplace=True)
-            data = pd.concat([data, temp_df], ignore_index=True)
+        temp_df = row["values"]
+        temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+        if "version_date" in row.keys():
+            temp_df = temp_df.assign(version_date=row["version_date"])
+        temp_df.dropna(how="all", axis=1, inplace=True)
+        data = pd.concat([data, temp_df], ignore_index=True)
 
     if not melted and "date-time" in data.columns:
         cols = ["ts_id", "units"]

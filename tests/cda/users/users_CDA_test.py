@@ -99,7 +99,8 @@ def test_get_user_403_has_friendly_message_for_missing_roles(request):
     assert response.request.method == "GET"
     assert response.url in message
     assert "403 GET" in message
-    assert response.text and response.text in message
+    assert response.text
+    assert response.text in message
     assert isinstance(error.value.__cause__, cwms.api.ApiError)
     assert error.value.__cause__.response is response
 

@@ -188,10 +188,9 @@ def test_extent_failure_is_not_suppressed(monkeypatch):
     monkeypatch.setattr(ts, "get_ts_extents", Mock(side_effect=original))
     fallback = Mock()
     monkeypatch.setattr(api, "get_with_paging", fallback)
+    begin = datetime(2010, 1, 1, tzinfo=timezone.utc)
     with pytest.raises(ValueError, match="invalid extents"):
-        ts.get_timeseries(
-            "test-series", "TEST", begin=datetime(2010, 1, 1, tzinfo=timezone.utc)
-        )
+        ts.get_timeseries("test-series", "TEST", begin=begin)
     fallback.assert_not_called()
 
 
@@ -261,14 +260,15 @@ def test_multi_store_preserves_all_original_failures(monkeypatch):
 
 @pytest.mark.parametrize("attempts", [0, -1])
 def test_invalid_retry_count_is_rejected(attempts):
+    call = Mock()
     with pytest.raises(ValueError, match="attempts"):
-        ts._call_with_retry(Mock(), attempts=attempts)
+        ts._call_with_retry(call, attempts=attempts)
 
 
 @pytest.mark.parametrize("days", [0, -1])
 def test_invalid_chunk_duration_is_rejected(days):
     begin = datetime(2025, 1, 1)
+    end = begin + timedelta(days=1)
+    chunk_size = timedelta(days=days)
     with pytest.raises(ValueError, match="chunk_size"):
-        ts.chunk_timeseries_time_range(
-            begin, begin + timedelta(days=1), timedelta(days=days)
-        )
+        ts.chunk_timeseries_time_range(begin, end, chunk_size)
