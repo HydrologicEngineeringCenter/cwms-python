@@ -87,11 +87,21 @@ def test_get_user_403_has_friendly_message_for_missing_roles(request):
     with pytest.raises(cwms.PermissionError) as error:
         cwms.get_user(user_name)
 
-    assert str(error.value) == (
+    friendly_message = (
         f"User '{user_name}' retrieval could not be completed because the current credentials "
         "are not authorized for user-management access or are missing the required "
         "role assignment. CDA responded with 403 Forbidden."
     )
+    message = str(error.value)
+    response = error.value.response
+    assert friendly_message in message
+    assert response.status_code == 403
+    assert response.request.method == "GET"
+    assert response.url in message
+    assert "403 GET" in message
+    assert response.text and response.text in message
+    assert isinstance(error.value.__cause__, cwms.api.ApiError)
+    assert error.value.__cause__.response is response
 
 
 def test_get_users():
