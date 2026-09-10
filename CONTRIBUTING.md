@@ -201,8 +201,19 @@ same straightforward checks as other PRs.
 The **CDA integration** workflow runs the full 18-job matrix nightly at 08:17 UTC:
 two Python versions, three CDA versions, and three schema versions. It does not
 run automatically on PRs or merges. Integration failures can therefore surface
-after merge. To check a branch before merging, use **Actions > CDA integration >
-Run workflow** or `gh workflow run CDA-testing.yml --ref <branch>`.
+after merge.
+
+**Before approving a PR that could affect CDA integration**, run the full matrix
+against the PR's head branch and review the results. You can also run it anytime
+you want to check a branch. From this repository, use:
+
+```sh
+gh workflow run CDA-testing.yml --ref <branch>
+```
+
+Replace `<branch>` with the branch name on GitHub. Alternatively, use **Actions >
+CDA integration > Run workflow** and select the branch. Starting the workflow
+does not mean the tests passed; check the completed run in Actions before approving.
 Inspect failed combinations and backend logs, reproduce using the Compose
 overrides above, and fix the cause rather than dropping failing combinations.
 
