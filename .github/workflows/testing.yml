@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.13']
+        python-version: ['3.9', '3.13', '3.14']
 
     steps:
       - uses: actions/checkout@v7
@@ -35,6 +35,8 @@ jobs:
             hashFiles('poetry.lock') }}
 
       - name: Install Dependencies
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
         run: poetry install
 
       # Run pytest and generate coverage report data.
