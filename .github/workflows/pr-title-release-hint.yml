@@ -1,0 +1,116 @@
+name: PR Title Release Hint
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  hint-title-for-python-changes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR title against Python changes
+        uses: actions/github-script@v9
+        with:
+          script: |-
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = pr.number;
+            const expected = /^(fix|feat|perf|revert|deps|docs)(\([^)\r\n]+\))?!?:\s+\S/;
+            const marker = "<!-- pr-title-release-hint -->";
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner,
+                repo,
+                pull_number: issue_number,
+                per_page: 100,
+              }
+            );
+
+            const excludedPythonFiles = new Set([
+              "docs/conf.py",
+              "rtd_docs/conf.py",
+            ]);
+            const hasPythonChanges = files.some(
+              (file) =>
+                file.filename.endsWith(".py") &&
+                !excludedPythonFiles.has(file.filename)
+            );
+            if (!hasPythonChanges || expected.test(pr.title)) {
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                {
+                  owner,
+                  repo,
+                  issue_number,
+                  per_page: 100,
+                }
+              );
+
+              const existing = comments.find((comment) =>
+                comment.user?.login === "github-actions[bot]" &&
+                comment.body && comment.body.includes(marker)
+              );
+
+              if (existing) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                });
+              }
+              return;
+            }
+
+            const body = `${marker}
+            This PR changes Python files, and the title does not match the release naming convention used by \`release-please\`.
+
+            Consider renaming the PR title to one of these forms:
+            - \`fix: short description\` (patch)
+            - \`feat: short description\` (minor)
+            - \`feat!: short description\` (major)
+
+            If this PR will be squash-merged, the PR title often becomes the commit message on the default branch, which affects whether the next release is patch, minor, or major.
+
+            Scoped titles such as \`fix(parser): handle missing values\` are also supported. This is an advisory reminder; tests, docs, and maintenance-only changes can use their appropriate Conventional Commit type.
+
+            See the repository guidance in [\`CONTRIBUTING.md\`](https://github.com/${owner}/${repo}/blob/${pr.base.ref}/CONTRIBUTING.md#releases).`;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number,
+                per_page: 100,
+              }
+            );
+
+            const existing = comments.find((comment) =>
+              comment.user?.login === "github-actions[bot]" &&
+                comment.body && comment.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }

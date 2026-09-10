@@ -129,3 +129,8 @@ endpoint implementation.
 ## Contributing
 
 Please view the contribution documentation here: [CONTRIBUTING.md]
+
+## Contributing and releases
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development checks, PR title conventions,
+and the Release Please publishing workflow.
