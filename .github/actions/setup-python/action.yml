@@ -1,0 +1,29 @@
+name: Set up project Python
+description: Install locked project dependencies with a versioned virtualenv cache
+inputs:
+  python-version:
+    required: true
+    description: Python version to test
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v6
+      id: python
+      with:
+        python-version: ${{ inputs.python-version }}
+    - uses: abatilo/actions-poetry@v4
+      with:
+        poetry-version: '2.1.4'
+    - name: Configure virtual environment
+      shell: bash
+      run: poetry config virtualenvs.in-project true
+    - uses: actions/cache@v6
+      with:
+        path: .venv
+        key: ${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version
+          }}-poetry2.1.4-ci-v1-${{ hashFiles('poetry.lock', 'pyproject.toml') }}
+    - name: Install locked dependencies
+      shell: bash
+      env:
+        POETRY_INSTALLER_ONLY_BINARY: ':all:'
+      run: poetry install --no-interaction

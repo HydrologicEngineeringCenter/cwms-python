@@ -1,64 +1,88 @@
-name: Testing
+name: CI
 
-# Run the workflow on all branches.
-on: [push, pull_request]
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+    inputs:
+      coverage:
+        description: CDA integration coverage
+        type: choice
+        options: [full, representative]
+        default: full
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
+    }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Run tests and generate code coverage report.
-  run-tests:
-    name: Unit tests (Python ${{ matrix.python-version }})
+  plan:
     runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      integration: ${{ steps.plan.outputs.integration }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Select coverage
+        id: plan
+        run: python3 .github/scripts/ci_policy.py plan
+
+  format:
+    uses: ./.github/workflows/code-check.yml
+
+  unit:
+    name: Unit tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.13', '3.14']
-
+        python: ['3.9', '3.x']
     steps:
       - uses: actions/checkout@v7
-
-      - name: Set Up Python
-        id: setup-python
-        uses: actions/setup-python@v6
+      - uses: ./.github/actions/setup-python
         with:
-          python-version: ${{ matrix.python-version }}
-
-      # Unlike the code-check workflow, this job requires the dev dependencies to be
-      # installed to make sure we have the necessary, tools, stub files, etc.
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
-
-      - name: Cache Virtual Environment
-        uses: actions/cache@v6
-        with:
-          path: ./.venv
-          key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{
-            hashFiles('poetry.lock') }}
-
-      - name: Install Dependencies
-        env:
-          POETRY_INSTALLER_ONLY_BINARY: ':all:'
-        run: poetry install
-
-      # Run pytest and generate coverage report data.
-      - name: Run Tests
+          python-version: ${{ matrix.python }}
+      - name: Run tests
         run: poetry run pytest tests/mock/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
-
-      # Run mypy with strict mode enabled. Only the main source code is type checked (test
-      # and example code is excluded).
-      - name: Check Types
+      - name: Test CI policy
+        run: poetry run python -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Check types
         run: poetry run mypy --strict cwms/
+      - name: Summarize coverage
+        run: poetry run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Generate Coverage Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: out/coverage.xml
-          format: markdown
-          output: both
-          badge: true
+  integration:
+    needs: [plan]
+    if: needs.plan.outputs.integration == 'true'
+    uses: ./.github/workflows/CDA-testing.yml
+    with:
+      matrix: ${{ needs.plan.outputs.matrix }}
 
-      - name: Generate Job Summary
-        uses: x-color/github-actions-job-summary@v0.1.1
-        with:
-          file: ./code-coverage-results.md
-          vars: |-
-            empty: empty
+  required:
+    name: CI required
+    needs: [plan, format, unit, integration]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require successful applicable checks
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: python3 .github/scripts/ci_policy.py gate
