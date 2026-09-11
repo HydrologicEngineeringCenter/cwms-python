@@ -192,4 +192,4 @@ def store_outlet(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
 
     endpoint = "projects/outlets"
     params = {"fail-if-exists": fail_if_exists}
-    api.post(endpoint, data, params)
+    api.post(endpoint, data, params, api_version=1)
