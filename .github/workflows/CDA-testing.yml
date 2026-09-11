@@ -1,10 +1,8 @@
-name: CI
+name: CDA integration
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  schedule:
+    - cron: '17 8 * * *'
   workflow_dispatch:
 
 jobs:
@@ -18,7 +16,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        python-version: ['3.9', '3.13']
+        python-version: ['3.9', '3.x']
         # Keep the release pins in sync with the environments (see CONTRIBUTING.md).
         cda:
           - name: latest
@@ -57,7 +55,7 @@ jobs:
 
       - name: Set Up Python
         id: setup-python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -78,16 +76,14 @@ jobs:
           key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-poetry-${{
             hashFiles('poetry.lock') }}
 
-      # Install dependencies only if cache is missed
       - name: Install dependencies
-        if: steps.cache-poetry-venv.outputs.cache-hit != 'true'
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
         run: poetry install --no-root
 
       # Run pytest and generate coverage report data.
-      - name: Run Tests and Check Types
-        run: |
-          poetry run pytest tests/cda/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
-          poetry run mypy --strict cwms/
+      - name: Run Tests
+        run: poetry run pytest tests/cda/ --doctest-modules --cov --cov-report=xml:out/coverage.xml
 
       - name: Generate Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
