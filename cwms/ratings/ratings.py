@@ -424,8 +424,8 @@ def _validate_rating_params(
         raise ValueError(f"Invalid rating identifer: {rating_id}")
     try:
         ind_params, _ = parts[1].split(";")
-    except Exception:
-        raise ValueError(f"Invalid rating template: {parts[1]}")
+    except ValueError as error:
+        raise ValueError(f"Invalid rating template: {parts[1]}") from error
     if not office_id:
         raise ValueError("Cannot rate values without an office identifier")
     if not units:
@@ -466,8 +466,8 @@ def _perform_value_rating(
     ind_params = _validate_rating_params(rating_id, office_id, units, values)
     try:
         ind_units_str, dep_unit = units.split(";")
-    except Exception:
-        raise ValueError("Invalid units string")
+    except ValueError as error:
+        raise ValueError("Invalid units string") from error
     value_count = len(values[0])
     times = _get_times(value_count, times)
     if not rating_time:
