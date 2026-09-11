@@ -98,135 +98,21 @@ PROJECT = {
     "project-remarks": "Remarks",
 }
 
-PUMP_LOCATION1 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION1 = PROJECT_LOCATION
+PUMP_LOCATION1["name"] = PUMP_LOCATION_ID
+PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID2,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2["name"] = PUMP_LOCATION_ID2
 
-PUMP_LOCATION3 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID3,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION3 = PUMP_LOCATION1
+PUMP_LOCATION3["name"] = PUMP_LOCATION_ID3
 
-PUMP_LOCATION4 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID4,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION4 = PUMP_LOCATION1
+PUMP_LOCATION4["name"] = PUMP_LOCATION_ID4
 
-PUMP_LOCATION5 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID5,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION5 = PUMP_LOCATION1
+PUMP_LOCATION5["name"] = PUMP_LOCATION_ID5
 
 LOOKUP = {
     "office-id": TEST_OFFICE,

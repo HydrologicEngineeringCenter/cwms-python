@@ -54,6 +54,27 @@ PROJECT_LOCATION = {
     "elevation-units": "m",
 }
 
+WATER_USER = {
+    "entity-name": TEST_ENTITY_NAME,
+    "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
+    "water-right": TEST_WATER_RIGHT,
+}
+
+WATER_USER1 = WATER_USER
+WATER_USER1["entity-name"] = TEST_ENTITY_NAME2
+
+WATER_USER2 = WATER_USER1
+WATER_USER2["entity-name"] = TEST_ENTITY_NAME3
+
+WATER_USER3 = WATER_USER1
+WATER_USER3["entity-name"] = TEST_ENTITY_NAME4
+
+WATER_USER4 = WATER_USER3
+WATER_USER4["entity-name"] = TEST_ENTITY_NAME5
+
+WATER_USER5 = WATER_USER4
+WATER_USER5["entity-name"] = TEST_ENTITY_NAME6
+
 PROJECT = {
     "location": {
         "office-id": TEST_OFFICE,
@@ -87,83 +108,15 @@ PROJECT = {
     "project-remarks": "Remarks",
 }
 
-PUMP_LOCATION1 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID2,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION1 = PROJECT_LOCATION
+PUMP_LOCATION1["name"] = PUMP_LOCATION_ID2
+PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID3,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2["name"] = PUMP_LOCATION_ID3
 
-PUMP_LOCATION3 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION3 = PUMP_LOCATION2
+PUMP_LOCATION3["name"] = PUMP_LOCATION_ID
 
 
 def _cleanup():
@@ -211,20 +164,8 @@ def setup_data():
     pl.store_location(PROJECT_LOCATION, False)
     proj.store_project(PROJECT, False)
 
-    water_user = {
-        "entity-name": TEST_ENTITY_NAME,
-        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": TEST_WATER_RIGHT,
-    }
-
-    water_user2 = {
-        "entity-name": TEST_ENTITY_NAME3,
-        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": TEST_WATER_RIGHT,
-    }
-
-    wu.create_water_user(water_user, False)
-    wu.create_water_user(water_user2, False)
+    wu.create_water_user(WATER_USER, False)
+    wu.create_water_user(WATER_USER2, False)
 
 
 @pytest.fixture(autouse=True)
@@ -233,44 +174,23 @@ def init_session():
 
 
 def test_store_water_user():
-    water_user = {
-        "entity-name": TEST_ENTITY_NAME2,
-        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": TEST_WATER_RIGHT,
-    }
-
-    wu.create_water_user(water_user, False)
+    wu.create_water_user(WATER_USER1, False)
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME2)
     data = data.json
-    assert data["entity-name"] == TEST_ENTITY_NAME2
-    assert data["project-id"]["name"] == TEST_PROJECT_ID
-    assert data["project-id"]["office-id"] == TEST_OFFICE
-    assert data["water-right"] == TEST_WATER_RIGHT
+    _assert_match(data, TEST_ENTITY_NAME2)
 
 
 def test_get_water_user():
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
     data = data.json
-    assert data["entity-name"] == TEST_ENTITY_NAME
-    assert data["project-id"]["name"] == TEST_PROJECT_ID
-    assert data["project-id"]["office-id"] == TEST_OFFICE
-    assert data["water-right"] == TEST_WATER_RIGHT
+    _assert_match(data, TEST_ENTITY_NAME)
 
 
 def test_delete_water_user():
-    water_user = {
-        "entity-name": TEST_ENTITY_NAME4,
-        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": TEST_WATER_RIGHT,
-    }
-
-    wu.create_water_user(water_user, False)
+    wu.create_water_user(WATER_USER3, False)
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
     data = data.json
-    assert data["entity-name"] == TEST_ENTITY_NAME4
-    assert data["project-id"]["name"] == TEST_PROJECT_ID
-    assert data["project-id"]["office-id"] == TEST_OFFICE
-    assert data["water-right"] == TEST_WATER_RIGHT
+    _assert_match(data, TEST_ENTITY_NAME4)
     wu.delete_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
     with pytest.raises(cwms.ApiError):
         wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME4)
@@ -282,9 +202,7 @@ def test_get_water_users():
     found_first = False
     found_second = False
     for value in data.json:
-        assert value["project-id"]["name"] == TEST_PROJECT_ID
-        assert value["project-id"]["office-id"] == TEST_OFFICE
-        assert value["water-right"] == TEST_WATER_RIGHT
+        _assert_match(value, null)
         if value["entity-name"] == TEST_ENTITY_NAME:
             found_first = True
         if value["entity-name"] == TEST_ENTITY_NAME3:
@@ -294,32 +212,22 @@ def test_get_water_users():
 
 
 def test_update_water_user():
-    water_user = {
-        "entity-name": TEST_ENTITY_NAME5,
-        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": TEST_WATER_RIGHT,
-    }
-
-    wu.create_water_user(water_user, False)
+    wu.create_water_user(WATER_USER4, False)
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5)
     data = data.json
-    assert data["entity-name"] == TEST_ENTITY_NAME5
-    assert data["project-id"]["name"] == TEST_PROJECT_ID
-    assert data["project-id"]["office-id"] == TEST_OFFICE
-    assert data["water-right"] == TEST_WATER_RIGHT
-
-    updated_user = {
-        "entity-name": TEST_ENTITY_NAME6,
-        "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-        "water-right": TEST_WATER_RIGHT,
-    }
+    _assert_match(data, TEST_ENTITY_NAME5)
 
     wu.update_water_user(
-        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5, updated_user, TEST_ENTITY_NAME6
+        TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME5, WATER_USER5, TEST_ENTITY_NAME6
     )
     data = wu.get_water_user(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME6)
     data = data.json
-    assert data["entity-name"] == TEST_ENTITY_NAME6
+    _assert_match(data, TEST_ENTITY_NAME6)
+
+
+def _assert_match(data, name):
+    if name is not null:
+        assert data["entity-name"] == name
     assert data["project-id"]["name"] == TEST_PROJECT_ID
     assert data["project-id"]["office-id"] == TEST_OFFICE
     assert data["water-right"] == TEST_WATER_RIGHT

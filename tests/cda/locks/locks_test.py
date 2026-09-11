@@ -18,7 +18,7 @@ PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUBLIC_NAME = "Test Public Pump Name"
 LONG_NAME = "Test Long Name"
-LOCATION_TYPE = "Test Location Type"
+LOCATION_TYPE = "SITE"
 DESCRIPTION = "Test Description"
 MAP_LABEL = "Test Map Label"
 NEW_LOCK1 = "pytestlock881"
@@ -87,57 +87,16 @@ TEST_LOCK = {
     "high-water-lower-pool-warning-level": 2.0,
 }
 
-PUMP_LOCATION1 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION1 = TEST_LOCK_LOCATION
+PUMP_LOCATION1["name"] = PUMP_LOCATION_ID
+PUMP_LOCATION1["public-name"] = PUBLIC_NAME
+PUMP_LOCATION1["long-name"] = LONG_NAME
+PUMP_LOCATION1["description"] = DESCRIPTION
+PUMP_LOCATION1["location-type"] = LOCATION_TYPE
+PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID2,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2["name"] = PUMP_LOCATION_ID2
 
 PROJECT = {
     "location": {
@@ -244,18 +203,7 @@ def test_get_lock():
     lock = lk.get_lock(LOCK_ID, TEST_OFFICE)
     assert lock is not None
     lock = lock.json
-    assert lock["lock-width"] == TEST_LOCK["lock-width"]
-    assert lock["lock-length"] == TEST_LOCK["lock-length"]
-    assert lock["normal-lock-lift"] == TEST_LOCK["normal-lock-lift"]
-    assert lock["volume-per-lockage"] == TEST_LOCK["volume-per-lockage"]
-    assert lock["minimum-draft"] == TEST_LOCK["minimum-draft"]
-    assert lock["maximum-lock-lift"] == TEST_LOCK["maximum-lock-lift"]
-    assert lock["length-units"] == TEST_LOCK["length-units"]
-    assert lock["volume-units"] == TEST_LOCK["volume-units"]
-    assert lock["elevation-units"] == TEST_LOCK["elevation-units"]
-    assert lock["chamber-type"] == TEST_LOCK["chamber-type"]
-    assert lock["location"]["name"] == TEST_LOCK["location"]["name"]
-    assert lock["project-id"] == TEST_LOCK["project-id"]
+    _assert_match(TEST_LOCK, lock)
 
 
 def test_create_lock():
@@ -266,18 +214,7 @@ def test_create_lock():
     lock = lk.get_lock(new_loc, TEST_OFFICE)
     assert lock is not None
     lock = lock.json
-    assert lock["lock-width"] == test_lock2["lock-width"]
-    assert lock["lock-length"] == test_lock2["lock-length"]
-    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
-    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
-    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
-    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
-    assert lock["length-units"] == test_lock2["length-units"]
-    assert lock["volume-units"] == test_lock2["volume-units"]
-    assert lock["elevation-units"] == test_lock2["elevation-units"]
-    assert lock["chamber-type"] == test_lock2["chamber-type"]
-    assert lock["location"]["name"] == test_lock2["location"]["name"]
-    assert lock["project-id"] == test_lock2["project-id"]
+    _assert_match(test_lock2, lock)
     lk.delete_lock(new_loc, TEST_OFFICE)
     try:
         lock = lk.get_lock(new_loc, TEST_OFFICE)
@@ -294,18 +231,7 @@ def test_delete_lock():
     lock = lk.get_lock(new_loc, TEST_OFFICE)
     assert lock is not None
     lock = lock.json
-    assert lock["lock-width"] == test_lock2["lock-width"]
-    assert lock["lock-length"] == test_lock2["lock-length"]
-    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
-    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
-    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
-    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
-    assert lock["length-units"] == test_lock2["length-units"]
-    assert lock["volume-units"] == test_lock2["volume-units"]
-    assert lock["elevation-units"] == test_lock2["elevation-units"]
-    assert lock["chamber-type"] == test_lock2["chamber-type"]
-    assert lock["location"]["name"] == test_lock2["location"]["name"]
-    assert lock["project-id"] == test_lock2["project-id"]
+    _assert_match(test_lock2, lock)
     lk.delete_lock(new_loc, TEST_OFFICE)
     try:
         lock = lk.get_lock(new_loc, TEST_OFFICE)
@@ -323,33 +249,26 @@ def test_update_lock():
     lock = lk.get_lock(new_loc, TEST_OFFICE)
     assert lock is not None
     lock = lock.json
-    assert lock["lock-width"] == test_lock2["lock-width"]
-    assert lock["lock-length"] == test_lock2["lock-length"]
-    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
-    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
-    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
-    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
-    assert lock["length-units"] == test_lock2["length-units"]
-    assert lock["volume-units"] == test_lock2["volume-units"]
-    assert lock["elevation-units"] == test_lock2["elevation-units"]
-    assert lock["chamber-type"] == test_lock2["chamber-type"]
-    assert lock["location"]["name"] == test_lock2["location"]["name"]
-    assert lock["project-id"] == test_lock2["project-id"]
+    _assert_match(test_lock2, lock)
     updated_loc = NEW_LOCK2
     lk.update_lock(LOCK_ID, TEST_OFFICE, updated_loc)
     lock = lk.get_lock(updated_loc, TEST_OFFICE)
     assert lock is not None
     lock = lock.json
-    assert lock["lock-width"] == test_lock2["lock-width"]
-    assert lock["lock-length"] == test_lock2["lock-length"]
-    assert lock["normal-lock-lift"] == test_lock2["normal-lock-lift"]
-    assert lock["volume-per-lockage"] == test_lock2["volume-per-lockage"]
-    assert lock["minimum-draft"] == test_lock2["minimum-draft"]
-    assert lock["maximum-lock-lift"] == test_lock2["maximum-lock-lift"]
-    assert lock["length-units"] == test_lock2["length-units"]
-    assert lock["volume-units"] == test_lock2["volume-units"]
-    assert lock["elevation-units"] == test_lock2["elevation-units"]
-    assert lock["chamber-type"] == test_lock2["chamber-type"]
-    assert lock["location"]["name"] == updated_loc
-    assert lock["project-id"] == test_lock2["project-id"]
+    _assert_match(test_lock2, lock)
     lk.delete_lock(updated_loc, TEST_OFFICE)
+
+
+def _assert_match(expected, actual):
+    assert expected["lock-width"] == actual["lock-width"]
+    assert expected["lock-length"] == actual["lock-length"]
+    assert expected["normal-lock-lift"] == actual["normal-lock-lift"]
+    assert expected["volume-per-lockage"] == actual["volume-per-lockage"]
+    assert expected["minimum-draft"] == actual["minimum-draft"]
+    assert expected["maximum-lock-lift"] == actual["maximum-lock-lift"]
+    assert expected["length-units"] == actual["length-units"]
+    assert expected["volume-units"] == actual["volume-units"]
+    assert expected["elevation-units"] == actual["elevation-units"]
+    assert expected["chamber-type"] == actual["chamber-type"]
+    assert expected["location"]["name"] == actual["location"]["name"]
+    assert expected["project-id"] == actual["project-id"]

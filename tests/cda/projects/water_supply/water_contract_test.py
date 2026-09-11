@@ -100,239 +100,33 @@ PROJECT = {
     "project-remarks": "Remarks",
 }
 
-PUMP_LOCATION1 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID2,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION1 = PROJECT_LOCATION
+PUMP_LOCATION1["name"] = PUMP_LOCATION_ID2
+PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID3,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2["name"] = PUMP_LOCATION_ID3
 
-PUMP_LOCATION3 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION3 = PUMP_LOCATION2
+PUMP_LOCATION3["name"] = PUMP_LOCATION_ID
 
-PUMP_LOCATION4 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID4,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION4 = PUMP_LOCATION3
+PUMP_LOCATION4["name"] = PUMP_LOCATION_ID4
 
-PUMP_LOCATION5 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID5,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION5 = PUMP_LOCATION4
+PUMP_LOCATION5["name"] = PUMP_LOCATION_ID5
 
-PUMP_LOCATION6 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID6,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION6 = PUMP_LOCATION5
+PUMP_LOCATION6["name"] = PUMP_LOCATION_ID6
 
-PUMP_LOCATION7 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID7,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION7 = PUMP_LOCATION6
+PUMP_LOCATION7["name"] = PUMP_LOCATION_ID7
 
-PUMP_LOCATION8 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID8,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION8 = PUMP_LOCATION7
+PUMP_LOCATION8["name"] = PUMP_LOCATION_ID8
 
-PUMP_LOCATION9 = {
-    "office-id": TEST_OFFICE,
-    "name": PUMP_LOCATION_ID9,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PUMP",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PUMP_LOCATION9 = PUMP_LOCATION8
+PUMP_LOCATION9["name"] = PUMP_LOCATION_ID9
 
 CONTRACT_LOOKUP = {
     "office-id": TEST_OFFICE,
@@ -454,61 +248,7 @@ def test_store_get_water_contract():
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
     data = data.json
-    assert data["contract-id"]["name"] == WATER_CONTRACT["contract-id"]["name"]
-    assert (
-        data["contract-id"]["office-id"] == WATER_CONTRACT["contract-id"]["office-id"]
-    )
-    assert data["office-id"] == WATER_CONTRACT["office-id"]
-    assert (
-        data["water-user"]["entity-name"] == WATER_CONTRACT["water-user"]["entity-name"]
-    )
-    assert (
-        data["water-user"]["project-id"] == WATER_CONTRACT["water-user"]["project-id"]
-    )
-    assert (
-        data["water-user"]["water-right"] == WATER_CONTRACT["water-user"]["water-right"]
-    )
-    assert data["contract-type"] == WATER_CONTRACT["contract-type"]
-    assert data["contract-effective-date"] == WATER_CONTRACT["contract-effective-date"]
-    assert (
-        data["contract-expiration-date"] == WATER_CONTRACT["contract-expiration-date"]
-    )
-    assert data["contracted-storage"] == WATER_CONTRACT["contracted-storage"]
-    assert data["initial-use-allocation"] == WATER_CONTRACT["initial-use-allocation"]
-    assert data["future-use-allocation"] == WATER_CONTRACT["future-use-allocation"]
-    assert data["storage-units-id"] == WATER_CONTRACT["storage-units-id"]
-    assert (
-        data["future-use-percent-activated"]
-        == WATER_CONTRACT["future-use-percent-activated"]
-    )
-    assert (
-        data["total-alloc-percent-activated"]
-        == WATER_CONTRACT["total-alloc-percent-activated"]
-    )
-    assert (
-        data["pump-out-location"]["pump-type"]
-        == WATER_CONTRACT["pump-out-location"]["pump-type"]
-    )
-    assert (
-        data["pump-out-location"]["pump-location"]["name"]
-        == WATER_CONTRACT["pump-out-location"]["pump-location"]["name"]
-    )
-    assert (
-        data["pump-out-below-location"]["pump-type"]
-        == WATER_CONTRACT["pump-out-below-location"]["pump-type"]
-    )
-    assert (
-        data["pump-out-below-location"]["pump-location"]["name"]
-        == WATER_CONTRACT["pump-out-below-location"]["pump-location"]["name"]
-    )
-    assert (
-        data["pump-in-location"]["pump-type"]
-        == WATER_CONTRACT["pump-in-location"]["pump-type"]
-    )
-    assert (
-        data["pump-in-location"]["pump-location"]["name"]
-        == WATER_CONTRACT["pump-in-location"]["pump-location"]["name"]
-    )
+
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, TEST_CONTRACT_ID
     )
@@ -526,63 +266,7 @@ def test_delete_water_contract():
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
     data = data.json
-    assert data["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
-    assert (
-        data["contract-id"]["office-id"] == WATER_CONTRACT2["contract-id"]["office-id"]
-    )
-    assert data["office-id"] == WATER_CONTRACT2["office-id"]
-    assert (
-        data["water-user"]["entity-name"]
-        == WATER_CONTRACT2["water-user"]["entity-name"]
-    )
-    assert (
-        data["water-user"]["project-id"] == WATER_CONTRACT2["water-user"]["project-id"]
-    )
-    assert (
-        data["water-user"]["water-right"]
-        == WATER_CONTRACT2["water-user"]["water-right"]
-    )
-    assert data["contract-type"] == WATER_CONTRACT2["contract-type"]
-    assert data["contract-effective-date"] == WATER_CONTRACT2["contract-effective-date"]
-    assert (
-        data["contract-expiration-date"] == WATER_CONTRACT2["contract-expiration-date"]
-    )
-    assert data["contracted-storage"] == WATER_CONTRACT2["contracted-storage"]
-    assert data["initial-use-allocation"] == WATER_CONTRACT2["initial-use-allocation"]
-    assert data["future-use-allocation"] == WATER_CONTRACT2["future-use-allocation"]
-    assert data["storage-units-id"] == WATER_CONTRACT2["storage-units-id"]
-    assert (
-        data["future-use-percent-activated"]
-        == WATER_CONTRACT2["future-use-percent-activated"]
-    )
-    assert (
-        data["total-alloc-percent-activated"]
-        == WATER_CONTRACT2["total-alloc-percent-activated"]
-    )
-    assert (
-        data["pump-out-location"]["pump-type"]
-        == WATER_CONTRACT2["pump-out-location"]["pump-type"]
-    )
-    assert (
-        data["pump-out-location"]["pump-location"]["name"]
-        == WATER_CONTRACT2["pump-out-location"]["pump-location"]["name"]
-    )
-    assert (
-        data["pump-out-below-location"]["pump-type"]
-        == WATER_CONTRACT2["pump-out-below-location"]["pump-type"]
-    )
-    assert (
-        data["pump-out-below-location"]["pump-location"]["name"]
-        == WATER_CONTRACT2["pump-out-below-location"]["pump-location"]["name"]
-    )
-    assert (
-        data["pump-in-location"]["pump-type"]
-        == WATER_CONTRACT2["pump-in-location"]["pump-type"]
-    )
-    assert (
-        data["pump-in-location"]["pump-location"]["name"]
-        == WATER_CONTRACT2["pump-in-location"]["pump-location"]["name"]
-    )
+    _assert_match(WATER_CONTRACT2, data)
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
@@ -610,75 +294,7 @@ def test_get_water_contracts():
     found = False
     for item in data:
         if item["contract-id"]["name"] == new_contract_name:
-            assert item["contract-id"]["name"] == WATER_CONTRACT2["contract-id"]["name"]
-            assert (
-                item["contract-id"]["office-id"]
-                == WATER_CONTRACT2["contract-id"]["office-id"]
-            )
-            assert item["office-id"] == WATER_CONTRACT2["office-id"]
-            assert (
-                item["water-user"]["entity-name"]
-                == WATER_CONTRACT2["water-user"]["entity-name"]
-            )
-            assert (
-                item["water-user"]["project-id"]
-                == WATER_CONTRACT2["water-user"]["project-id"]
-            )
-            assert (
-                item["water-user"]["water-right"]
-                == WATER_CONTRACT2["water-user"]["water-right"]
-            )
-            assert item["contract-type"] == WATER_CONTRACT2["contract-type"]
-            assert (
-                item["contract-effective-date"]
-                == WATER_CONTRACT2["contract-effective-date"]
-            )
-            assert (
-                item["contract-expiration-date"]
-                == WATER_CONTRACT2["contract-expiration-date"]
-            )
-            assert item["contracted-storage"] == WATER_CONTRACT2["contracted-storage"]
-            assert (
-                item["initial-use-allocation"]
-                == WATER_CONTRACT2["initial-use-allocation"]
-            )
-            assert (
-                item["future-use-allocation"]
-                == WATER_CONTRACT2["future-use-allocation"]
-            )
-            assert item["storage-units-id"] == WATER_CONTRACT2["storage-units-id"]
-            assert (
-                item["future-use-percent-activated"]
-                == WATER_CONTRACT2["future-use-percent-activated"]
-            )
-            assert (
-                item["total-alloc-percent-activated"]
-                == WATER_CONTRACT2["total-alloc-percent-activated"]
-            )
-            assert (
-                item["pump-out-location"]["pump-type"]
-                == WATER_CONTRACT2["pump-out-location"]["pump-type"]
-            )
-            assert (
-                item["pump-out-location"]["pump-location"]["name"]
-                == WATER_CONTRACT2["pump-out-location"]["pump-location"]["name"]
-            )
-            assert (
-                item["pump-out-below-location"]["pump-type"]
-                == WATER_CONTRACT2["pump-out-below-location"]["pump-type"]
-            )
-            assert (
-                item["pump-out-below-location"]["pump-location"]["name"]
-                == WATER_CONTRACT2["pump-out-below-location"]["pump-location"]["name"]
-            )
-            assert (
-                item["pump-in-location"]["pump-type"]
-                == WATER_CONTRACT2["pump-in-location"]["pump-type"]
-            )
-            assert (
-                item["pump-in-location"]["pump-location"]["name"]
-                == WATER_CONTRACT2["pump-in-location"]["pump-location"]["name"]
-            )
+            _assert_match(WATER_CONTRACT2, item)
             found = True
     assert found
     wc.delete_water_contract(
@@ -698,61 +314,55 @@ def test_update_water_contract():
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
     data = data.json
-    assert data["contract-id"]["name"] == new_contract_name
-    assert (
-        data["contract-id"]["office-id"] == WATER_CONTRACT["contract-id"]["office-id"]
-    )
-    assert data["office-id"] == WATER_CONTRACT["office-id"]
-    assert (
-        data["water-user"]["entity-name"] == WATER_CONTRACT["water-user"]["entity-name"]
-    )
-    assert (
-        data["water-user"]["project-id"] == WATER_CONTRACT["water-user"]["project-id"]
-    )
-    assert (
-        data["water-user"]["water-right"] == WATER_CONTRACT["water-user"]["water-right"]
-    )
-    assert data["contract-type"] == WATER_CONTRACT["contract-type"]
-    assert data["contract-effective-date"] == WATER_CONTRACT["contract-effective-date"]
-    assert (
-        data["contract-expiration-date"] == WATER_CONTRACT["contract-expiration-date"]
-    )
-    assert data["contracted-storage"] == WATER_CONTRACT["contracted-storage"]
-    assert data["initial-use-allocation"] == WATER_CONTRACT["initial-use-allocation"]
-    assert data["future-use-allocation"] == WATER_CONTRACT["future-use-allocation"]
-    assert data["storage-units-id"] == WATER_CONTRACT["storage-units-id"]
-    assert (
-        data["future-use-percent-activated"]
-        == WATER_CONTRACT["future-use-percent-activated"]
-    )
-    assert (
-        data["total-alloc-percent-activated"]
-        == WATER_CONTRACT["total-alloc-percent-activated"]
-    )
-    assert (
-        data["pump-out-location"]["pump-type"]
-        == WATER_CONTRACT["pump-out-location"]["pump-type"]
-    )
-    assert (
-        data["pump-out-location"]["pump-location"]["name"]
-        == WATER_CONTRACT["pump-out-location"]["pump-location"]["name"]
-    )
-    assert (
-        data["pump-out-below-location"]["pump-type"]
-        == WATER_CONTRACT["pump-out-below-location"]["pump-type"]
-    )
-    assert (
-        data["pump-out-below-location"]["pump-location"]["name"]
-        == WATER_CONTRACT["pump-out-below-location"]["pump-location"]["name"]
-    )
-    assert (
-        data["pump-in-location"]["pump-type"]
-        == WATER_CONTRACT["pump-in-location"]["pump-type"]
-    )
-    assert (
-        data["pump-in-location"]["pump-location"]["name"]
-        == WATER_CONTRACT["pump-in-location"]["pump-location"]["name"]
-    )
+    _assert_match(WATER_CONTRACT, data)
     wc.delete_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
+    )
+
+
+def _assert_match(expected, actual):
+    assert expected["contract-id"]["name"] == actual["contract-id"]["name"]
+    assert expected["contract-id"]["office-id"] == actual["contract-id"]["office-id"]
+    assert expected["office-id"] == actual["office-id"]
+    assert expected["water-user"]["entity-name"] == actual["water-user"]["entity-name"]
+    assert expected["water-user"]["project-id"] == actual["water-user"]["project-id"]
+    assert expected["water-user"]["water-right"] == actual["water-user"]["water-right"]
+    assert expected["contract-type"] == actual["contract-type"]
+    assert expected["contract-effective-date"] == actual["contract-effective-date"]
+    assert expected["contract-expiration-date"] == actual["contract-expiration-date"]
+    assert expected["contracted-storage"] == actual["contracted-storage"]
+    assert expected["initial-use-allocation"] == actual["initial-use-allocation"]
+    assert expected["future-use-allocation"] == actual["future-use-allocation"]
+    assert expected["storage-units-id"] == actual["storage-units-id"]
+    assert (
+        expected["future-use-percent-activated"]
+        == actual["future-use-percent-activated"]
+    )
+    assert (
+        expected["total-alloc-percent-activated"]
+        == actual["total-alloc-percent-activated"]
+    )
+    assert (
+        expected["pump-out-location"]["pump-type"]
+        == actual["pump-out-location"]["pump-type"]
+    )
+    assert (
+        expected["pump-out-location"]["pump-location"]["name"]
+        == actual["pump-out-location"]["pump-location"]["name"]
+    )
+    assert (
+        expected["pump-out-below-location"]["pump-type"]
+        == actual["pump-out-below-location"]["pump-type"]
+    )
+    assert (
+        expected["pump-out-below-location"]["pump-location"]["name"]
+        == actual["pump-out-below-location"]["pump-location"]["name"]
+    )
+    assert (
+        expected["pump-in-location"]["pump-type"]
+        == actual["pump-in-location"]["pump-type"]
+    )
+    assert (
+        expected["pump-in-location"]["pump-location"]["name"]
+        == actual["pump-in-location"]["pump-location"]["name"]
     )
