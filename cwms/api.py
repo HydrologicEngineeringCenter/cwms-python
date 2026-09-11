@@ -48,6 +48,9 @@ from cwms.cwms_types import JSON, RequestParams
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
 
+# Specify whether LRTS will use new ID format
+USE_NEW_LRTS_IDS = False
+
 # Initialize a non-authenticated session with the default root URL and set default pool connections.
 
 retry_strategy = Retry(
@@ -168,6 +171,7 @@ def init_session(
     api_key: Optional[str] = None,
     token: Optional[str] = None,
     pool_connections: int = 100,
+    use_new_lrts_format: bool = False,
 ) -> BaseUrlSession:
     """Specify a root URL and authentication credentials for the CWMS Data API.
 
@@ -186,7 +190,7 @@ def init_session(
         Returns the updated session object.
     """
 
-    global SESSION
+    global SESSION, USE_NEW_LRTS_IDS
     if api_root:
         # Ensure the API_ROOT ends with a single slash
         api_root = api_root.rstrip("/") + "/"
@@ -206,11 +210,23 @@ def init_session(
         # Ensure we don't provide the bearer text twice
         if token.lower().startswith("bearer "):
             token = token[7:]
-        SESSION.headers.update({"Authorization": "Bearer " + token})
+        SESSION.headers.update(
+            {
+                "Authorization": "Bearer " + token,
+                "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+            }
+        )
     elif api_key:
         if api_key.startswith("apikey "):
             api_key = api_key.replace("apikey ", "")
-        SESSION.headers.update({"Authorization": "apikey " + api_key})
+        SESSION.headers.update(
+            {
+                "Authorization": "apikey " + api_key,
+                "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+            }
+        )
+
+    USE_NEW_LRTS_IDS = use_new_lrts_format
 
     return SESSION
 
@@ -223,6 +239,46 @@ def return_base_url() -> str:
     """
 
     return str(SESSION.base_url)
+
+
+def set_use_new_lrts_ids(state: bool) -> None:
+    """Sets whether the new LRTS identifer format is used for subsequent operations.
+
+    The old Local Regular Time Series (LRTS) identifier format is the same as the
+    Pseudo-Regular Time Series (PRTS) identifier format, where both prepend a tilde
+    character ('~') to valid Regular Time Series (RTS) interval identifiers (e.g.,
+    ~6Hours, ~1Day).
+
+    The new LRTS identifiers instead append "Local" to valid RTS interval identifiers
+    (e.g., 6HoursLocal, 1DayLocal), leaving the old format to specify only PRTS.
+
+    Args:
+        state: Whether the new LRTS identifier format is used
+    """
+
+    global USE_NEW_LRTS_IDS
+
+    USE_NEW_LRTS_IDS = state
+
+
+def get_use_new_lrts_ids() -> bool:
+    """Gets whether the new LRTS identifer format is used for subsequent operations.
+
+    The old Local Regular Time Series (LRTS) identifier format is the same as the
+    Pseudo-Regular Time Series (PRTS) identifier format, where both prepend a tilde
+    character ('~') to valid Regular Time Series (RTS) interval identifiers (e.g.,
+    ~6Hours, ~1Day).
+
+    The new LRTS identifiers instead append "Local" to valid RTS interval identifiers
+    (e.g., 6HoursLocal, 1DayLocal), leaving the old format to specify only PRTS.
+
+    Returns:
+        Whether the new LRTS identifier format is used
+    """
+
+    global USE_NEW_LRTS_IDS
+
+    return USE_NEW_LRTS_IDS
 
 
 def api_version_text(api_version: int) -> str:
@@ -329,7 +385,10 @@ def get(
         ApiError: If an error response is return by the API.
     """
 
-    headers = {"Accept": api_version_text(api_version)}
+    headers = {
+        "Accept": api_version_text(api_version),
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+    }
     try:
         with SESSION.get(endpoint, params=params, headers=headers) as response:
             if not response.ok:
@@ -389,7 +448,11 @@ def _post_function(
 ) -> Any:
 
     # post requires different headers than get for
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+    headers = {
+        "accept": "*/*",
+        "Content-Type": api_version_text(api_version),
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+    }
     if isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
     try:
@@ -487,7 +550,11 @@ def patch(
         ApiError: If an error response is return by the API.
     """
 
-    headers = {"accept": "*/*", "Content-Type": api_version_text(api_version)}
+    headers = {
+        "accept": "*/*",
+        "Content-Type": api_version_text(api_version),
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+    }
 
     if data and isinstance(data, dict) or isinstance(data, list):
         data = json.dumps(data)
@@ -522,7 +589,10 @@ def delete(
         ApiError: If an error response is return by the API.
     """
 
-    headers = {"Accept": api_version_text(api_version)}
+    headers = {
+        "Accept": api_version_text(api_version),
+        "X-CWMS-LRTS-Formatting": str(USE_NEW_LRTS_IDS).lower(),
+    }
     try:
         with SESSION.delete(endpoint, params=params, headers=headers) as response:
             if not response.ok:

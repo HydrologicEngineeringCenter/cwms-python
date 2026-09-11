@@ -1,20 +1,34 @@
 name: Testing
 
-# Run the workflow on all branches.
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: testing-${{ github.event_name }}-${{ github.event.pull_request.number ||
+    github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Run tests and generate code coverage report.
   run-tests:
+    name: Unit tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.x']
 
     steps:
       - uses: actions/checkout@v7
 
       - name: Set Up Python
-        uses: actions/setup-python@v6
+        id: setup-python
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: ${{ matrix.python-version }}
 
       # Unlike the code-check workflow, this job requires the dev dependencies to be
       # installed to make sure we have the necessary, tools, stub files, etc.
@@ -25,9 +39,12 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{
+            hashFiles('poetry.lock') }}
 
       - name: Install Dependencies
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ':all:'
         run: poetry install
 
       # Run pytest and generate coverage report data.
