@@ -153,7 +153,7 @@ def store_location(data: JSON, fail_if_exists: bool = True) -> None:
 
     endpoint = "locations"
     params = {"fail-if-exists": fail_if_exists}
-    return api.post(endpoint, data, params=params)
+    return api.post(endpoint, data, params=params, api_version=1)
 
 
 def update_location(location_id: str, data: JSON) -> None:
@@ -178,4 +178,4 @@ def update_location(location_id: str, data: JSON) -> None:
 
     endpoint = f"locations/{location_id}"
 
-    return api.patch(endpoint=endpoint, data=data)
+    return api.patch(endpoint=endpoint, data=data, api_version=1)

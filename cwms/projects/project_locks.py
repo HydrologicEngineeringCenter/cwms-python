@@ -45,7 +45,7 @@ def get_project_lock(office_id: str, name: str, application_id: str) -> Data:
 
     endpoint = f"project-locks/{name}"
     params = {"office": office_id, "application-id": application_id}
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -87,7 +87,7 @@ def get_project_locks(
         "project-mask": project_mask,
         "application-mask": application_mask,
     }
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -170,7 +170,7 @@ def request_project_lock(
         "revoke-existing": revoke_existing,
         "revoke-timeout": revoke_timeout_seconds,
     }
-    api.post(endpoint, data, params)
+    api.post(endpoint, data, params, api_version=1)
 
 
 def deny_project_lock_request(lock_id: str) -> None:

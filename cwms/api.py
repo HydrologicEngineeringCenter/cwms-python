@@ -44,7 +44,7 @@ from urllib3.util.retry import Retry
 
 from cwms.cwms_types import JSON, RequestParams
 
-# Specify the default API root URL and version.
+# Default service URL and data-format selector (not a CDA release version).
 API_ROOT = "https://cwms-data.usace.army.mil/cwms-data/"
 API_VERSION = 2
 
@@ -282,19 +282,21 @@ def get_use_new_lrts_ids() -> bool:
 
 
 def api_version_text(api_version: int) -> str:
-    """Initialize CDA request headers.
+    """Return the media type for a CDA data representation.
 
-    The CDA supports multiple versions. To request a specific version, the version number
-    must be included in the request headers.
+    CDA versions data formats per operation, not the API as a whole. The historical
+    selector 1 requests unversioned JSON (the server's default representation), 2
+    requests JSON version 2, and 102 requests XML version 2. Select the format from
+    the operation's documented request or response media types.
 
     Args:
-        api_version: The CDA version to use for the request.
+        api_version: The data-format selector; this is not a CDA release version.
 
     Returns:
-        A dict containing the request headers.
+        A media-type string for an Accept or Content-Type header.
 
     Raises:
-        InvalidVersion: If an unsupported API version is specified.
+        InvalidVersion: If an unsupported data-format selector is specified.
     """
 
     if api_version == 1:
@@ -322,7 +324,7 @@ def get_xml(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Returns:
@@ -375,7 +377,7 @@ def get(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Returns:
@@ -414,7 +416,7 @@ def get_with_paging(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Returns:
@@ -482,7 +484,7 @@ def post(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Returns:
@@ -509,7 +511,7 @@ def post_with_returned_data(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Returns:
@@ -540,7 +542,7 @@ def patch(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Returns:
@@ -582,7 +584,7 @@ def delete(
         params (optional): Query parameters for the request.
 
     Keyword Args:
-        api_version (optional): The CDA version to use for the request. If not specified,
+        api_version (optional): The data-format selector for the operation. If not specified,
             the default API_VERSION will be used.
 
     Raises:
