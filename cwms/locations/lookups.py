@@ -156,7 +156,9 @@ def delete_lookup(
         If a 500 range error code response is returned from the server.
     """
     if not all([display_value, category, prefix, office_id]):
-        raise ValueError("Category, Prefix, and Office ID must be specified")
+        raise ValueError(
+            "Display Value, Category, Prefix, and Office ID must be specified"
+        )
 
     endpoint = f"{ENDPOINT}/{display_value}"
     params = {"category": category, "prefix": prefix, "office": office_id}

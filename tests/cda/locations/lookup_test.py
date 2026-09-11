@@ -11,6 +11,8 @@ CATEGORY1 = "AT_WS_CONTRACT_TYPE"
 PREFIX1 = "WS_CONTRACT_TYPE"
 DISPLAY_VALUE = "Test Lookup"
 TOOLTIP = "Test Tooltip"
+CATEGORY1 = "AT_GATE_RELEASE_REASON_CODE"
+PREFIX1 = "RELEASE_REASON"
 
 LOOKUP_DATA = {
     "office-id": OFFICE_ID,
@@ -23,6 +25,10 @@ LOOKUP_DATA = {
 def _cleanup():
     try:
         lookups.delete_lookup(DISPLAY_VALUE, CATEGORY, PREFIX, OFFICE_ID)
+    except Exception:
+        pass
+    try:
+        lookups.delete_lookup(CATEGORY1, PREFIX1, OFFICE_ID)
     except Exception:
         pass
 
