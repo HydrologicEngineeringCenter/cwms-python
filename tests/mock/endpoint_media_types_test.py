@@ -164,5 +164,6 @@ def test_endpoint_media_type(
         raise RequestCaptured
 
     monkeypatch.setattr(api.SESSION, "send", capture)
+    endpoint_function = getattr(module, function_name)
     with pytest.raises(RequestCaptured):
-        getattr(module, function_name)(*args)
+        endpoint_function(*args)
