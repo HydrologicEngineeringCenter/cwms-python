@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "0d62b1fd6777f950420cb2ceb37994d1bb3d9637",
+  "packages": {
+    ".": {
+      "package-name": "cwms-python",
+      "release-type": "python",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
+    }
+  }
+}
