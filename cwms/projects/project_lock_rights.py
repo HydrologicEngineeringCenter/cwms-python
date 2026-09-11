@@ -49,7 +49,7 @@ def get_project_lock_rights(
         "project-mask": project_mask,
         "application-mask": application_mask,
     }
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
