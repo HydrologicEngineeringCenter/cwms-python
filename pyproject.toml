@@ -28,6 +28,11 @@ requests = [
     {version = "^2.32.4", python = ">=3.9,<3.10"},
     {version = "^2.33.0", python = ">=3.10"},
 ]
+# Keep the Python 3.9 fallback while requiring patched releases on newer Python.
+urllib3 = [
+    {version = ">=2.6.3,<2.7", python = ">=3.9,<3.10"},
+    {version = "^2.7.0", python = ">=3.10"},
+]
 
 [tool.poetry.group.dev.dependencies]
 black = [
@@ -46,6 +51,10 @@ pytest-cov = "^4.1.0"
 pandas-stubs = "^2.2.1.240316"
 types-requests = "^2.31.0.20240311"
 yamlfix = "^1.16.0"
+setuptools = [
+    {version = ">=82.0.1,<83", python = ">=3.9,<3.10"},
+    {version = ">=83.0.0", python = ">=3.10"},
+]
 
 [build-system]
 requires = ["poetry-core"]
