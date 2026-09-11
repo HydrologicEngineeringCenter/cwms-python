@@ -49,7 +49,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8 # v4
       - name: Install Dependencies
         env:
           POETRY_INSTALLER_ONLY_BINARY: ':all:'
@@ -91,7 +91,7 @@ jobs:
           name: package-dist
           path: dist/
       - name: Publish Distribution To PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
       - name: Sign Distribution
         uses: sigstore/gh-action-sigstore-python@790bc6befb9d733738f18d8f895854b453640ec9 # v3.5.0
         with:
