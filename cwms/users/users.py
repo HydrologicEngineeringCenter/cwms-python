@@ -135,7 +135,7 @@ def store_user(user_name: str, office_id: str, roles: List[str]) -> None:
 
     endpoint = f"user/{user_name}/roles/{office_id}"
     try:
-        api.post(endpoint, roles)
+        api.post(endpoint, roles, api_version=1)
     except api.ApiError as error:
         _raise_user_management_error(
             error, f"User '{user_name}' role assignment update"
@@ -153,7 +153,7 @@ def delete_user_roles(user_name: str, office_id: str, roles: List[str]) -> None:
         raise ValueError("Delete user roles requires a roles list")
 
     endpoint = f"user/{user_name}/roles/{office_id}"
-    headers = {"accept": "*/*", "Content-Type": api.api_version_text(api.API_VERSION)}
+    headers = {"accept": "*/*", "Content-Type": api.api_version_text(1)}
     # TODO: Delete does not currently support a body in the api module. Use SESSION directly
     with api.SESSION.delete(
         endpoint, headers=headers, data=json.dumps(roles)
@@ -198,6 +198,6 @@ def update_user(user_name: str, office_id: str, roles: List[str]) -> None:
         delete_user_roles(user_name, office_id, roles_to_remove)
     if roles_to_add:
         try:
-            api.post(endpoint, roles_to_add)
+            api.post(endpoint, roles_to_add, api_version=1)
         except api.ApiError as error:
             _raise_user_management_error(error, f"User '{user_name}' role replacement")

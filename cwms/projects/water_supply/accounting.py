@@ -144,4 +144,4 @@ def store_pump_accounting(
         "water-user": water_user,
         "contract-name": contract_name,
     }
-    api.post(endpoint, data, params)
+    api.post(endpoint, data, params, api_version=1)

@@ -78,7 +78,7 @@ def get_outlets(office_id: str, project_id: str) -> Data:
 
     endpoint = "projects/outlets"
     params = {"office": office_id, "project-id": project_id}
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 

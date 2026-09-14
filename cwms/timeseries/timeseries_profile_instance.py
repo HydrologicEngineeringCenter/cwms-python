@@ -92,7 +92,7 @@ def get_timeseries_profile_instance(
         "page-size": page_size,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -138,7 +138,7 @@ def get_timeseries_profile_instances(
         "version-mask": version_mask,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -234,4 +234,4 @@ def store_timeseries_profile_instance(
         "override-protection": override_protection,
     }
 
-    return api.post(endpoint, None, params)
+    return api.post(endpoint, None, params, api_version=1)
