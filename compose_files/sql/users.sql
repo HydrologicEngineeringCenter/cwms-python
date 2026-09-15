@@ -4,14 +4,16 @@ declare
     type office_list_t is table of varchar2(16);
 
     procedure add_full_admin(p_user varchar2, p_offices office_list_t) is
+        i pls_integer := p_offices.first;
     begin
-        for i in 1 .. p_offices.count loop
+        while i is not null loop
             cwms_sec.add_cwms_user(p_user, NULL, p_offices(i));
             cwms_sec.add_user_to_group(p_user, 'All Users',        p_offices(i));
             cwms_sec.add_user_to_group(p_user, 'CWMS Users',       p_offices(i));
             cwms_sec.add_user_to_group(p_user, 'TS ID Creator',    p_offices(i));
             cwms_sec.add_user_to_group(p_user, 'CWMS User Admins', p_offices(i));
             cwms_sec.add_user_to_group(p_user, 'CWMS PD Users',    p_offices(i));
+            i := p_offices.next(i);
         end loop;
     end;
 begin
