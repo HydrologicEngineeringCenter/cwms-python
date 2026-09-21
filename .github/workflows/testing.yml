@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.x']
+        python-version: ['3.9', '3.11', '3.x']
 
     steps:
       - uses: actions/checkout@v7
@@ -47,9 +47,12 @@ jobs:
           POETRY_INSTALLER_ONLY_BINARY: ':all:'
         run: poetry install
 
-      - name: Pin pandas 3.x for Python 3.10+
+      - name: Pin pandas 3.x for Python 3.11+
         if: matrix.python-version != '3.9'
-        run: 'poetry run python -m pip install --upgrade --only-binary=:all: "pandas>=3,<4"'
+        run: |
+          poetry env use "${{ matrix.python-version }}"
+          . "$(poetry env info --path)/bin/activate"
+          python -m pip install --upgrade --only-binary=:all: "pandas>=3,<4"
 
       # Run pytest and generate coverage report data.
       - name: Run Tests
