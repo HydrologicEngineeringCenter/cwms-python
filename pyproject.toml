@@ -16,10 +16,7 @@ authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pandas = [
-    {version = ">=2.3.3,<3", python = ">=3.9,<3.10"},
-    {version = ">=3.0.0,<4", python = ">=3.10"},
-]
+pandas = ">=2.3.3,<3"
 # Require NumPy wheels for newer Python versions while retaining Python 3.9.
 numpy = [
     {version = ">=1.23.5,<3", python = ">=3.9,<3.13"},

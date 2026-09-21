@@ -580,6 +580,26 @@ def store_multi_timeseries_df(
     def version_key(value: Any) -> str:
         return "NaT" if pd.isna(value) else str(value)
 
+    def get_ts_group(
+        ts_id: str, version_date: str
+    ) -> Tuple[Optional[datetime], pd.DataFrame]:
+        if version_date == "NaT":
+            return (
+                None,
+                ts_data_all[
+                    (ts_data_all["ts_id"] == ts_id) & ts_data_all["version_date"].isna()
+                ],
+            )
+
+        version_date_dt = pd.to_datetime(version_date)
+        return (
+            version_date_dt,
+            ts_data_all[
+                (ts_data_all["ts_id"] == ts_id)
+                & (ts_data_all["version_date"] == version_date_dt)
+            ],
+        )
+
     unique_tsids = (
         ts_data_all["ts_id"].astype(str)
         + ":"
@@ -591,18 +611,8 @@ def store_multi_timeseries_df(
         futures = {}
         for unique_tsid in unique_tsids:
             ts_id, version_date = unique_tsid.split(":", 1)
-            if version_date != "NaT":
-                version_date_dt = pd.to_datetime(version_date)
-                ts_data = ts_data_all[
-                    (ts_data_all["ts_id"] == ts_id)
-                    & (ts_data_all["version_date"] == version_date_dt)
-                ]
-            else:
-                version_date_dt = None
-                ts_data = ts_data_all[
-                    (ts_data_all["ts_id"] == ts_id) & ts_data_all["version_date"].isna()
-                ]
-            if not data.empty:
+            version_date_dt, ts_data = get_ts_group(ts_id, version_date)
+            if not ts_data.empty:
                 future = executor.submit(
                     store_ts_ids, ts_data, ts_id, office_id, version_date_dt
                 )
