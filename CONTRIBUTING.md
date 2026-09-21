@@ -180,10 +180,12 @@ after the type or scope marks a breaking change. Use `test:`, `ci:`,
 `build:`, or `chore:` when appropriate; ordinary maintenance commits do not
 trigger a release on their own.
 
-The PR-title workflow adds an advisory comment when Python files change without
-a release-triggering title. It updates the same comment and removes it when the
-title is corrected. Sphinx configuration files are excluded. The reminder can
-be ignored for test-only or maintenance changes that do not need a release.
+The PR-title workflow adds an advisory comment when a title lacks the
+`<type>: description` format, regardless of which files change. Any type is
+accepted, including `test:`, `ci:`, and `chore:`, as are optional scopes and
+breaking-change markers. Titles must include a space after the colon and a
+nonempty description. It updates the same comment and removes it when the title
+is corrected. This format check does not determine whether a release is needed.
 
 Squash merging uses the PR title as the commit subject by default. Check the final
 subject before merging; Release Please reads commits on `main`, not PR titles
