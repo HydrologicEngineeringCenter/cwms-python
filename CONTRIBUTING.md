@@ -167,18 +167,24 @@ the workflow used by [cwms-cli](https://github.com/HydrologicEngineeringCenter/c
 
 Use a Conventional Commit title for changes that should be released:
 
-| Title example | Next release |
-| --- | --- |
-| `fix: handle missing values` | Patch |
-| `fix(parser): handle missing values` | Patch |
-| `feat: support a new data source` | Minor |
-| `feat!: change the public API` | Major |
+| Version bump | Required commit format | When to use it | Example from `1.2.3` |
+| --- | --- | --- | --- |
+| **Major** | `!` after the type or scope, such as `feat!: ...` or `fix(parser)!: ...`, or a `BREAKING CHANGE: description` footer in the merged commit | Breaking changes that require callers to change their code | `2.0.0` |
+| **Minor** | `feat: description` or `feat(scope): description`, without a breaking-change marker | New functionality that preserves compatibility | `1.3.0` |
+| **Patch** | `fix: description` or `fix(scope): description`, without a breaking-change marker | Compatible bug fixes | `1.2.4` |
 
-`perf:`, `revert:`, `deps:`, and `docs:` also trigger patch releases with the
-Python release strategy. A `BREAKING CHANGE:` footer or `!`
-after the type or scope marks a breaking change. Use `test:`, `ci:`,
-`build:`, or `chore:` when appropriate; ordinary maintenance commits do not
-trigger a release on their own.
+**A breaking change must be explicitly marked; `feat:` alone produces a minor
+bump, not a major bump.** Describe the incompatibility and migration steps in the
+PR, and preserve the `!` or `BREAKING CHANGE:` footer in the final merged commit.
+
+`perf:`, `revert:`, `deps:`, and `docs:` also trigger patch releases with this
+repository's Python release strategy when no breaking-change marker is present.
+Ordinary `test:`, `ci:`, `build:`, `chore:`, `refactor:`, and `style:` commits do
+not trigger a release on their own. Accepting a title prefix does not make it a
+release trigger.
+
+Release Please considers the commits since the last release. The highest required
+bump wins: **major over minor over patch**, rather than one bump per PR.
 
 The PR-title workflow adds an advisory comment when a title lacks the
 `<type>: description` format, regardless of which files change. Any type is

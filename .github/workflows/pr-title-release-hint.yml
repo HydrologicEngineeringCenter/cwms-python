@@ -63,6 +63,14 @@ jobs:
             - \`ci: short description\` (CI workflows)
             - \`chore: short description\` (maintenance)
 
+            **Version bumps require these commit markers:**
+            - **Major** (\`1.2.3 → 2.0.0\`): mark a breaking change with \`!\` after the type or scope, such as \`feat!:\` or \`fix(parser)!:\`, or include a \`BREAKING CHANGE: description\` footer in the merged commit. **\`feat:\` alone does not trigger a major bump.**
+            - **Minor** (\`1.2.3 → 1.3.0\`): use \`feat:\` for compatible new functionality, without a breaking-change marker.
+            - **Patch** (\`1.2.3 → 1.2.4\`): use \`fix:\` for compatible bug fixes. This repository also releases patches for \`perf:\`, \`revert:\`, \`deps:\`, and \`docs:\` without a breaking-change marker.
+            - Ordinary \`test:\`, \`ci:\`, \`build:\`, \`chore:\`, \`refactor:\`, and \`style:\` commits do not trigger a release on their own.
+
+            The highest required bump across commits since the last release wins: **major over minor over patch**.
+
             If this PR will be squash-merged, the PR title often becomes the commit message on the default branch, which affects whether the next release is patch, minor, or major.
 
             Scoped titles such as \`fix(parser): handle missing values\` and other types such as \`refactor:\` and \`style:\` are also supported. This is an advisory reminder; choose the type that describes the change. A title with a type prefix and a description will not receive this reminder.
