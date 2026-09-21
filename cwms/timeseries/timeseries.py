@@ -465,10 +465,10 @@ def timeseries_df_to_json(
             "value is a required column when posting data when posting as a dataframe"
         )
 
-    # make sure that dataTime column is in iso8601 formate.
-    df["date-time"] = pd.to_datetime(df["date-time"], utc=True).apply(
-        pd.Timestamp.isoformat
-    )
+    # make sure that date-time column is in ISO8601 format and keep CWMS
+    # millisecond precision to match the API and pandas 2/3 behavior.
+    df["date-time"] = pd.to_datetime(df["date-time"], utc=True).dt.as_unit("ms")
+    df["date-time"] = df["date-time"].apply(pd.Timestamp.isoformat)
     df = df.reindex(columns=["date-time", "value", "quality-code"])
 
     # Replace NaN/NA/NaT in value column with None so they serialize as JSON
@@ -576,8 +576,14 @@ def store_multi_timeseries_df(
     ts_data_all = data.copy()
     if "version_date" not in ts_data_all.columns:
         ts_data_all = ts_data_all.assign(version_date=pd.to_datetime(pd.Series([])))
+
+    def version_key(value: Any) -> str:
+        return "NaT" if pd.isna(value) else str(value)
+
     unique_tsids = (
-        ts_data_all["ts_id"].astype(str) + ":" + ts_data_all["version_date"].astype(str)
+        ts_data_all["ts_id"].astype(str)
+        + ":"
+        + ts_data_all["version_date"].map(version_key)
     ).unique()
 
     errors: List[str] = []
