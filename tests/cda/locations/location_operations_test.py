@@ -1,13 +1,7 @@
-import pandas as pd
-import pytest
+from uuid import uuid4
 
 import cwms
 import cwms.api
-
-
-@pytest.fixture(autouse=True)
-def init_session(request):
-    print("Initializing CWMS API session for location operations test...")
 
 
 def test_get_location_operations():
@@ -15,17 +9,9 @@ def test_get_location_operations():
     Test the retrieval of location operations from the CWMS API.
     """
     TEST_OFFICE = "SPK"
-    TEST_LOCATION_ID = "pytest-loc-123"
+    TEST_LOCATION_ID = f"pytestloc{uuid4().hex[:12]}"
     TEST_LATITUDE = 44.0
     TEST_LONGITUDE = -93.0
-
-    loc_cat = cwms.get_locations_catalog(office_id="SPK")
-
-    assert (
-        len(loc_cat.df) == 0
-    )  # Assuming no locations are present for SPK office in the test environment
-    print(len(loc_cat.df))
-    print(loc_cat.df)
 
     cwms.store_location(
         {
@@ -45,8 +31,13 @@ def test_get_location_operations():
         }
     )
 
-    loc_cat = cwms.get_locations_catalog(office_id="SPK")
-
-    # assert(len(loc_cat.df)==0)  # Assuming no locations are present for SPK office in the test environment
-    print(len(loc_cat.df))
-    print(loc_cat.df)
+    try:
+        # Other integration tests and seeded databases can contain SPK locations.
+        loc_cat = cwms.get_locations_catalog(office_id=TEST_OFFICE)
+        location = loc_cat.df.loc[loc_cat.df["name"] == TEST_LOCATION_ID]
+        assert len(location) == 1
+        assert location.iloc[0]["office"] == TEST_OFFICE
+        assert location.iloc[0]["latitude"] == TEST_LATITUDE
+        assert location.iloc[0]["longitude"] == TEST_LONGITUDE
+    finally:
+        cwms.delete_location(TEST_LOCATION_ID, TEST_OFFICE)
