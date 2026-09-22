@@ -52,7 +52,7 @@ jobs:
         run: |
           poetry env use "${{ matrix.python-version }}"
           . "$(poetry env info --path)/bin/activate"
-          python -m pip install --upgrade --only-binary=:all: "pandas>=3,<4"
+          python -m pip install --upgrade --only-binary=:all: "pandas==3.0.6"
 
       # Run pytest and generate coverage report data.
       - name: Run Tests
