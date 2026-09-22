@@ -132,7 +132,7 @@ def store_location_level(data: JSON) -> None:
         raise ValueError("Cannot store a location level without a JSON data dictionary")
 
     endpoint = "levels"
-    return api.post(endpoint, data, params=None)
+    return api.post(endpoint, data, params=None, api_version=1)
 
 
 def delete_location_level(
@@ -195,7 +195,7 @@ def update_location_level(
     params = {
         "effective-date": (effective_date.isoformat() if effective_date else None),
     }
-    return api.patch(endpoint, data, params)
+    return api.patch(endpoint, data, params, api_version=1)
 
 
 def get_level_as_timeseries(

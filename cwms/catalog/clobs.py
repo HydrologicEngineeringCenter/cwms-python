@@ -146,7 +146,7 @@ def update_clob(
         endpoint = f"clobs/{clob_id}"
     params["ignore-nulls"] = ignore_nulls
 
-    return api.patch(endpoint, data, params, api_version=1)
+    return api.patch(endpoint, data, params, api_version=2)
 
 
 def store_clobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
@@ -176,4 +176,4 @@ def store_clobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
     endpoint = "clobs"
     params = {"fail-if-exists": fail_if_exists}
 
-    return api.post(endpoint, data, params, api_version=1)
+    return api.post(endpoint, data, params, api_version=2)
