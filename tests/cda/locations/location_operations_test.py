@@ -14,18 +14,15 @@ def test_get_location_operations():
     """
     Test the retrieval of location operations from the CWMS API.
     """
+    import uuid
+
     TEST_OFFICE = "SPK"
-    TEST_LOCATION_ID = "pytest-loc-123"
+    TEST_LOCATION_ID = f"pytest-loc-123-{uuid.uuid4().hex[:8]}"
     TEST_LATITUDE = 44.0
     TEST_LONGITUDE = -93.0
 
     loc_cat = cwms.get_locations_catalog(office_id="SPK")
-
-    assert (
-        len(loc_cat.df) == 0
-    )  # Assuming no locations are present for SPK office in the test environment
-    print(len(loc_cat.df))
-    print(loc_cat.df)
+    assert isinstance(loc_cat.df, pd.DataFrame)
 
     cwms.store_location(
         {
@@ -46,7 +43,6 @@ def test_get_location_operations():
     )
 
     loc_cat = cwms.get_locations_catalog(office_id="SPK")
-
-    # assert(len(loc_cat.df)==0)  # Assuming no locations are present for SPK office in the test environment
-    print(len(loc_cat.df))
-    print(loc_cat.df)
+    assert isinstance(loc_cat.df, pd.DataFrame)
+    assert not loc_cat.df.empty
+    assert TEST_LOCATION_ID in loc_cat.df["name"].astype(str).tolist()
