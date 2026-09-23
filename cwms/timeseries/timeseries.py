@@ -338,9 +338,9 @@ def get_timeseries(
         trim: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         multithread: boolean, optional, default is True
-            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+            Specifies whether to retrieve time series chunks concurrently.
         max_workers: integer, default is 20
-            The maximum number of worker threads that will be spawned for multithreading, If calling more than 3 years of 15 minute data, consider using 30 max_workers
+            The maximum number of worker threads used for concurrent requests.
         max_days_per_chunk: integer, default is 365
             The maximum number of days included in each thread.
     Returns
