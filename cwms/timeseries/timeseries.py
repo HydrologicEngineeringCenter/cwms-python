@@ -298,7 +298,7 @@ def get_timeseries(
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
     max_workers: int = 20,
-    max_days_per_chunk: int = 14,
+    max_days_per_chunk: int = 365,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -341,8 +341,8 @@ def get_timeseries(
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         max_workers: integer, default is 20
             The maximum number of worker threads that will be spawned for multithreading, If calling more than 3 years of 15 minute data, consider using 30 max_workers
-        max_days_per_chunk: integer, default is 14
-            The maximum number of days that would be included in a thread. If calling more than 1 year of 15 minute data, consider using 30 days
+        max_days_per_chunk: integer, default is 365
+            The maximum number of days included in each thread.
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC

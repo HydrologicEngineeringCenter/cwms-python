@@ -3,7 +3,7 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -270,6 +270,36 @@ def test_call_with_retry_does_not_retry_404():
 
     assert exc_info.value.response.status_code == 404
     assert call_count == 1
+
+
+def test_get_timeseries_uses_365_day_chunks_by_default(monkeypatch):
+    begin = datetime(2025, 1, 1, tzinfo=pytz.UTC)
+    end = begin + timedelta(days=731)
+    expected = object()
+    captured = {}
+
+    def fetch_chunks(chunks, params, selector, endpoint, max_workers):
+        captured["chunks"] = chunks
+        captured["max_workers"] = max_workers
+        return [object()]
+
+    monkeypatch.setattr(timeseries, "fetch_timeseries_chunks", fetch_chunks)
+    monkeypatch.setattr(
+        timeseries, "combine_timeseries_results", lambda results: expected
+    )
+
+    result = timeseries.get_timeseries(
+        ts_id="Test.Stage.Inst.15Minutes.0.DefaultChunk",
+        office_id="MVP",
+        begin=begin,
+        end=end,
+    )
+
+    assert result is expected
+    assert captured["chunks"] == timeseries.chunk_timeseries_time_range(
+        begin, end, timedelta(days=365)
+    )
+    assert captured["max_workers"] == 3
 
 
 def test_get_timeseries_group_default(requests_mock):
