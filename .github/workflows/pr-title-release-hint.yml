@@ -10,11 +10,11 @@ permissions:
   issues: write
 
 jobs:
-  hint-title-for-python-changes:
+  hint-title-format:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check PR title against Python changes
+      - name: Check PR title format
         uses: actions/github-script@v9
         with:
           script: |-
@@ -22,29 +22,10 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const issue_number = pr.number;
-            const expected = /^(fix|feat|perf|revert|deps|docs)(\([^)\r\n]+\))?!?:\s+\S/;
+            const expected = /^[a-zA-Z][a-zA-Z0-9-]*(\([^)\r\n]+\))?!?:[^\S\r\n]+\S/;
             const marker = "<!-- pr-title-release-hint -->";
 
-            const files = await github.paginate(
-              github.rest.pulls.listFiles,
-              {
-                owner,
-                repo,
-                pull_number: issue_number,
-                per_page: 100,
-              }
-            );
-
-            const excludedPythonFiles = new Set([
-              "docs/conf.py",
-              "rtd_docs/conf.py",
-            ]);
-            const hasPythonChanges = files.some(
-              (file) =>
-                file.filename.endsWith(".py") &&
-                !excludedPythonFiles.has(file.filename)
-            );
-            if (!hasPythonChanges || expected.test(pr.title)) {
+            if (expected.test(pr.title)) {
               const comments = await github.paginate(
                 github.rest.issues.listComments,
                 {
@@ -71,16 +52,28 @@ jobs:
             }
 
             const body = `${marker}
-            This PR changes Python files, and the title does not match the release naming convention used by \`release-please\`.
+            Please give this PR a title in the form \`<type>: short description\`.
 
             Consider renaming the PR title to one of these forms:
             - \`fix: short description\` (patch)
             - \`feat: short description\` (minor)
             - \`feat!: short description\` (major)
+            - \`test: short description\` (tests)
+            - \`docs: short description\` (documentation)
+            - \`ci: short description\` (CI workflows)
+            - \`chore: short description\` (maintenance)
+
+            **Version bumps require these commit markers:**
+            - **Major** (\`1.2.3 → 2.0.0\`): mark a breaking change with \`!\` after the type or scope, such as \`feat!:\` or \`fix(parser)!:\`, or include a \`BREAKING CHANGE: description\` footer in the merged commit. **\`feat:\` alone does not trigger a major bump.**
+            - **Minor** (\`1.2.3 → 1.3.0\`): use \`feat:\` for compatible new functionality, without a breaking-change marker.
+            - **Patch** (\`1.2.3 → 1.2.4\`): use \`fix:\` for compatible bug fixes. This repository also releases patches for \`perf:\`, \`revert:\`, \`deps:\`, and \`docs:\` without a breaking-change marker.
+            - Ordinary \`test:\`, \`ci:\`, \`build:\`, \`chore:\`, \`refactor:\`, and \`style:\` commits do not trigger a release on their own.
+
+            The highest required bump across commits since the last release wins: **major over minor over patch**.
 
             If this PR will be squash-merged, the PR title often becomes the commit message on the default branch, which affects whether the next release is patch, minor, or major.
 
-            Scoped titles such as \`fix(parser): handle missing values\` are also supported. This is an advisory reminder; tests, docs, and maintenance-only changes can use their appropriate Conventional Commit type.
+            Scoped titles such as \`fix(parser): handle missing values\` and other types such as \`refactor:\` and \`style:\` are also supported. This is an advisory reminder; choose the type that describes the change. A title with a type prefix and a description will not receive this reminder.
 
             See the repository guidance in [\`CONTRIBUTING.md\`](https://github.com/${owner}/${repo}/blob/${pr.base.ref}/CONTRIBUTING.md#releases).`;
 
