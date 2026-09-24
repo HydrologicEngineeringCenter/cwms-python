@@ -41,7 +41,7 @@ WATER_USER["project-id"]["office-id"] = TEST_OFFICE
 WATER_USER["project-id"]["name"] = TEST_PROJECT_ID
 WATER_USER["water-right"] = TEST_WATER_RIGHT
 
-PROJECT_LOCATION = read_resource_file("water_project.json")
+PROJECT_LOCATION = read_resource_file("project_location.json")
 PROJECT_LOCATION["location-type"] = LOCATION_TYPE
 PROJECT_LOCATION["bounding-office-id"] = TEST_OFFICE
 PROJECT_LOCATION["map-label"] = MAP_LABEL
@@ -55,32 +55,32 @@ PROJECT["location"]["name"] = TEST_PROJECT_ID
 PROJECT["pump-back-location"]["name"] = PUMP_LOCATION_ID
 PROJECT["near-gage-location"]["name"] = PUMP_LOCATION_ID2
 
-PUMP_LOCATION1 = PROJECT_LOCATION
+PUMP_LOCATION1 = PROJECT_LOCATION.copy()
 PUMP_LOCATION1["name"] = PUMP_LOCATION_ID2
 PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2 = PUMP_LOCATION1.copy()
 PUMP_LOCATION2["name"] = PUMP_LOCATION_ID3
 
-PUMP_LOCATION3 = PUMP_LOCATION2
+PUMP_LOCATION3 = PUMP_LOCATION2.copy()
 PUMP_LOCATION3["name"] = PUMP_LOCATION_ID
 
-PUMP_LOCATION4 = PUMP_LOCATION3
+PUMP_LOCATION4 = PUMP_LOCATION3.copy()
 PUMP_LOCATION4["name"] = PUMP_LOCATION_ID4
 
-PUMP_LOCATION5 = PUMP_LOCATION4
+PUMP_LOCATION5 = PUMP_LOCATION4.copy()
 PUMP_LOCATION5["name"] = PUMP_LOCATION_ID5
 
-PUMP_LOCATION6 = PUMP_LOCATION5
+PUMP_LOCATION6 = PUMP_LOCATION5.copy()
 PUMP_LOCATION6["name"] = PUMP_LOCATION_ID6
 
-PUMP_LOCATION7 = PUMP_LOCATION6
+PUMP_LOCATION7 = PUMP_LOCATION6.copy()
 PUMP_LOCATION7["name"] = PUMP_LOCATION_ID7
 
-PUMP_LOCATION8 = PUMP_LOCATION7
+PUMP_LOCATION8 = PUMP_LOCATION7.copy()
 PUMP_LOCATION8["name"] = PUMP_LOCATION_ID8
 
-PUMP_LOCATION9 = PUMP_LOCATION8
+PUMP_LOCATION9 = PUMP_LOCATION8.copy()
 PUMP_LOCATION9["name"] = PUMP_LOCATION_ID9
 
 CONTRACT_LOOKUP = read_resource_file("contract_lookup.json")
@@ -88,7 +88,7 @@ CONTRACT_LOOKUP["office-id"] = TEST_OFFICE
 
 WATER_CONTRACT = read_resource_file("water_contract.json")
 WATER_CONTRACT["office-id"] = TEST_OFFICE
-WATER_CONTRACT["water-user"] = WATER_USER
+WATER_CONTRACT["water-user"] = WATER_USER.copy()
 WATER_CONTRACT["contract-id"]["office-id"] = TEST_OFFICE
 WATER_CONTRACT["contract-id"]["name"] = TEST_CONTRACT_ID
 WATER_CONTRACT["contract-type"] = CONTRACT_LOOKUP
@@ -198,12 +198,12 @@ def test_store_get_water_contract():
 
 
 def test_delete_water_contract():
-    WATER_CONTRACT2 = WATER_CONTRACT
+    WATER_CONTRACT2 = WATER_CONTRACT.copy()
     new_contract_name = "Temporary Contract"
     WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
-    WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION4
-    WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION5
-    WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION6
+    WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION4.copy()
+    WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION5.copy()
+    WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION6.copy()
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
@@ -224,12 +224,12 @@ def test_delete_water_contract():
 
 
 def test_get_water_contracts():
-    WATER_CONTRACT2 = WATER_CONTRACT
+    WATER_CONTRACT2 = WATER_CONTRACT.copy()
     new_contract_name = "Addendum Contract"
     WATER_CONTRACT2["contract-id"]["name"] = new_contract_name
-    WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION7
-    WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION8
-    WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION9
+    WATER_CONTRACT2["pump-out-location"]["pump-location"] = PUMP_LOCATION7.copy()
+    WATER_CONTRACT2["pump-in-location"]["pump-location"] = PUMP_LOCATION8.copy()
+    WATER_CONTRACT2["pump-out-below-location"]["pump-location"] = PUMP_LOCATION9.copy()
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT2, False)
     data = wc.get_water_contracts(TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME)
     data = data.json
@@ -246,13 +246,14 @@ def test_get_water_contracts():
 
 
 def test_update_water_contract():
-    WATER_CONTRACT["pump-out-location"]["pump-location"] = PUMP_LOCATION1
-    WATER_CONTRACT["pump-in-location"]["pump-location"] = PUMP_LOCATION3
-    WATER_CONTRACT["pump-out-below-location"]["pump-location"] = PUMP_LOCATION2
+    WATER_CONTRACT["pump-out-location"]["pump-location"] = PUMP_LOCATION1.copy()
+    WATER_CONTRACT["pump-in-location"]["pump-location"] = PUMP_LOCATION3.copy()
+    WATER_CONTRACT["pump-out-below-location"]["pump-location"] = PUMP_LOCATION2.copy()
     WATER_CONTRACT["contract-id"]["name"] = TEST_CONTRACT_ID
     wc.create_water_contract(TEST_ENTITY_NAME, WATER_CONTRACT, False)
     new_contract_name = "Additional Contract"
     wc.update_water_contract(TEST_CONTRACT_ID, new_contract_name, WATER_CONTRACT)
+    WATER_CONTRACT["contract-id"]["name"] = new_contract_name
     data = wc.get_water_contract(
         TEST_OFFICE, TEST_PROJECT_ID, TEST_ENTITY_NAME, new_contract_name
     )
@@ -270,7 +271,11 @@ def _assert_match(expected, actual):
     assert expected["water-user"]["entity-name"] == actual["water-user"]["entity-name"]
     assert expected["water-user"]["project-id"] == actual["water-user"]["project-id"]
     assert expected["water-user"]["water-right"] == actual["water-user"]["water-right"]
-    assert expected["contract-type"] == actual["contract-type"]
+    assert expected["contract-type"]["tooltip"] == actual["contract-type"]["tooltip"]
+    assert (
+        expected["contract-type"]["display-value"]
+        == actual["contract-type"]["display-value"]
+    )
     assert expected["contract-effective-date"] == actual["contract-effective-date"]
     assert expected["contract-expiration-date"] == actual["contract-expiration-date"]
     assert expected["contracted-storage"] == actual["contracted-storage"]

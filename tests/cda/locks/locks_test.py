@@ -75,7 +75,7 @@ TEST_LOCK = {
     "high-water-lower-pool-warning-level": 2.0,
 }
 
-PUMP_LOCATION1 = TEST_LOCK_LOCATION
+PUMP_LOCATION1 = TEST_LOCK_LOCATION.copy()
 PUMP_LOCATION1["name"] = PUMP_LOCATION_ID
 PUMP_LOCATION1["public-name"] = PUBLIC_NAME
 PUMP_LOCATION1["long-name"] = LONG_NAME
@@ -83,7 +83,7 @@ PUMP_LOCATION1["description"] = DESCRIPTION
 PUMP_LOCATION1["location-type"] = LOCATION_TYPE
 PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2 = PUMP_LOCATION1.copy()
 PUMP_LOCATION2["name"] = PUMP_LOCATION_ID2
 
 PROJECT = read_resource_file("water_project.json")
@@ -170,7 +170,7 @@ def test_get_lock():
 
 
 def test_create_lock():
-    test_lock2 = TEST_LOCK
+    test_lock2 = TEST_LOCK.copy()
     new_loc = NEW_LOCK3
     test_lock2["location"]["name"] = new_loc
     lk.create_lock(test_lock2, False)
@@ -187,7 +187,7 @@ def test_create_lock():
 
 
 def test_delete_lock():
-    test_lock2 = TEST_LOCK
+    test_lock2 = TEST_LOCK.copy()
     new_loc = "pytest-lock456"
     test_lock2["location"]["name"] = new_loc
     lk.create_lock(test_lock2, False)
@@ -204,7 +204,7 @@ def test_delete_lock():
 
 
 def test_update_lock():
-    test_lock2 = TEST_LOCK
+    test_lock2 = TEST_LOCK.copy()
     new_loc = NEW_LOCK1
     test_lock2["location"]["name"] = new_loc
     test_lock2["location"]["description"] = "pytest-lock-description"
@@ -213,7 +213,7 @@ def test_update_lock():
     assert lock is not None
     lock = lock.json
     _assert_match(test_lock2, lock)
-    updated_loc = NEW_LOCK2
+    updated_loc = NEW_LOCK2.copy()
     lk.update_lock(LOCK_ID, TEST_OFFICE, updated_loc)
     lock = lk.get_lock(updated_loc, TEST_OFFICE)
     assert lock is not None

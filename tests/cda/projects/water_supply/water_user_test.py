@@ -45,19 +45,19 @@ WATER_USER["project-id"]["name"] = TEST_PROJECT_ID
 WATER_USER["project-id"]["office-id"] = TEST_OFFICE
 WATER_USER["water-right"] = TEST_WATER_RIGHT
 
-WATER_USER1 = WATER_USER
+WATER_USER1 = WATER_USER.copy()
 WATER_USER1["entity-name"] = TEST_ENTITY_NAME2
 
-WATER_USER2 = WATER_USER1
+WATER_USER2 = WATER_USER1.copy()
 WATER_USER2["entity-name"] = TEST_ENTITY_NAME3
 
-WATER_USER3 = WATER_USER1
+WATER_USER3 = WATER_USER1.copy()
 WATER_USER3["entity-name"] = TEST_ENTITY_NAME4
 
-WATER_USER4 = WATER_USER3
+WATER_USER4 = WATER_USER3.copy()
 WATER_USER4["entity-name"] = TEST_ENTITY_NAME5
 
-WATER_USER5 = WATER_USER4
+WATER_USER5 = WATER_USER4.copy()
 WATER_USER5["entity-name"] = TEST_ENTITY_NAME6
 
 PROJECT = read_resource_file("water_project.json")
@@ -68,14 +68,14 @@ PROJECT["pump-back-location"]["office-id"] = TEST_OFFICE
 PROJECT["near-gage-location"]["name"] = PUMP_LOCATION_ID2
 PROJECT["near-gage-location"]["office-id"] = TEST_OFFICE
 
-PUMP_LOCATION1 = PROJECT_LOCATION
+PUMP_LOCATION1 = PROJECT_LOCATION.copy()
 PUMP_LOCATION1["name"] = PUMP_LOCATION_ID2
 PUMP_LOCATION1["location-kind"] = "PUMP"
 
-PUMP_LOCATION2 = PUMP_LOCATION1
+PUMP_LOCATION2 = PUMP_LOCATION1.copy()
 PUMP_LOCATION2["name"] = PUMP_LOCATION_ID3
 
-PUMP_LOCATION3 = PUMP_LOCATION2
+PUMP_LOCATION3 = PUMP_LOCATION2.copy()
 PUMP_LOCATION3["name"] = PUMP_LOCATION_ID
 
 
@@ -162,7 +162,7 @@ def test_get_water_users():
     found_first = False
     found_second = False
     for value in data.json:
-        _assert_match(value, null)
+        _assert_match(value, None)
         if value["entity-name"] == TEST_ENTITY_NAME:
             found_first = True
         if value["entity-name"] == TEST_ENTITY_NAME3:
@@ -186,7 +186,7 @@ def test_update_water_user():
 
 
 def _assert_match(data, name):
-    if name is not null:
+    if name is not None:
         assert data["entity-name"] == name
     assert data["project-id"]["name"] == TEST_PROJECT_ID
     assert data["project-id"]["office-id"] == TEST_OFFICE
