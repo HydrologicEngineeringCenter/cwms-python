@@ -9,6 +9,7 @@ import cwms
 import cwms.locations.physical_locations as pl
 import cwms.projects.projects as proj
 import cwms.projects.water_supply.water_users as wu
+from tests._test_utils import read_resource_file
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "pytest_wu"
@@ -28,37 +29,21 @@ PUMP_LOCATION_ID = "Sac River-Pump 1"
 PUMP_LOCATION_ID2 = "Sac River-Pump 2"
 PUMP_LOCATION_ID3 = "Sac River-Pump 3"
 
-PROJECT_LOCATION = {
-    "office-id": TEST_OFFICE,
-    "name": TEST_PROJECT_ID,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PROJECT",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PROJECT_LOCATION = read_resource_file("project_location.json")
+PROJECT_LOCATION["office-id"] = TEST_OFFICE
+PROJECT_LOCATION["name"] = TEST_PROJECT_ID
+PROJECT_LOCATION["public-name"] = PUBLIC_NAME
+PROJECT_LOCATION["long-name"] = LONG_NAME
+PROJECT_LOCATION["map-label"] = MAP_LABEL
+PROJECT_LOCATION["bounding-office-id"] = TEST_OFFICE
+PROJECT_LOCATION["location-type"] = LOCATION_TYPE
+PROJECT_LOCATION["description"] = DESCRIPTION
 
-WATER_USER = {
-    "entity-name": TEST_ENTITY_NAME,
-    "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-    "water-right": TEST_WATER_RIGHT,
-}
+WATER_USER = read_resource_file("water_user.json")
+WATER_USER["entity-name"] = TEST_ENTITY_NAME
+WATER_USER["project-id"]["name"] = TEST_PROJECT_ID
+WATER_USER["project-id"]["office-id"] = TEST_OFFICE
+WATER_USER["water-right"] = TEST_WATER_RIGHT
 
 WATER_USER1 = WATER_USER
 WATER_USER1["entity-name"] = TEST_ENTITY_NAME2
@@ -75,38 +60,13 @@ WATER_USER4["entity-name"] = TEST_ENTITY_NAME5
 WATER_USER5 = WATER_USER4
 WATER_USER5["entity-name"] = TEST_ENTITY_NAME6
 
-PROJECT = {
-    "location": {
-        "office-id": TEST_OFFICE,
-        "name": TEST_PROJECT_ID,
-        "timezone-name": "UTC",
-    },
-    "federal-cost": 100.0,
-    "non-federal-cost": 50.0,
-    "cost-year": 1717282800000,
-    "cost-unit": "$",
-    "federal-o-and-m-cost": 10.0,
-    "non-federal-o-and-m-cost": 5.0,
-    "authorizing-law": "Authorizing Law",
-    "project-owner": "Project Owner",
-    "hydropower-desc": "Hydropower Description",
-    "sedimentation-desc": "Sedimentation Description",
-    "downstream-urban-desc": "Downstream Urban Description",
-    "bank-full-capacity-desc": "Bank Full Capacity Description",
-    "pump-back-location": {
-        "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID,
-        "timezone-name": "UTC",
-    },
-    "near-gage-location": {
-        "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID2,
-        "timezone-name": "UTC",
-    },
-    "yield-time-frame-start": 1717282800000,
-    "yield-time-frame-end": 1717308000000,
-    "project-remarks": "Remarks",
-}
+PROJECT = read_resource_file("water_project.json")
+PROJECT["location"]["office-id"] = TEST_OFFICE
+PROJECT["location"]["name"] = TEST_PROJECT_ID
+PROJECT["pump-back-location"]["name"] = PUMP_LOCATION_ID
+PROJECT["pump-back-location"]["office-id"] = TEST_OFFICE
+PROJECT["near-gage-location"]["name"] = PUMP_LOCATION_ID2
+PROJECT["near-gage-location"]["office-id"] = TEST_OFFICE
 
 PUMP_LOCATION1 = PROJECT_LOCATION
 PUMP_LOCATION1["name"] = PUMP_LOCATION_ID2

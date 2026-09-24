@@ -13,6 +13,7 @@ import cwms.projects.water_supply.accounting as ac
 import cwms.projects.water_supply.water_contracts as wc
 import cwms.projects.water_supply.water_users as wu
 from cwms import DeleteMethod
+from tests._test_utils import read_resource_file
 
 TEST_OFFICE = "SPK"
 TEST_CONTRACT_ID = "Sac River Pumps"
@@ -33,70 +34,29 @@ CATEGORY = "AT_WS_CONTRACT_TYPE"
 PREFIX = "WS_CONTRACT_TYPE"
 DISPLAY_VALUE = "Test Display Value"
 
-WATER_USER = {
-    "entity-name": TEST_ENTITY_NAME,
-    "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
-    "water-right": TEST_WATER_RIGHT,
-}
+WATER_USER = read_resource_file("water_user.json")
+WATER_USER["entity-name"] = TEST_ENTITY_NAME
+WATER_USER["project-id"]["office-id"] = TEST_OFFICE
+WATER_USER["project-id"]["name"] = TEST_PROJECT_ID
+WATER_USER["water-right"] = TEST_WATER_RIGHT
 
-PROJECT_LOCATION = {
-    "office-id": TEST_OFFICE,
-    "name": TEST_PROJECT_ID,
-    "latitude": 0,
-    "longitude": 0,
-    "active": True,
-    "public-name": PUBLIC_NAME,
-    "long-name": LONG_NAME,
-    "description": DESCRIPTION,
-    "timezone-name": "UTC",
-    "location-type": LOCATION_TYPE,
-    "location-kind": "PROJECT",
-    "nation": "US",
-    "state-initial": "NV",
-    "county-name": "Clark",
-    "nearest-city": "Sparks",
-    "horizontal-datum": "WGS84",
-    "published-longitude": 0,
-    "published-latitude": 0,
-    "vertical-datum": "NGVD29",
-    "elevation": 150,
-    "map-label": MAP_LABEL,
-    "bounding-office-id": TEST_OFFICE,
-    "elevation-units": "m",
-}
+PROJECT_LOCATION = read_resource_file("project_location.json")
+PROJECT_LOCATION["office-id"] = TEST_OFFICE
+PROJECT_LOCATION["name"] = TEST_PROJECT_ID
+PROJECT_LOCATION["location-type"] = LOCATION_TYPE
+PROJECT_LOCATION["public-name"] = PUBLIC_NAME
+PROJECT_LOCATION["long-name"] = LONG_NAME
+PROJECT_LOCATION["description"] = DESCRIPTION
+PROJECT_LOCATION["map-label"] = MAP_LABEL
+PROJECT_LOCATION["bounding-office-id"] = TEST_OFFICE
 
-PROJECT = {
-    "location": {
-        "office-id": TEST_OFFICE,
-        "name": TEST_PROJECT_ID,
-        "timezone-name": "UTC",
-    },
-    "federal-cost": 100.0,
-    "non-federal-cost": 50.0,
-    "cost-year": 1717282800000,
-    "cost-unit": "$",
-    "federal-o-and-m-cost": 10.0,
-    "non-federal-o-and-m-cost": 5.0,
-    "authorizing-law": "Authorizing Law",
-    "project-owner": "Project Owner",
-    "hydropower-desc": "Hydropower Description",
-    "sedimentation-desc": "Sedimentation Description",
-    "downstream-urban-desc": "Downstream Urban Description",
-    "bank-full-capacity-desc": "Bank Full Capacity Description",
-    "pump-back-location": {
-        "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID4,
-        "timezone-name": "UTC",
-    },
-    "near-gage-location": {
-        "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID5,
-        "timezone-name": "UTC",
-    },
-    "yield-time-frame-start": 1717282800000,
-    "yield-time-frame-end": 1717308000000,
-    "project-remarks": "Remarks",
-}
+PROJECT = read_resource_file("water_project.json")
+PROJECT["location"]["office-id"] = TEST_OFFICE
+PROJECT["location"]["name"] = TEST_PROJECT_ID
+PROJECT["pump-back-location"]["office-id"] = TEST_OFFICE
+PROJECT["pump-back-location"]["name"] = PUMP_LOCATION_ID4
+PROJECT["near-gage-location"]["office-id"] = TEST_OFFICE
+PROJECT["near-gage-location"]["name"] = PUMP_LOCATION_ID5
 
 PUMP_LOCATION1 = PROJECT_LOCATION
 PUMP_LOCATION1["name"] = PUMP_LOCATION_ID
@@ -114,30 +74,19 @@ PUMP_LOCATION4["name"] = PUMP_LOCATION_ID4
 PUMP_LOCATION5 = PUMP_LOCATION1
 PUMP_LOCATION5["name"] = PUMP_LOCATION_ID5
 
-LOOKUP = {
-    "office-id": TEST_OFFICE,
-    "display-value": DISPLAY_VALUE,
-    "tooltip": "Test Tooltip",
-    "active": True,
-}
+LOOKUP = read_resource_file("contract_lookup.json")
+LOOKUP["office-id"] = TEST_OFFICE
+LOOKUP["display-value"] = DISPLAY_VALUE
 
-WATER_CONTRACT = {
-    "office-id": TEST_OFFICE,
-    "water-user": WATER_USER,
-    "contract-id": {"office-id": TEST_OFFICE, "name": TEST_CONTRACT_ID},
-    "contract-type": LOOKUP,
-    "contract-effective-date": 158000,
-    "contract-expiration-date": 167000,
-    "contracted-storage": 200000.5,
-    "initial-use-allocation": 15600,
-    "future-use-allocation": 27800.5,
-    "storage-units-id": "m3",
-    "future-use-percent-activated": 15.6,
-    "total-alloc-percent-activated": 65.2,
-    "pump-out-location": {"pump-location": PUMP_LOCATION1, "pump-type": "OUT"},
-    "pump-out-below-location": {"pump-location": PUMP_LOCATION2, "pump-type": "BELOW"},
-    "pump-in-location": {"pump-location": PUMP_LOCATION3, "pump-type": "IN"},
-}
+WATER_CONTRACT = read_resource_file("water_contract.json")
+WATER_CONTRACT["office-id"] = TEST_OFFICE
+WATER_CONTRACT["water-user"] = WATER_USER
+WATER_CONTRACT["contract-type"] = LOOKUP
+WATER_CONTRACT["contract-id"]["name"] = TEST_CONTRACT_ID
+WATER_CONTRACT["contract-id"]["office-id"] = TEST_OFFICE
+WATER_CONTRACT["pump-out-location"]["pump-location"] = PUMP_LOCATION1
+WATER_CONTRACT["pump-out-below-location"]["pump-location"] = PUMP_LOCATION2
+WATER_CONTRACT["pump-in-location"]["pump-location"] = PUMP_LOCATION3
 
 PUMP_ACCOUNTING = {
     "contract-name": TEST_CONTRACT_ID,

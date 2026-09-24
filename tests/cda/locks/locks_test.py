@@ -10,6 +10,7 @@ import cwms.locations.physical_locations as pl
 import cwms.locks.locks as lk
 import cwms.projects.projects as proj
 from cwms import DeleteMethod
+from tests._test_utils import read_resource_file
 
 TEST_OFFICE = "SPK"
 TEST_PROJECT_ID = "BIGH"
@@ -48,22 +49,9 @@ TEST_LOCK_LOCATION = {
     "bounding-office-id": TEST_OFFICE,
     "nearest-city": "Davis",
 }
-
-TEST_PROJECT_LOCATION = {
-    "name": TEST_PROJECT_ID,
-    "latitude": 40.0,
-    "longitude": -105.0,
-    "elevation": 1000.0,
-    "horizontal-datum": "NAD83",
-    "vertical-datum": "NAVD88",
-    "office-id": TEST_OFFICE,
-    "location-type": "TESTING",
-    "location-kind": "PROJECT",
-    "public-name": "Test Location",
-    "long-name": "A pytest-generated location",
-    "timezone-name": "America/Chicago",
-    "nation": "US",
-}
+TEST_PROJECT_LOCATION = read_resource_file("project_location.json")
+TEST_PROJECT_LOCATION["name"] = TEST_PROJECT_ID
+TEST_PROJECT_LOCATION["office-id"] = TEST_OFFICE
 
 TEST_LOCK = {
     "project-id": {"office-id": TEST_OFFICE, "name": TEST_PROJECT_ID},
@@ -98,38 +86,13 @@ PUMP_LOCATION1["location-kind"] = "PUMP"
 PUMP_LOCATION2 = PUMP_LOCATION1
 PUMP_LOCATION2["name"] = PUMP_LOCATION_ID2
 
-PROJECT = {
-    "location": {
-        "office-id": TEST_OFFICE,
-        "name": TEST_PROJECT_ID,
-        "timezone-name": "UTC",
-    },
-    "federal-cost": 100.0,
-    "non-federal-cost": 50.0,
-    "cost-year": 1717282800000,
-    "cost-unit": "$",
-    "federal-o-and-m-cost": 10.0,
-    "non-federal-o-and-m-cost": 5.0,
-    "authorizing-law": "Authorizing Law",
-    "project-owner": "Project Owner",
-    "hydropower-desc": "Hydropower Description",
-    "sedimentation-desc": "Sedimentation Description",
-    "downstream-urban-desc": "Downstream Urban Description",
-    "bank-full-capacity-desc": "Bank Full Capacity Description",
-    "pump-back-location": {
-        "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID,
-        "timezone-name": "UTC",
-    },
-    "near-gage-location": {
-        "office-id": TEST_OFFICE,
-        "name": PUMP_LOCATION_ID2,
-        "timezone-name": "UTC",
-    },
-    "yield-time-frame-start": 1717282800000,
-    "yield-time-frame-end": 1717308000000,
-    "project-remarks": "Remarks",
-}
+PROJECT = read_resource_file("water_project.json")
+PROJECT["location"]["office-id"] = TEST_OFFICE
+PROJECT["location"]["name"] = TEST_PROJECT_ID
+PROJECT["pump-back-location"]["name"] = PUMP_LOCATION_ID
+PROJECT["pump-back-location"]["office-id"] = TEST_OFFICE
+PROJECT["near-gage-location"]["name"] = PUMP_LOCATION_ID2
+PROJECT["near-gage-location"]["office-id"] = TEST_OFFICE
 
 
 def _cleanup():
