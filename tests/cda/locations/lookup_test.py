@@ -9,6 +9,8 @@ CATEGORY = "AT_EMBANK_STRUCTURE_TYPE"
 PREFIX = "STRUCTURE_TYPE"
 DISPLAY_VALUE = "Test Lookup"
 TOOLTIP = "Test Tooltip"
+CATEGORY1 = "AT_GATE_RELEASE_REASON_CODE"
+PREFIX1 = "RELEASE_REASON"
 
 LOOKUP_DATA = {
     "office-id": OFFICE_ID,
@@ -21,6 +23,10 @@ LOOKUP_DATA = {
 def _cleanup():
     try:
         lookups.delete_lookup(DISPLAY_VALUE, CATEGORY, PREFIX, OFFICE_ID)
+    except Exception:
+        pass
+    try:
+        lookups.delete_lookup(CATEGORY1, PREFIX1, OFFICE_ID)
     except Exception:
         pass
 
@@ -101,18 +107,11 @@ def test_update_lookup():
 
 
 def test_delete_lookup():
-    office = "LRL"
-    data = {
-        "office-id": office,
-        "display-value": DISPLAY_VALUE,
-        "tooltip": TOOLTIP,
-        "active": True,
-    }
-    lookups.create_lookup(data, CATEGORY, PREFIX)
+    lookups.create_lookup(LOOKUP_DATA, CATEGORY1, PREFIX1)
 
-    lookups.delete_lookup(DISPLAY_VALUE, CATEGORY, PREFIX, office)
+    lookups.delete_lookup(DISPLAY_VALUE, CATEGORY1, PREFIX1, OFFICE_ID)
 
-    result = lookups.get_all_lookups(CATEGORY, PREFIX, office)
+    result = lookups.get_all_lookups(CATEGORY1, PREFIX1, OFFICE_ID)
     found = False
     for item in result.json:
         if item["display-value"] == DISPLAY_VALUE:
