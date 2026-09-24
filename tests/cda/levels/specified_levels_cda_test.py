@@ -97,11 +97,7 @@ def test_delete_specified_level():
     specified_levels.delete_specified_level(
         specified_level_id=temp_id, office_id=TEST_OFFICE
     )
-    # Try to get it, should raise or return None/empty
-    try:
-        levels = specified_levels.get_specified_levels(
-            specified_level_mask=temp_id, office_id=TEST_OFFICE
-        )
-        assert not any(lvl.get("id") == temp_id for lvl in levels.json)
-    except Exception:
-        pass
+    levels = specified_levels.get_specified_levels(
+        specified_level_mask=temp_id, office_id=TEST_OFFICE
+    )
+    assert not any(lvl.get("id") == temp_id for lvl in levels.json)
