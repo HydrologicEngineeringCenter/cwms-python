@@ -12,31 +12,30 @@ from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
 
 _DEFAULT_CHUNK_DAYS = 365
-_FINE_INTERVAL_SECONDS = 15 * 60
+_MIN_INTERVAL_MINUTES = 2
+_FINE_INTERVAL_MINUTES = 15
 _FINE_INTERVAL_CHUNK_DAYS = 365
 _HOURLY_CHUNK_DAYS = 365
 _SIX_HOURLY_CHUNK_DAYS = 1460
 _COARSE_INTERVAL_CHUNK_DAYS = 2920
 _INTERVAL_PATTERN = re.compile(
     r"^(?P<count>\d+)(?P<unit>"
-    r"Second|Seconds|Minute|Minutes|Hour|Hours|Day|Days|"
+    r"Minute|Minutes|Hour|Hours|Day|Days|"
     r"Week|Weeks|Month|Months|Year|Years)$"
 )
-_INTERVAL_SECONDS = {
-    "Second": 1,
-    "Seconds": 1,
-    "Minute": 60,
-    "Minutes": 60,
-    "Hour": 60 * 60,
-    "Hours": 60 * 60,
-    "Day": 24 * 60 * 60,
-    "Days": 24 * 60 * 60,
-    "Week": 7 * 24 * 60 * 60,
-    "Weeks": 7 * 24 * 60 * 60,
-    "Month": 30 * 24 * 60 * 60,
-    "Months": 30 * 24 * 60 * 60,
-    "Year": 365 * 24 * 60 * 60,
-    "Years": 365 * 24 * 60 * 60,
+_INTERVAL_MINUTES = {
+    "Minute": 1,
+    "Minutes": 1,
+    "Hour": 60,
+    "Hours": 60,
+    "Day": 24 * 60,
+    "Days": 24 * 60,
+    "Week": 7 * 24 * 60,
+    "Weeks": 7 * 24 * 60,
+    "Month": 30 * 24 * 60,
+    "Months": 30 * 24 * 60,
+    "Year": 365 * 24 * 60,
+    "Years": 365 * 24 * 60,
 }
 
 
@@ -56,21 +55,24 @@ def get_timeseries_chunk_size(ts_id: str) -> timedelta:
     if match is None:
         return timedelta(days=_DEFAULT_CHUNK_DAYS)
 
-    interval_seconds = (
-        int(match.group("count")) * _INTERVAL_SECONDS[match.group("unit")]
+    interval_minutes = (
+        int(match.group("count")) * _INTERVAL_MINUTES[match.group("unit")]
     )
+    if interval_minutes < _MIN_INTERVAL_MINUTES:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
     # These bands balance request overhead and response size based on production
     # CDA timings. Fine intervals scale toward about 35,000 expected values.
-    if interval_seconds < _FINE_INTERVAL_SECONDS:
+    if interval_minutes < _FINE_INTERVAL_MINUTES:
         chunk_days = max(
             1,
             round(
-                _FINE_INTERVAL_CHUNK_DAYS * interval_seconds / _FINE_INTERVAL_SECONDS
+                _FINE_INTERVAL_CHUNK_DAYS * interval_minutes / _FINE_INTERVAL_MINUTES
             ),
         )
-    elif interval_seconds <= 60 * 60:
+    elif interval_minutes <= 60:
         chunk_days = _HOURLY_CHUNK_DAYS
-    elif interval_seconds <= 6 * 60 * 60:
+    elif interval_minutes <= 6 * 60:
         chunk_days = _SIX_HOURLY_CHUNK_DAYS
     else:
         chunk_days = _COARSE_INTERVAL_CHUNK_DAYS

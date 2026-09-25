@@ -275,8 +275,7 @@ def test_call_with_retry_does_not_retry_404():
 @pytest.mark.parametrize(
     ("ts_id", "expected_days"),
     [
-        ("Test.Stage.Inst.1Second.0.Test", 1),
-        ("Test.Stage.Inst.1Minute.0.Test", 24),
+        ("Test.Stage.Inst.2Minutes.0.Test", 49),
         ("Test.Stage.Inst.5Minutes.0.Test", 122),
         ("Test.Stage.Inst.15Minutes.0.Test", 365),
         ("Test.Stage.Inst.~15Minutes.0.Test", 365),
@@ -300,6 +299,8 @@ def test_get_timeseries_chunk_size(ts_id, expected_days):
     [
         "Invalid",
         "Test.Stage.Inst.0.0.Test",
+        "Test.Stage.Inst.1Second.0.Test",
+        "Test.Stage.Inst.1Minute.0.Test",
         "Test.Stage.Inst.Irregular.0.Test",
     ],
 )
