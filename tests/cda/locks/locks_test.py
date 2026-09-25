@@ -214,6 +214,7 @@ def test_update_lock():
     lock = lock.json
     _assert_match(test_lock2, lock)
     updated_loc = NEW_LOCK2
+    test_lock2["location"]["name"] = updated_loc
     lk.update_lock(LOCK_ID, TEST_OFFICE, updated_loc)
     lock = lk.get_lock(updated_loc, TEST_OFFICE)
     assert lock is not None
