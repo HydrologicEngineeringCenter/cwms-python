@@ -1,5 +1,6 @@
 import concurrent.futures
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -9,6 +10,74 @@ from pandas import DataFrame
 import cwms.api as api
 from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
+
+_DEFAULT_CHUNK_DAYS = 365
+_MIN_INTERVAL_MINUTES = 2
+_FINE_INTERVAL_MINUTES = 15
+_FINE_INTERVAL_CHUNK_DAYS = 365
+_HOURLY_CHUNK_DAYS = 365
+_SIX_HOURLY_CHUNK_DAYS = 1460
+_COARSE_INTERVAL_CHUNK_DAYS = 2920
+_INTERVAL_PATTERN = re.compile(
+    r"^(?P<count>\d+)(?P<unit>"
+    r"Minute|Minutes|Hour|Hours|Day|Days|"
+    r"Week|Weeks|Month|Months|Year|Years)$"
+)
+_INTERVAL_MINUTES = {
+    "Minute": 1,
+    "Minutes": 1,
+    "Hour": 60,
+    "Hours": 60,
+    "Day": 24 * 60,
+    "Days": 24 * 60,
+    "Week": 7 * 24 * 60,
+    "Weeks": 7 * 24 * 60,
+    "Month": 30 * 24 * 60,
+    "Months": 30 * 24 * 60,
+    "Year": 365 * 24 * 60,
+    "Years": 365 * 24 * 60,
+}
+
+
+def get_timeseries_chunk_size(ts_id: str) -> timedelta:
+    """Return the default request chunk size for a time series interval.
+
+    Local regular time series intervals, such as ``~15Minutes``, use the same
+    chunk size as their regular interval. Unrecognized intervals retain the
+    conservative default used for 15-minute through hourly data.
+    """
+    ts_id_parts = ts_id.split(".")
+    if len(ts_id_parts) < 4:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
+    interval = ts_id_parts[3].removeprefix("~")
+    match = _INTERVAL_PATTERN.fullmatch(interval)
+    if match is None:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
+    interval_minutes = (
+        int(match.group("count")) * _INTERVAL_MINUTES[match.group("unit")]
+    )
+    if interval_minutes < _MIN_INTERVAL_MINUTES:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
+    # These bands balance request overhead and response size based on production
+    # CDA timings. Fine intervals scale toward about 35,000 expected values.
+    if interval_minutes < _FINE_INTERVAL_MINUTES:
+        chunk_days = max(
+            1,
+            round(
+                _FINE_INTERVAL_CHUNK_DAYS * interval_minutes / _FINE_INTERVAL_MINUTES
+            ),
+        )
+    elif interval_minutes <= 60:
+        chunk_days = _HOURLY_CHUNK_DAYS
+    elif interval_minutes <= 6 * 60:
+        chunk_days = _SIX_HOURLY_CHUNK_DAYS
+    else:
+        chunk_days = _COARSE_INTERVAL_CHUNK_DAYS
+
+    return timedelta(days=chunk_days)
 
 
 def get_multi_timeseries_df(
@@ -136,6 +205,9 @@ def chunk_timeseries_time_range(
     List[Tuple[datetime, datetime]]
         A list of tuples, where each tuple represents the start and end of a chunk.
     """
+    if chunk_size <= timedelta(0):
+        raise ValueError("chunk_size must be greater than zero")
+
     chunks = []
     current = begin
     while current < end:
@@ -298,7 +370,7 @@ def get_timeseries(
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
     max_workers: int = 20,
-    max_days_per_chunk: int = 14,
+    max_days_per_chunk: Optional[int] = None,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -338,15 +410,18 @@ def get_timeseries(
         trim: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         multithread: boolean, optional, default is True
-            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+            Specifies whether to retrieve time series chunks concurrently.
         max_workers: integer, default is 20
-            The maximum number of worker threads that will be spawned for multithreading, If calling more than 3 years of 15 minute data, consider using 30 max_workers
-        max_days_per_chunk: integer, default is 14
-            The maximum number of days that would be included in a thread. If calling more than 1 year of 15 minute data, consider using 30 days
+            The maximum number of worker threads used for concurrent requests.
+        max_days_per_chunk: integer, optional, default is None
+            The maximum number of days included in each request. By default,
+            the chunk size is selected from the time series interval.
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
+    if max_days_per_chunk is not None and max_days_per_chunk <= 0:
+        raise ValueError("max_days_per_chunk must be greater than zero")
 
     selector = "values"
     endpoint = "timeseries"
@@ -386,8 +461,12 @@ def get_timeseries(
             )
             return Data(response, selector=selector)
 
-    # divide the time range into chunks
-    chunks = chunk_timeseries_time_range(begin, end, timedelta(days=max_days_per_chunk))
+    chunk_size = (
+        timedelta(days=max_days_per_chunk)
+        if max_days_per_chunk is not None
+        else get_timeseries_chunk_size(ts_id)
+    )
+    chunks = chunk_timeseries_time_range(begin, end, chunk_size)
 
     # find max worker thread
     max_workers = max(min(len(chunks), max_workers), 1)
