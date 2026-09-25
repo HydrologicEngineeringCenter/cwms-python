@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.0.10...v1.1.0) (2026-09-25)
+
+
+### Features
+
+* REGI-499: Project Sublocation Endpoints ([#306](https://github.com/HydrologicEngineeringCenter/cwms-python/issues/306)) ([1a0d115](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/1a0d1150e6e7b1dd109ea24c5aef9f846cb1081a))
+
 ## [1.0.10](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.0.9...v1.0.10) (2026-09-11)
 
 
