@@ -99,6 +99,23 @@ def test_post_500_raises_api_error(monkeypatch):
     assert "incident identifier 34566432" in str(error.value)
 
 
+@pytest.mark.parametrize("method", ["get", "post", "patch", "delete"])
+def test_retry_error_retains_unknown_cause(monkeypatch, method):
+    original_error = ValueError("synthetic retry cause")
+    wrapped_error = RequestsRetryError(original_error)
+
+    def fail(*args, **kwargs):
+        raise wrapped_error
+
+    monkeypatch.setattr(cwms.api.SESSION, method, fail)
+    call = getattr(cwms.api, method)
+    kwargs = {"data": {}} if method in {"post", "patch"} else {}
+    with pytest.raises(RequestsRetryError) as caught:
+        call(TEST_ENDPOINT, **kwargs)
+    assert caught.value is wrapped_error
+    assert caught.value.args[0] is original_error
+
+
 def test_retry_error_unwraps_original_cause(monkeypatch):
     """Verify wrapped retry failures propagate the underlying cause."""
 

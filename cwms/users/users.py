@@ -1,4 +1,3 @@
-import json
 from typing import Any, List, Optional
 
 import cwms.api as api
@@ -14,7 +13,7 @@ def _raise_user_management_error(error: api.ApiError, action: str) -> None:
             "are not authorized for user-management access or are missing the "
             f"required role assignment. CDA responded with 403 {response_hint}."
         )
-        raise api.PermissionError(error.response, message) from None
+        raise api.PermissionError(error.response, message) from error
     raise error
 
 
@@ -110,7 +109,7 @@ def get_user(user_name: str) -> dict[str, Any]:
         if status_code == 404:
             raise api.NotFoundError(
                 error.response, f"User '{user_name}' was not found."
-            ) from None
+            ) from error
         if status_code == 403:
             _raise_user_management_error(error, f"User '{user_name}' retrieval")
         raise
@@ -153,15 +152,10 @@ def delete_user_roles(user_name: str, office_id: str, roles: List[str]) -> None:
         raise ValueError("Delete user roles requires a roles list")
 
     endpoint = f"user/{user_name}/roles/{office_id}"
-    headers = {"accept": "*/*", "Content-Type": api.api_version_text(api.API_VERSION)}
-    # TODO: Delete does not currently support a body in the api module. Use SESSION directly
-    with api.SESSION.delete(
-        endpoint, headers=headers, data=json.dumps(roles)
-    ) as response:
-        if not response.ok:
-            _raise_user_management_error(
-                api.ApiError(response), f"User '{user_name}' role deletion"
-            )
+    try:
+        api.delete(endpoint, data=roles)
+    except api.ApiError as error:
+        _raise_user_management_error(error, f"User '{user_name}' role deletion")
 
 
 def update_user(user_name: str, office_id: str, roles: List[str]) -> None:
