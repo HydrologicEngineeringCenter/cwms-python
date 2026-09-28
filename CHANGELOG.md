@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.0...v1.1.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* increase default time-series chunk window for multithreading...infers chunk size from interval: ([527795b](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/527795b49303ec7960a69355e3353d2a1370f6d1))
+
 ## [1.1.0](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.0.10...v1.1.0) (2026-09-25)
 
 
