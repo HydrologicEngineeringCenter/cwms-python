@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.1...v1.1.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* configure HTTP connection pools and surface CDA batch errors ([#312](https://github.com/HydrologicEngineeringCenter/cwms-python/issues/312)) ([dd32eb1](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/dd32eb1b7f4e3fe9b89495e2f02a1152d22e3341))
+
 ## [1.1.1](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.0...v1.1.1) (2026-09-28)
 
 
