@@ -3,7 +3,7 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -270,6 +270,128 @@ def test_call_with_retry_does_not_retry_404():
 
     assert exc_info.value.response.status_code == 404
     assert call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("ts_id", "expected_days"),
+    [
+        ("Test.Stage.Inst.2Minutes.0.Test", 49),
+        ("Test.Stage.Inst.5Minutes.0.Test", 122),
+        ("Test.Stage.Inst.15Minutes.0.Test", 365),
+        ("Test.Stage.Inst.~15Minutes.0.Test", 365),
+        ("Test.Stage.Inst.1Hour.0.Test", 365),
+        ("Test.Stage.Inst.~1Hour.0.Test", 365),
+        ("Test.Stage.Inst.6Hours.0.Test", 1460),
+        ("Test.Stage.Inst.~6Hours.0.Test", 1460),
+        ("Test.Stage.Inst.1Day.0.Test", 2920),
+        ("Test.Stage.Inst.~1Day.0.Test", 2920),
+        ("Test.Stage.Inst.1Week.0.Test", 2920),
+        ("Test.Stage.Inst.1Month.0.Test", 2920),
+        ("Test.Stage.Inst.1Year.0.Test", 2920),
+    ],
+)
+def test_get_timeseries_chunk_size(ts_id, expected_days):
+    assert timeseries.get_timeseries_chunk_size(ts_id) == timedelta(days=expected_days)
+
+
+@pytest.mark.parametrize(
+    "ts_id",
+    [
+        "Invalid",
+        "Test.Stage.Inst.0.0.Test",
+        "Test.Stage.Inst.1Second.0.Test",
+        "Test.Stage.Inst.1Minute.0.Test",
+        "Test.Stage.Inst.Irregular.0.Test",
+    ],
+)
+def test_get_timeseries_chunk_size_falls_back_for_unknown_intervals(ts_id):
+    assert timeseries.get_timeseries_chunk_size(ts_id) == timedelta(days=365)
+
+
+def test_chunk_timeseries_time_range_rejects_nonpositive_size():
+    now = datetime.now(tz=pytz.UTC)
+
+    with pytest.raises(ValueError, match="chunk_size must be greater than zero"):
+        timeseries.chunk_timeseries_time_range(
+            now, now + timedelta(days=1), timedelta()
+        )
+
+
+@pytest.mark.parametrize(
+    ("ts_id", "expected_days"),
+    [
+        ("Test.Stage.Inst.~15Minutes.0.DefaultChunk", 365),
+        ("Test.Stage.Inst.1Day.0.DefaultChunk", 2920),
+    ],
+)
+def test_get_timeseries_uses_interval_chunk_size_by_default(
+    monkeypatch, ts_id, expected_days
+):
+    begin = datetime(2025, 1, 1, tzinfo=pytz.UTC)
+    end = begin + timedelta(days=expected_days * 2 + 1)
+    expected = object()
+    captured = {}
+
+    def fetch_chunks(chunks, params, selector, endpoint, max_workers):
+        captured["chunks"] = chunks
+        captured["max_workers"] = max_workers
+        return [object()]
+
+    monkeypatch.setattr(timeseries, "fetch_timeseries_chunks", fetch_chunks)
+    monkeypatch.setattr(
+        timeseries, "combine_timeseries_results", lambda results: expected
+    )
+
+    result = timeseries.get_timeseries(
+        ts_id=ts_id,
+        office_id="MVP",
+        begin=begin,
+        end=end,
+    )
+
+    assert result is expected
+    assert captured["chunks"] == timeseries.chunk_timeseries_time_range(
+        begin, end, timedelta(days=expected_days)
+    )
+    assert captured["max_workers"] == 3
+
+
+def test_get_timeseries_max_days_per_chunk_overrides_interval(monkeypatch):
+    begin = datetime(2025, 1, 1, tzinfo=pytz.UTC)
+    end = begin + timedelta(days=31)
+    captured = {}
+
+    def fetch_chunks(chunks, params, selector, endpoint, max_workers):
+        captured["chunks"] = chunks
+        return [object()]
+
+    monkeypatch.setattr(timeseries, "fetch_timeseries_chunks", fetch_chunks)
+    monkeypatch.setattr(
+        timeseries, "combine_timeseries_results", lambda results: object()
+    )
+
+    timeseries.get_timeseries(
+        ts_id="Test.Stage.Inst.1Day.0.OverrideChunk",
+        office_id="MVP",
+        begin=begin,
+        end=end,
+        max_days_per_chunk=10,
+    )
+
+    assert captured["chunks"] == timeseries.chunk_timeseries_time_range(
+        begin, end, timedelta(days=10)
+    )
+
+
+def test_get_timeseries_rejects_nonpositive_max_days_per_chunk():
+    with pytest.raises(
+        ValueError, match="max_days_per_chunk must be greater than zero"
+    ):
+        timeseries.get_timeseries(
+            ts_id="Test.Stage.Inst.15Minutes.0.InvalidChunk",
+            office_id="MVP",
+            max_days_per_chunk=0,
+        )
 
 
 def test_get_timeseries_group_default(requests_mock):
