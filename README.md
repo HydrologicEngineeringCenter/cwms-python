@@ -38,6 +38,17 @@ cwms.init_session(
 If both `token` and `api_key` are provided, `cwms-python` will use the token
 and log a warning.
 
+### HTTP connection pools
+
+Sessions created with `cwms.init_session(api_root=..., pool_connections=100)`
+configure the same connection pool size and retry policy for HTTP and HTTPS.
+This includes unencrypted internal HTTP CDA roots used by Batch jobs. The default
+pool retains up to 100 connections per host for reuse; it does not cap concurrent
+requests. Set `pool_connections` when creating the session to size that pool for
+your workload. A `Connection pool is full, discarding connection` warning means
+an extra connection is being closed instead of retained, not that a response or
+its data was discarded. Check raised exceptions for actual request failures.
+
 ### Errors and debugging
 
 Failed HTTP requests raise `cwms.api.ApiError`. Its message includes the HTTP

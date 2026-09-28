@@ -73,6 +73,7 @@ adapter = adapters.HTTPAdapter(
     pool_connections=100, pool_maxsize=100, max_retries=retry_strategy
 )
 SESSION.mount("https://", adapter)
+SESSION.mount("http://", adapter)
 
 
 class InvalidVersion(Exception):
@@ -131,6 +132,9 @@ class ApiError(Exception):
         if status == 400:
             return "Check that your parameters are correct."
         if status == 404:
+            request = getattr(self.response, "request", None)
+            if request is not None and request.method != "GET":
+                return "Check the CDA response body for the failed operation."
             return "May be the result of an empty query."
 
         # No hint for other codes
@@ -209,6 +213,9 @@ def init_session(
         api_key (optional): An authentication key.
         token (optional): A Keycloak access token. If both token and api_key are
             provided, token is used.
+        pool_connections (optional): Number of host pools and reusable connections
+            per host when creating a session with api_root. Defaults to 100 for
+            both HTTP and HTTPS; this is not a limit on concurrent requests.
 
     Returns:
         Returns the updated session object.
@@ -226,6 +233,7 @@ def init_session(
             max_retries=retry_strategy,
         )
         SESSION.mount("https://", adapter)
+        SESSION.mount("http://", adapter)
     if token:
         if api_key:
             logging.warning(

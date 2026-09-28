@@ -8,6 +8,37 @@ from cwms.api import SESSION, ApiError, api_version_text, init_session
 TEST_ENDPOINT = "/test-endpoint"
 
 
+@pytest.mark.parametrize("scheme", ["http", "https"])
+def test_default_session_pool_for_both_protocols(scheme):
+    adapter = SESSION.get_adapter(f"{scheme}://example.com/cwms-data/")
+    pool = adapter.poolmanager.connection_from_url(f"{scheme}://example.com")
+    assert pool.pool.maxsize == 100
+    assert adapter.max_retries == cwms.api.retry_strategy
+
+
+@pytest.mark.parametrize("scheme", ["http", "https"])
+@pytest.mark.parametrize("pool_connections", [None, 37])
+def test_initialized_session_retains_concurrent_connections(
+    scheme, pool_connections, monkeypatch, caplog
+):
+    """Returning 30 workers' connections must not overflow Requests' default 10."""
+    monkeypatch.setattr(cwms.api, "SESSION", SESSION)
+    options = {} if pool_connections is None else {"pool_connections": pool_connections}
+    session = init_session(api_root=f"{scheme}://example.com/cwms-data", **options)
+    try:
+        adapter = session.get_adapter(session.base_url)
+        pool = adapter.poolmanager.connection_from_url(session.base_url)
+        assert pool.pool.maxsize == (pool_connections or 100)
+        assert adapter.max_retries == cwms.api.retry_strategy
+        # Exercise the real urllib3 return path without opening network sockets.
+        connections = [pool._get_conn() for _ in range(30)]
+        for connection in connections:
+            pool._put_conn(connection)
+        assert "Connection pool is full" not in caplog.text
+    finally:
+        session.close()
+
+
 def test_session_default():
     """Verify the default root URL and auth headers."""
 
