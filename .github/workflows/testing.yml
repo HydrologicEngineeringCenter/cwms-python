@@ -33,7 +33,7 @@ jobs:
       # Unlike the code-check workflow, this job requires the dev dependencies to be
       # installed to make sure we have the necessary, tools, stub files, etc.
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8 # v4
 
       - name: Cache Virtual Environment
         uses: actions/cache@v6
@@ -57,7 +57,7 @@ jobs:
         run: poetry run mypy --strict cwms/
 
       - name: Generate Coverage Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
+        uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95 # v1.3.0
         with:
           filename: out/coverage.xml
           format: markdown
@@ -65,7 +65,7 @@ jobs:
           badge: true
 
       - name: Generate Job Summary
-        uses: x-color/github-actions-job-summary@v0.1.1
+        uses: x-color/github-actions-job-summary@91bbfe6fb3ba53c9d0304991601cf2508e8098a2 # v0.1.1
         with:
           file: ./code-coverage-results.md
           vars: |-
