@@ -1,14 +1,23 @@
-name: CDA integration
+name: CDA integration (PR production, weekly exhaustive)
 
 on:
+  pull_request:
   schedule:
-    - cron: '17 8 * * *'
+    - cron: '17 8 * * 1'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cda-integration-${{ github.event_name }}-${{ github.event.pull_request.number
+    || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   integration-tests:
-    name: integration-tests (Python ${{ matrix.python-version }}, CDA ${{ matrix.cda.name }},
-      schema ${{ matrix.schema.name }})
+    name: integration-tests (Python ${{ matrix.python-version }}, CDA ${{ matrix.cda }},
+      schema ${{ matrix.schema }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -17,26 +26,16 @@ jobs:
       max-parallel: 6
       matrix:
         python-version: ['3.9', '3.x']
-        # Keep the release pins in sync with the environments (see CONTRIBUTING.md).
-        cda:
-          - name: latest
-            image: ghcr.io/usace/cwms-data-api:develop-nightly
-          - name: production
-            image: ghcr.io/usace/cwms-data-api:2026.05.12-i
-          - name: test
-            image: ghcr.io/usace/cwms-data-api:2026.08.31-testd
-        schema:
-          - name: latest
-            tag: latest-dev
-          - name: production
-            tag: '26.02.17'
-          - name: test
-            tag: 26.07.16-RC02
+        # Ordinary PRs run two production combinations. Release Please PRs,
+        # weekly runs, and manual runs exercise all 18 combinations.
+        cda: ${{ fromJSON(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') && '["production"]' || '["latest", "production", "test"]') }}
+        schema: ${{ fromJSON(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') && '["production"]' || '["latest", "production", "test"]') }}
 
     env:
-      CWMS_DATA_API_IMAGE: ${{ matrix.cda.image }}
-      CWMS_DATABASE_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:${{ matrix.schema.tag }}
-      CWMS_SCHEMA_INSTALLER_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:${{ matrix.schema.tag }}
+      # Keep the release pins in sync with the environments (see CONTRIBUTING.md).
+      CWMS_DATA_API_IMAGE: ghcr.io/usace/cwms-data-api:${{ fromJSON('{"latest":"develop-nightly","production":"2026.05.12-i","test":"2026.08.31-testd"}')[matrix.cda] }}
+      CWMS_DATABASE_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/database-ready-ora-23.5:${{ fromJSON('{"latest":"latest-dev","production":"26.02.17","test":"26.07.16-RC02"}')[matrix.schema] }}
+      CWMS_SCHEMA_INSTALLER_IMAGE: ghcr.io/hydrologicengineeringcenter/cwms-database/cwms/schema_installer:${{ fromJSON('{"latest":"latest-dev","production":"26.02.17","test":"26.07.16-RC02"}')[matrix.schema] }}
 
     steps:
       - uses: actions/checkout@v7

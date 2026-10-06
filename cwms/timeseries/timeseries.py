@@ -1,14 +1,86 @@
 import concurrent.futures
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame
+from requests.exceptions import ConnectionError, Timeout
 
 import cwms.api as api
 from cwms.catalog.catalog import get_ts_extents
 from cwms.cwms_types import JSON, Data
+
+logger = logging.getLogger(__name__)
+
+_DEFAULT_CHUNK_DAYS = 365
+_MIN_INTERVAL_MINUTES = 2
+_FINE_INTERVAL_MINUTES = 15
+_FINE_INTERVAL_CHUNK_DAYS = 365
+_HOURLY_CHUNK_DAYS = 365
+_SIX_HOURLY_CHUNK_DAYS = 1460
+_COARSE_INTERVAL_CHUNK_DAYS = 2920
+_INTERVAL_PATTERN = re.compile(
+    r"^(?P<count>\d+)(?P<unit>"
+    r"Minute|Minutes|Hour|Hours|Day|Days|"
+    r"Week|Weeks|Month|Months|Year|Years)$"
+)
+_INTERVAL_MINUTES = {
+    "Minute": 1,
+    "Minutes": 1,
+    "Hour": 60,
+    "Hours": 60,
+    "Day": 24 * 60,
+    "Days": 24 * 60,
+    "Week": 7 * 24 * 60,
+    "Weeks": 7 * 24 * 60,
+    "Month": 30 * 24 * 60,
+    "Months": 30 * 24 * 60,
+    "Year": 365 * 24 * 60,
+    "Years": 365 * 24 * 60,
+}
+
+
+def get_timeseries_chunk_size(ts_id: str) -> timedelta:
+    """Return the default request chunk size for a time series interval.
+
+    Local regular time series intervals, such as ``~15Minutes``, use the same
+    chunk size as their regular interval. Unrecognized intervals retain the
+    conservative default used for 15-minute through hourly data.
+    """
+    ts_id_parts = ts_id.split(".")
+    if len(ts_id_parts) < 4:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
+    interval = ts_id_parts[3].removeprefix("~")
+    match = _INTERVAL_PATTERN.fullmatch(interval)
+    if match is None:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
+    interval_minutes = (
+        int(match.group("count")) * _INTERVAL_MINUTES[match.group("unit")]
+    )
+    if interval_minutes < _MIN_INTERVAL_MINUTES:
+        return timedelta(days=_DEFAULT_CHUNK_DAYS)
+
+    # These bands balance request overhead and response size based on production
+    # CDA timings. Fine intervals scale toward about 35,000 expected values.
+    if interval_minutes < _FINE_INTERVAL_MINUTES:
+        chunk_days = max(
+            1,
+            round(
+                _FINE_INTERVAL_CHUNK_DAYS * interval_minutes / _FINE_INTERVAL_MINUTES
+            ),
+        )
+    elif interval_minutes <= 60:
+        chunk_days = _HOURLY_CHUNK_DAYS
+    elif interval_minutes <= 6 * 60:
+        chunk_days = _SIX_HOURLY_CHUNK_DAYS
+    else:
+        chunk_days = _COARSE_INTERVAL_CHUNK_DAYS
+
+    return timedelta(days=chunk_days)
 
 
 def get_multi_timeseries_df(
@@ -60,45 +132,53 @@ def get_multi_timeseries_df(
     """
 
     def get_ts_ids(ts_id: str) -> Any:
-        try:
-            if ":" in ts_id:
-                ts_id, version_date = ts_id.split(":", 1)
-                version_date_dt = pd.to_datetime(version_date)
-            else:
-                version_date_dt = None
-            data = get_timeseries(
-                ts_id=ts_id,
-                office_id=office_id,
-                unit=unit,
-                begin=begin,
-                end=end,
-                version_date=version_date_dt,
-                multithread=False,
-            )
-            result_dict = {
-                "ts_id": ts_id,
-                "unit": data.json["units"],
-                "version_date": version_date_dt,
-                "values": data.df,
-            }
-            return result_dict
-        except Exception as e:
-            logging.error(f"Error processing {ts_id}: {e}")
-            return None
+        if ":" in ts_id:
+            ts_id, version_date = ts_id.split(":", 1)
+            version_date_dt = pd.to_datetime(version_date)
+        else:
+            version_date_dt = None
+        data = get_timeseries(
+            ts_id=ts_id,
+            office_id=office_id,
+            unit=unit,
+            begin=begin,
+            end=end,
+            version_date=version_date_dt,
+            multithread=False,
+        )
+        result_dict = {
+            "ts_id": ts_id,
+            "unit": data.json["units"],
+            "version_date": version_date_dt,
+            "values": data.df,
+        }
+        return result_dict
 
+    logger.debug(
+        "Fetching %s time series with up to %s workers", len(ts_ids), max_workers
+    )
+    failures: list[tuple[str, Exception]] = []
+    result_dict = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        results = executor.map(get_ts_ids, ts_ids)
+        futures = [(ts_id, executor.submit(get_ts_ids, ts_id)) for ts_id in ts_ids]
+        for ts_id, future in futures:
+            try:
+                result_dict.append(future.result())
+            except Exception as error:
+                failures.append((ts_id, error))
+    if failures:
+        raise api.BatchError(
+            f"{len(failures)} time series failed to fetch:", failures
+        ) from failures[0][1]
 
-    result_dict = list(results)
     data = pd.DataFrame()
     for row in result_dict:
-        if row:
-            temp_df = row["values"]
-            temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
-            if "version_date" in row.keys():
-                temp_df = temp_df.assign(version_date=row["version_date"])
-            temp_df.dropna(how="all", axis=1, inplace=True)
-            data = pd.concat([data, temp_df], ignore_index=True)
+        temp_df = row["values"]
+        temp_df = temp_df.assign(ts_id=row["ts_id"], units=row["unit"])
+        if "version_date" in row.keys():
+            temp_df = temp_df.assign(version_date=row["version_date"])
+        temp_df.dropna(how="all", axis=1, inplace=True)
+        data = pd.concat([data, temp_df], ignore_index=True)
 
     if not melted and "date-time" in data.columns:
         cols = ["ts_id", "units"]
@@ -136,6 +216,9 @@ def chunk_timeseries_time_range(
     List[Tuple[datetime, datetime]]
         A list of tuples, where each tuple represents the start and end of a chunk.
     """
+    if chunk_size <= timedelta(0):
+        raise ValueError("chunk_size must be greater than zero")
+
     chunks = []
     current = begin
     while current < end:
@@ -162,16 +245,24 @@ _CHUNK_ATTEMPTS = 6
 
 
 def _call_with_retry(fn: Any, *args: Any, attempts: int = _CHUNK_ATTEMPTS) -> Any:
+    if attempts < 1:
+        raise ValueError("attempts must be at least 1")
     for i in range(attempts):
         try:
             return fn(*args)
-        except Exception as e:
+        except (api.ApiError, ConnectionError, Timeout) as e:
             status_code = getattr(getattr(e, "response", None), "status_code", None)
-            if status_code == 404:
+            if isinstance(e, api.ApiError) and status_code not in {
+                429,
+                500,
+                502,
+                503,
+                504,
+            }:
                 raise
             if i == attempts - 1:
                 raise
-            logging.warning(f"chunk attempt {i + 1}/{attempts} failed: {e}")
+            logger.warning(f"chunk attempt {i + 1}/{attempts} failed: {e}")
 
 
 def fetch_timeseries_chunks(
@@ -182,7 +273,7 @@ def fetch_timeseries_chunks(
     max_workers: int,
 ) -> List[Data]:
     results: List[Data] = []
-    errors: List[str] = []
+    errors: list[tuple[str, Exception]] = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_chunk = {
@@ -206,14 +297,15 @@ def fetch_timeseries_chunks(
                 error_msg = (
                     f"Failed to fetch data from {chunk_start} to {chunk_end}: {e}"
                 )
-                logging.error(error_msg)
-                errors.append(error_msg)
+                logger.debug(error_msg)
+                errors.append(
+                    (f"Failed to fetch data from {chunk_start} to {chunk_end}", e)
+                )
 
     if errors:
-        raise RuntimeError(
-            f"{len(errors)} of {len(chunks)} chunk(s) failed to fetch:\n"
-            + "\n".join(errors)
-        )
+        raise api.BatchError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to fetch:", errors
+        ) from errors[0][1]
 
     return results
 
@@ -298,7 +390,7 @@ def get_timeseries(
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
     max_workers: int = 20,
-    max_days_per_chunk: int = 14,
+    max_days_per_chunk: Optional[int] = None,
 ) -> Data:
     """Retrieves time series values from a specified time series and time window.  Value date-times
     obtained are always in UTC.
@@ -338,15 +430,18 @@ def get_timeseries(
         trim: boolean, optional, default is True
             Specifies whether to trim missing values from the beginning and end of the retrieved values.
         multithread: boolean, optional, default is True
-            Specifies whether to trim missing values from the beginning and end of the retrieved values.
+            Specifies whether to retrieve time series chunks concurrently.
         max_workers: integer, default is 20
-            The maximum number of worker threads that will be spawned for multithreading, If calling more than 3 years of 15 minute data, consider using 30 max_workers
-        max_days_per_chunk: integer, default is 14
-            The maximum number of days that would be included in a thread. If calling more than 1 year of 15 minute data, consider using 30 days
+            The maximum number of worker threads used for concurrent requests.
+        max_days_per_chunk: integer, optional, default is None
+            The maximum number of days included in each request. By default,
+            the chunk size is selected from the time series interval.
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe. dates are all in UTC
     """
+    if max_days_per_chunk is not None and max_days_per_chunk <= 0:
+        raise ValueError("max_days_per_chunk must be greater than zero")
 
     selector = "values"
     endpoint = "timeseries"
@@ -367,27 +462,20 @@ def get_timeseries(
 
     # grab extents if begin is before CWMS DB were implemented to prevent empty queries outside of extents
     if begin < datetime(2014, 1, 1, tzinfo=timezone.utc) and multithread:
-        try:
-            begin_extent, _, _ = get_ts_extents(ts_id=ts_id, office_id=office_id)
-            # replace begin with begin extent if outside extents
-            if begin < begin_extent:
-                begin = begin_extent
-                logging.debug(
-                    f"Requested begin was before any data in this timeseries. Reseting to {begin}"
-                )
-        except Exception as e:
-            # If getting extents fails, fall back to single-threaded mode
-            logging.debug(
-                f"Could not retrieve time series extents ({e}). Falling back to single-threaded mode."
+        begin_extent, _, _ = get_ts_extents(ts_id=ts_id, office_id=office_id)
+        # replace begin with begin extent if outside extents
+        if begin < begin_extent:
+            begin = begin_extent
+            logger.debug(
+                f"Requested begin was before any data in this timeseries. Reseting to {begin}"
             )
 
-            response = api.get_with_paging(
-                selector=selector, endpoint=endpoint, params=params
-            )
-            return Data(response, selector=selector)
-
-    # divide the time range into chunks
-    chunks = chunk_timeseries_time_range(begin, end, timedelta(days=max_days_per_chunk))
+    chunk_size = (
+        timedelta(days=max_days_per_chunk)
+        if max_days_per_chunk is not None
+        else get_timeseries_chunk_size(ts_id)
+    )
+    chunks = chunk_timeseries_time_range(begin, end, chunk_size)
 
     # find max worker thread
     max_workers = max(min(len(chunks), max_workers), 1)
@@ -399,7 +487,7 @@ def get_timeseries(
         )
         return Data(response, selector=selector)
     else:
-        logging.debug(
+        logger.debug(
             f"Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
         )
         # fetch the data
@@ -606,7 +694,7 @@ def store_multi_timeseries_df(
         + ts_data_all["version_date"].map(version_key)
     ).unique()
 
-    errors: List[str] = []
+    errors: list[tuple[str, Exception]] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {}
         for unique_tsid in unique_tsids:
@@ -622,12 +710,12 @@ def store_multi_timeseries_df(
             try:
                 future.result()
             except Exception as e:
-                errors.append(f"{futures[future]}: {e}")
+                errors.append((str(futures[future]), e))
 
     if errors:
-        raise RuntimeError(
-            f"{len(errors)} time series failed to store:\n" + "\n".join(errors)
-        )
+        raise api.BatchError(
+            f"{len(errors)} time series failed to store:", errors
+        ) from errors[0][1]
 
 
 def chunk_timeseries_data(
@@ -727,13 +815,13 @@ def store_timeseries(
     _call_with_retry(api.post, endpoint, chunks[0], params)
     remaining_chunks = chunks[1:]
     actual_workers = min(max_workers, len(remaining_chunks))
-    logging.debug(
+    logger.debug(
         f"Storing {len(chunks)} chunks of timeseries data with {actual_workers} threads"
     )
 
     # Store chunks concurrently
     responses: List[Dict[str, Any]] = []
-    errors: List[str] = []
+    errors: list[tuple[str, Exception]] = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=actual_workers) as executor:
         future_to_chunk = {
@@ -749,15 +837,16 @@ def store_timeseries(
                 start_time = chunk["values"][0][0]
                 end_time = chunk["values"][-1][0]
                 error_msg = f"Error storing chunk from {start_time} to {end_time}: {e}"
-                logging.error(error_msg)
-                errors.append(error_msg)
+                logger.debug(error_msg)
+                errors.append(
+                    (f"Error storing chunk from {start_time} to {end_time}", e)
+                )
                 responses.append({"error": error_msg})
 
     if errors:
-        raise RuntimeError(
-            f"{len(errors)} of {len(chunks)} chunk(s) failed to store:\n"
-            + "\n".join(errors)
-        )
+        raise api.BatchError(
+            f"{len(errors)} of {len(chunks)} chunk(s) failed to store:", errors
+        ) from errors[0][1]
 
     return
 

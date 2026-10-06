@@ -49,6 +49,47 @@ cwms.init_session(
 If both `token` and `api_key` are provided, `cwms-python` will use the token
 and log a warning.
 
+### HTTP connection pools
+
+Sessions created with `cwms.init_session(api_root=..., pool_connections=100)`
+configure the same connection pool size and retry policy for HTTP and HTTPS.
+This includes unencrypted internal HTTP CDA roots used by Batch jobs. The default
+pool retains up to 100 connections per host for reuse; it does not cap concurrent
+requests. Set `pool_connections` when creating the session to size that pool for
+your workload. A `Connection pool is full, discarding connection` warning means
+an extra connection is being closed instead of retained, not that a response or
+its data was discarded. Check raised exceptions for actual request failures.
+
+### Errors and debugging
+
+Failed HTTP requests raise `cwms.api.ApiError`. Its message includes the HTTP
+status, method, URL, and CDA response body (including incident details when
+provided). The original response is available as `error.response`. Custom
+user-management errors retain these details too. Network exceptions propagate
+with their original type. Invalid JSON responses raise `ApiError` with the
+decoding exception as the cause; empty response bodies return an empty dictionary.
+
+Concurrent time-series reads and writes raise `cwms.api.BatchError` if any
+series or chunk fails. It subclasses `RuntimeError`, and `error.failures`
+contains `(series_or_chunk, original_exception)` pairs for every failure.
+Reads do not return incomplete results as success. Successful writes are not
+rolled back. Failures while looking up time-series extents also propagate.
+Chunk retries are limited to connection errors, timeouts, and HTTP
+429/500/502/503/504; validation and other permanent errors fail immediately
+at the chunk layer. The shared HTTP adapter retains its existing retry policy.
+
+Enable request outcome and chunk diagnostics with Python logging:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("cwms").setLevel(logging.DEBUG)
+```
+
+Request diagnostics include the method, endpoint, and response status, without
+request bodies or authentication headers.
+
 ## Getting Started
 
 ```python

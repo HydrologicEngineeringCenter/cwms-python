@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.2](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.1...v1.1.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* configure HTTP connection pools and surface CDA batch errors ([#312](https://github.com/HydrologicEngineeringCenter/cwms-python/issues/312)) ([dd32eb1](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/dd32eb1b7f4e3fe9b89495e2f02a1152d22e3341))
+
+## [1.1.1](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.0...v1.1.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* increase default time-series chunk window for multithreading...infers chunk size from interval: ([527795b](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/527795b49303ec7960a69355e3353d2a1370f6d1))
+
+## [1.1.0](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.0.10...v1.1.0) (2026-09-25)
+
+
+### Features
+
+* REGI-499: Project Sublocation Endpoints ([#306](https://github.com/HydrologicEngineeringCenter/cwms-python/issues/306)) ([1a0d115](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/1a0d1150e6e7b1dd109ea24c5aef9f846cb1081a))
+
 ## [1.0.10](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.0.9...v1.0.10) (2026-09-11)
 
 
