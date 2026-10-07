@@ -77,6 +77,7 @@ class Data:
 
             if "date-time" in df.columns:
                 df["date-time"] = to_datetime(df["date-time"], unit="ms", utc=True)
+                df["date-time"] = df["date-time"].dt.as_unit("ms")
             return df
 
         def reorder_measurement_cols(df: DataFrame) -> DataFrame:
