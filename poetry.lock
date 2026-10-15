@@ -1986,4 +1986,4 @@ ruyaml = ">=0.91.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "224c4940ab5f1b07c246cb4df5b554c0f51864d250ed319c20ca8f52298b570c"
+content-hash = "021b412df746dbda6e66a845fc28939333169fbb96de21c58df3e7b7c362d16b"

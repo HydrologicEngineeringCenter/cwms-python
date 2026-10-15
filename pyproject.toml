@@ -60,6 +60,7 @@ setuptools = [
     {version = ">=82.0.1,<83", python = ">=3.9,<3.10"},
     {version = ">=83.0.0", python = ">=3.10"},
 ]
+pytz = ">=2020.1"
 
 [build-system]
 requires = ["poetry-core"]
