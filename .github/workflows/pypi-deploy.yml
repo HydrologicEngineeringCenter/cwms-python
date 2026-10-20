@@ -47,7 +47,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.x'
+          python-version: '3.14'
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
       - name: Install Dependencies

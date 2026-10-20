@@ -103,8 +103,8 @@ passed, bearer token auth takes precedence.
     Stop the previous stack before starting another one using the same host ports.
 
     The integration workflow in `.github/workflows/CDA-testing.yml` tests every
-    combination of three CDA images and three database versions on Python 3.9
-    and latest stable (`3.x`) in exhaustive runs (18 jobs):
+    combination of three CDA images and three database versions on Python 3.9,
+    3.13, and the latest validated stable (`3.14`) in exhaustive runs (27 jobs):
 
     | Lane | CDA tag | Database and schema-installer tag |
     | --- | --- | --- |
@@ -200,24 +200,24 @@ merged commits.
 
 ### CI coverage
 
-Unit tests and strict type checks run on Python **3.9** and **latest stable**
-(`3.x`) for PRs targeting any branch and pushes to `main`. Formatting and CodeQL
-also run on PRs and main. Feature-branch pushes do not start duplicate checks;
-new PR commits cancel superseded runs. Draft and documentation-only PRs use the
-same straightforward checks as other PRs.
+Unit tests and strict type checks run on Python **3.9**, **3.13**, and the latest
+validated stable version (**3.14**) for PRs targeting any branch and pushes to
+`main`. Formatting and CodeQL also run on PRs and main. Feature-branch pushes do
+not start duplicate checks; new PR commits cancel superseded runs. Draft and
+documentation-only PRs use the same straightforward checks as other PRs.
 
 The **CDA integration (PR production, weekly exhaustive)** workflow runs on every
-PR. Ordinary PRs run two integration jobs: production CDA with the production
-database/schema on Python **3.9** and **latest stable** (`3.x`). These jobs use
+PR. Ordinary PRs run three integration jobs: production CDA with the production
+database/schema on Python **3.9**, **3.13**, and **3.14**. These jobs use
 disposable local containers with production version pins, not deployed production
 services. New PR commits cancel superseded integration runs.
 
-The full **18-job matrix** runs weekly on **Monday at 08:17 UTC**, on manual
+The full **27-job matrix** runs weekly on **Monday at 08:17 UTC**, on manual
 dispatch, and on Release Please PRs (branches beginning with `release-please--`).
-It covers two Python versions, three CDA versions, and three schema versions,
+It covers three Python versions, three CDA versions, and three schema versions,
 including mixed CDA/schema combinations.
 
-**Before merging a Release Please PR, all 18 integration jobs must pass for its
+**Before merging a Release Please PR, all 27 integration jobs must pass for its
 current revision.** If the bot-created PR has no checks, close and reopen it as
 described below, or manually run the full matrix against its head branch. You can
 also run the full matrix for any other PR when broader coverage is useful:
@@ -233,11 +233,11 @@ run in Actions before approving.
 Inspect failed combinations and backend logs, reproduce using the Compose
 overrides above, and fix the cause rather than dropping failing combinations.
 
-Release publishing still tests the exact tag on latest stable Python, verifies
+Release publishing still tests the exact tag on Python 3.14, verifies
 the package version, and builds before publishing. CodeQL retains its weekly run.
-Repository administrators should require the two unit-test checks, the two
+Repository administrators should require the three unit-test checks, the three
 production CDA integration checks, formatting, and CodeQL (plus existing external
-requirements). The other 16 CDA combinations do not run on ordinary PRs and
+requirements). The other 24 CDA combinations do not run on ordinary PRs and
 should not be required globally. Maintainers must verify the full release matrix
 before merging a release PR; these workflow changes do not modify repository
 merge rules or enforce a separate release-only merge gate.
@@ -249,7 +249,7 @@ merge rules or enforce a separate release-only merge gate.
    proposed `pyproject.toml` version, `CHANGELOG.md`, and
    `.release-please-manifest.json`.
 3. Review the proposed version and release notes, verify the required checks and
-   all 18 CDA integration jobs pass for the current revision, and merge the release
+   all 27 CDA integration jobs pass for the current revision, and merge the release
    PR when ready.
 4. The same workflow creates the `vX.Y.Z` tag and GitHub release, checks out that
    exact tag, tests and builds the distribution, publishes to PyPI, signs the
