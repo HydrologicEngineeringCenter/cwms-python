@@ -13,6 +13,7 @@ import pytz
 import cwms.api
 import cwms.timeseries.timeseries as timeseries
 import cwms.timeseries.timeseries_group as timeseries_group
+from cwms.cwms_types import Data
 from tests._test_utils import read_resource_file
 
 _MOCK_ROOT = "https://mockwebserver.cwms.gov"
@@ -158,7 +159,7 @@ def test_get_timeseries_unversioned_default(requests_mock, monkeypatch):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=300000",
+        "page-size=-1",
         json=_UNVERS_TS_JSON,
     )
 
@@ -196,7 +197,7 @@ def test_get_empty_ts_df(requests_mock, monkeypatch):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=300000&"
+        "page-size=-1&"
         "trim=true",
         json=_EMPTY_TS_JSON,
     )
@@ -336,6 +337,31 @@ def test_chunk_timeseries_time_range_rejects_nonpositive_size():
         )
 
 
+def test_combine_timeseries_results_trims_only_outer_missing_values():
+    first_json = _UNVERS_TS_JSON.copy()
+    first_json["values"] = [[0, None, 0], [1000, 1.0, 0], [2000, None, 0]]
+    second_json = _UNVERS_TS_JSON.copy()
+    second_json["values"] = [
+        [2000, None, 0],
+        [3000, None, 0],
+        [4000, 2.0, 0],
+        [5000, None, 0],
+    ]
+
+    combined = timeseries.combine_timeseries_results(
+        [Data(first_json, selector="values"), Data(second_json, selector="values")],
+        trim=True,
+    )
+
+    assert combined.json["values"] == [
+        [1000, 1.0, 0],
+        [2000, None, 0],
+        [3000, None, 0],
+        [4000, 2.0, 0],
+    ]
+    assert combined.json["total"] == 4
+
+
 @pytest.mark.parametrize(
     ("ts_id", "expected_days"),
     [
@@ -354,11 +380,14 @@ def test_get_timeseries_uses_interval_chunk_size_by_default(
     def fetch_chunks(chunks, params, selector, endpoint, max_workers):
         captured["chunks"] = chunks
         captured["max_workers"] = max_workers
+        captured["trim"] = params["trim"]
         return [object()]
 
     monkeypatch.setattr(timeseries, "fetch_timeseries_chunks", fetch_chunks)
     monkeypatch.setattr(
-        timeseries, "combine_timeseries_results", lambda results: expected
+        timeseries,
+        "combine_timeseries_results",
+        lambda results, trim=False: expected,
     )
 
     result = timeseries.get_timeseries(
@@ -373,6 +402,7 @@ def test_get_timeseries_uses_interval_chunk_size_by_default(
         begin, end, timedelta(days=expected_days)
     )
     assert captured["max_workers"] == 3
+    assert captured["trim"] is False
 
 
 def test_get_timeseries_max_days_per_chunk_overrides_interval(monkeypatch):
@@ -386,7 +416,9 @@ def test_get_timeseries_max_days_per_chunk_overrides_interval(monkeypatch):
 
     monkeypatch.setattr(timeseries, "fetch_timeseries_chunks", fetch_chunks)
     monkeypatch.setattr(
-        timeseries, "combine_timeseries_results", lambda results: object()
+        timeseries,
+        "combine_timeseries_results",
+        lambda results, trim=False: object(),
     )
 
     timeseries.get_timeseries(
@@ -468,7 +500,7 @@ def test_get_multi_timeseries_default(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=300000&"
+        "page-size=-1&"
         "version-date=2021-06-20T08%3A00%3A00%2B00%3A00",
         json=_VERS_TS_JSON,
     )
@@ -480,7 +512,7 @@ def test_get_multi_timeseries_default(requests_mock):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=300000",
+        "page-size=-1",
         json=_UNVERS_TS_JSON,
     )
 
@@ -533,7 +565,7 @@ def test_get_timeseries_versioned_default(requests_mock, monkeypatch):
         "unit=EN&"
         "begin=2008-05-01T15%3A00%3A00%2B00%3A00&"
         "end=2008-05-01T17%3A00%3A00%2B00%3A00&"
-        "page-size=300000&"
+        "page-size=-1&"
         "version-date=2021-06-20T08%3A00%3A00%2B00%3A00",
         json=_VERS_TS_JSON,
     )

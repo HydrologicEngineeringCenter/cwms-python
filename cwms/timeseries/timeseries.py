@@ -310,7 +310,7 @@ def fetch_timeseries_chunks(
     return results
 
 
-def combine_timeseries_results(results: List[Data]) -> Data:
+def combine_timeseries_results(results: List[Data], trim: bool = False) -> Data:
     """
     Combines the results from multiple chunks into a single cwms Data object.
 
@@ -335,13 +335,27 @@ def combine_timeseries_results(results: List[Data]) -> Data:
 
     # Drop duplicate rows based on 'date-time' (if necessary)
     combined_df.drop_duplicates(subset="date-time", inplace=True)
+    combined_df.reset_index(drop=True, inplace=True)
+
+    # CDA trimming applies to the requested range. Applying it to each chunk
+    # independently can remove scheduled missing values at internal boundaries.
+    if trim and not combined_df.empty:
+        populated = combined_df["value"].notna()
+        if populated.any():
+            populated_positions = populated.to_numpy().nonzero()[0]
+            first = int(populated_positions[0])
+            last = int(populated_positions[-1]) + 1
+            combined_df = combined_df.iloc[first:last].copy()
+        else:
+            combined_df = combined_df.iloc[0:0].copy()
 
     # Extract metadata from the first result (assuming all chunks share the same metadata)
     combined_json = results[0].json
 
     # Update metadata to reflect the combined time range
-    combined_json["begin"] = combined_df["date-time"].min().isoformat()
-    combined_json["end"] = combined_df["date-time"].max().isoformat()
+    if not combined_df.empty:
+        combined_json["begin"] = combined_df["date-time"].min().isoformat()
+        combined_json["end"] = combined_df["date-time"].max().isoformat()
     combined_json["total"] = len(combined_df)
 
     combined_df["date-time"] = combined_df["date-time"].apply(
@@ -385,7 +399,7 @@ def get_timeseries(
     datum: Optional[str] = None,
     begin: Optional[datetime] = None,
     end: Optional[datetime] = None,
-    page_size: Optional[int] = 300000,
+    page_size: Optional[int] = -1,
     version_date: Optional[datetime] = None,
     trim: Optional[bool] = True,
     multithread: Optional[bool] = True,
@@ -422,8 +436,8 @@ def get_timeseries(
             not specified, any required time window ends at the current time. Any timezone
             information should be passed within the datetime object. If no timezone information
             is given, default will be UTC.
-        page_size: int, optional, default is 300000: Specifies the number of records to obtain in
-            a single call.
+        page_size: int, optional, default is -1: Specifies the number of records to obtain in
+            a single call. A value of -1 disables paging.
         version_date: datetime, optional, default is None
             Version date of time series values being requested. If this field is not specified and
             the timeseries is versioned, the query will return the max aggregate for the time period.
@@ -491,16 +505,18 @@ def get_timeseries(
             f"Fetching {len(chunks)} chunks of timeseries data with {max_workers} threads"
         )
         # fetch the data
+        chunk_params = params.copy()
+        chunk_params["trim"] = False
         result_list = fetch_timeseries_chunks(
             chunks,
-            params,
+            chunk_params,
             selector,
             endpoint,
             max_workers,
         )
 
         # combine the results
-        results = combine_timeseries_results(result_list)
+        results = combine_timeseries_results(result_list, trim=trim is not False)
 
         return results
 
