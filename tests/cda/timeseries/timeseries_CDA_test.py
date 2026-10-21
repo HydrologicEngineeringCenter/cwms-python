@@ -48,7 +48,7 @@ DT_CHUNK_MULTI = pd.date_range(
     end=END_DATE_CHUNK_MULTI,
     freq="15min",
     tz="UTC",
-)
+).as_unit("ms")
 # Create DataFrame
 DF_CHUNK_MULTI = pd.DataFrame(
     {

@@ -131,6 +131,8 @@ def delete_lookup(
 
     Parameters
     ----------
+    display_value : str
+        Specifies the display value of the lookup type to be deleted.
     category : str
         Specifies the category id of the lookup type to be deleted.
     prefix : str

@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional
 
+import pytest
+import requests
+
 from cwms.api import ApiError
 
 
@@ -41,7 +44,7 @@ def test_api_error_str():
 
     assert (
         str(error)
-        == "CWMS API Error (https://api.example.com/test) Not Found. May be the result of an empty query. incident identifier 34566432"
+        == "CWMS API Error (https://api.example.com/test) 404 Not Found. May be the result of an empty query. incident identifier 34566432"
     )
 
     # The response should not include a reason, since it is not included in the response.
@@ -50,11 +53,31 @@ def test_api_error_str():
 
     assert (
         str(error)
-        == "CWMS API Error (https://api.example.com/test). May be the result of an empty query."
+        == "CWMS API Error (https://api.example.com/test) 404. May be the result of an empty query."
     )
 
-    # In the most minimal case, only the URL is included.
+    # Even without a reason or body, the URL and status are included.
     response = Response(url="https://api.example.com/test", status_code=500)
     error = ApiError(response)
 
-    assert str(error) == "CWMS API Error (https://api.example.com/test)."
+    assert str(error) == "CWMS API Error (https://api.example.com/test) 500."
+
+
+@pytest.mark.parametrize("method", ["GET", "POST", "PATCH", "DELETE"])
+def test_404_hint_and_database_details_without_reason(method):
+    """Internal HTTP CDA writes can return 404 with a database incident body."""
+    response = requests.Response()
+    response.status_code = 404
+    response.url = "http://example.com/cwms-data/timeseries"
+    response.request = requests.Request(method, response.url).prepare()
+    response._content = (
+        b'{"message":"ORA-20998: ERROR",'
+        b'"incidentIdentifier":"test-incident","source":"Database","details":{}}'
+    )
+    error = ApiError(response)
+    message = str(error)
+    assert f"404 {method}" in message
+    assert response.url in message
+    assert response.text in message
+    assert ("empty query" in message) == (method == "GET")
+    assert error.response is response

@@ -3,7 +3,7 @@ name = "cwms-python"
 repository = "https://github.com/HydrologicEngineeringCenter/cwms-python"
 
 # Managed by Release Please; runtime versions come from package metadata.
-version = "1.0.9"
+version = "1.1.4"
 
 packages = [
     { include = "cwms" },
@@ -16,10 +16,15 @@ authors = ["Eric Novotny <eric.v.novotny@usace.army.mil>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pandas = "^2.3.3"
-# Require NumPy wheels for newer Python versions while retaining Python 3.9.
+pandas = [
+    {version = ">=2.3.3,<3", python = ">=3.9,<3.11"},
+    {version = ">=2.3.3,<4", python = ">=3.11"},
+]
+
+# Pandas 3.x requires a newer NumPy baseline on Python 3.11+.
 numpy = [
-    {version = ">=1.23.5,<3", python = ">=3.9,<3.13"},
+    {version = ">=1.23.5,<3", python = ">=3.9,<3.11"},
+    {version = ">=1.26.0,<3", python = ">=3.11,<3.13"},
     {version = ">=2.1.0,<3", python = ">=3.13,<3.14"},
     {version = ">=2.3.3,<3", python = ">=3.14"},
 ]
@@ -27,6 +32,11 @@ requests-toolbelt = "^1.0.0"
 requests = [
     {version = "^2.32.4", python = ">=3.9,<3.10"},
     {version = "^2.33.0", python = ">=3.10"},
+]
+# Keep the Python 3.9 fallback while requiring patched releases on newer Python.
+urllib3 = [
+    {version = ">=2.6.3,<2.7", python = ">=3.9,<3.10"},
+    {version = "^2.7.0", python = ">=3.10"},
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -46,6 +56,11 @@ pytest-cov = "^4.1.0"
 pandas-stubs = "^2.2.1.240316"
 types-requests = "^2.31.0.20240311"
 yamlfix = "^1.16.0"
+setuptools = [
+    {version = ">=82.0.1,<83", python = ">=3.9,<3.10"},
+    {version = ">=83.0.0", python = ">=3.10"},
+]
+pytz = ">=2020.1"
 
 [build-system]
 requires = ["poetry-core"]
