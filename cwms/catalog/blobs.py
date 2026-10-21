@@ -96,7 +96,7 @@ def store_blobs(data: JSON, fail_if_exists: Optional[bool] = True) -> None:
 
     endpoint = "blobs"
     params = {"fail-if-exists": fail_if_exists}
-    return api.post(endpoint, data, params, api_version=1)
+    return api.post(endpoint, data, params, api_version=2)
 
 
 def delete_blob(blob_id: str, office_id: str) -> None:

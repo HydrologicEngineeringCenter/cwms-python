@@ -44,7 +44,7 @@ def get_virtual_outlet(office_id: str, project_id: str, name: str) -> Data:
         raise ValueError("Retrieve virtual outlet requires an office")
 
     endpoint = f"projects/{office_id}/{project_id}/virtual-outlets/{name}"
-    response = api.get(endpoint)
+    response = api.get(endpoint, api_version=1)
     return Data(response)
 
 
@@ -80,7 +80,7 @@ def get_virtual_outlets(office_id: str, project_id: str) -> Data:
         raise ValueError("Retrieve virtual outlets requires an office")
 
     endpoint = f"projects/{office_id}/{project_id}/virtual-outlets"
-    response = api.get(endpoint)
+    response = api.get(endpoint, api_version=1)
     return Data(response)
 
 
@@ -161,4 +161,4 @@ def store_virtual_outlet(data: JSON, fail_if_exists: Optional[bool] = True) -> N
 
     endpoint = "projects/virtual-outlets"
     params = {"fail-if-exists": fail_if_exists}
-    api.post(endpoint, data, params)
+    api.post(endpoint, data, params, api_version=1)

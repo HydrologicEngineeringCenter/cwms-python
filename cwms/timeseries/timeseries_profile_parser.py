@@ -39,7 +39,7 @@ def get_timeseries_profile_parser(
         "office": office_id,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -80,7 +80,7 @@ def get_timeseries_profile_parsers(
         "parameter-id-mask": parameter_id_mask,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -207,4 +207,4 @@ def store_timeseries_profile_parser(
         "fail-if-exists": fail_if_exists,
     }
 
-    return api.post(endpoint, data, params)
+    return api.post(endpoint, data, params, api_version=1)

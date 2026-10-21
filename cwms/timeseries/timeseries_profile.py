@@ -37,7 +37,7 @@ def get_timeseries_profile(office_id: str, location_id: str, parameter_id: str) 
         "office": office_id,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -82,7 +82,7 @@ def get_timeseries_profiles(
         "page-size": page_size,
     }
 
-    response = api.get(endpoint, params)
+    response = api.get(endpoint, params, api_version=1)
     return Data(response)
 
 
@@ -163,4 +163,4 @@ def store_timeseries_profile(data: str, fail_if_exists: Optional[bool] = True) -
         "fail-if-exists": fail_if_exists,
     }
 
-    return api.post(endpoint, data, params)
+    return api.post(endpoint, data, params, api_version=1)
