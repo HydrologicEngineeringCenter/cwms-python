@@ -138,20 +138,23 @@ def timeseries_group_df_to_json(
     if "attribute" not in df.columns:
         df["attribute"] = 0
 
-    # Replace NaN with None for optional columns
+    def normalize_optional_value(value: Any) -> Any:
+        return None if pd.isna(value) else value
+
+    # Replace NaN/NaT/NA with None for optional columns
     for column in optional_columns:
         if column in df.columns:
-            df[column] = df[column].where(pd.notnull(df[column]), None)
+            df[column] = df[column].map(normalize_optional_value)
 
     # Build the list of time-series entries
     assigned_time_series = df.apply(
         lambda entry: {
             "office-id": entry["office-id"],
             "timeseries-id": entry["timeseries-id"],
-            "alias-id": entry["alias-id"],
+            "alias-id": normalize_optional_value(entry["alias-id"]),
             "attribute": entry["attribute"],
             **(
-                {"ts-code": entry["ts-code"]}
+                {"ts-code": normalize_optional_value(entry["ts-code"])}
                 if "ts-code" in entry and pd.notna(entry["ts-code"])
                 else {}
             ),

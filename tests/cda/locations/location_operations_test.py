@@ -8,6 +8,8 @@ def test_get_location_operations():
     """
     Test the retrieval of location operations from the CWMS API.
     """
+    import uuid
+
     TEST_OFFICE = "SPK"
     TEST_LOCATION_ID = f"pytestloc{uuid4().hex[:12]}"
     TEST_LATITUDE = 44.0

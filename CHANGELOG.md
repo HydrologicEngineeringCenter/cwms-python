@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.4](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.3...v1.1.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* Update pandas and numpy dependencies in pyproject.toml ([#330](https://github.com/HydrologicEngineeringCenter/cwms-python/issues/330)) ([cd8903e](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/cd8903e9e6e9b3d5b5408a43e78773487dacb287))
+
+## [1.1.3](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.2...v1.1.3) (2026-10-07)
+
+
+### Bug Fixes
+
+* update to allow pandas 3.X versions with python 3.10+ ([#322](https://github.com/HydrologicEngineeringCenter/cwms-python/issues/322)) ([18bea55](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/18bea55d177ab34dd339bf2048d7ce15b0483e8c))
+
 ## [1.1.2](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.1...v1.1.2) (2026-09-28)
 
 

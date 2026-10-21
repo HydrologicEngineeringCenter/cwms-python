@@ -14,6 +14,17 @@ Python 3.9+
 pip install cwms-python
 ```
 
+For users on Python 3.11+ who want the pandas 3.x stack, install into a fresh virtual environment and upgrade pandas explicitly:
+
+```sh
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+pip install cwms-python "pandas>=3,<4"
+```
+
+This keeps the default package install stable while allowing a modern Python environment to use pandas 3.x.
+
 Then import the package:
 
 ```python
