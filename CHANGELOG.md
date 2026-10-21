@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.4...v1.1.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* Optimize time-series retrieval defaults ([3b4f613](https://github.com/HydrologicEngineeringCenter/cwms-python/commit/3b4f6131786e96bf3bdf3e36aaeea48f5bf48063))
+
 ## [1.1.4](https://github.com/HydrologicEngineeringCenter/cwms-python/compare/v1.1.3...v1.1.4) (2026-10-15)
 
 
