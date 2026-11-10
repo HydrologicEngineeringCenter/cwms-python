@@ -3,6 +3,8 @@
 #  All Rights Reserved.  USACE PROPRIETARY/CONFIDENTIAL.
 #  Source may not be released without written approval from HEC
 
+import json
+import re
 from datetime import datetime, timedelta
 from datetime import timezone as datetime_timezone
 
@@ -39,7 +41,7 @@ def test_update_timeseries_groups(requests_mock):
     data = _TS_GROUP
 
     requests_mock.patch(
-        f"{_MOCK_ROOT}/timeseries/group/USGS%20TS%20Data%20Acquisition?replace-assigned-ts=True&office=CWMS",
+        f"{_MOCK_ROOT}/v2/timeseries/group/CWMS/USGS%20TS%20Data%20Acquisition?ignore-nulls=True",
         status_code=200,
     )
 
@@ -49,9 +51,13 @@ def test_update_timeseries_groups(requests_mock):
         office_id=office_id,
         replace_assigned_ts=replace_assigned_ts,
     )
-
     assert requests_mock.called
     assert requests_mock.call_count == 1
+    assert requests_mock.last_request.headers["Accept"] == "*/*"
+    assert requests_mock.last_request.headers["Content-Type"] == "application/json"
+    patch_data = json.loads(requests_mock.last_request.text)
+    assert patch_data["membership"]["assign"] == _TS_GROUP["assigned-time-series"]
+    assert "unassign" not in patch_data["membership"]
 
 
 def test_timeseries_group_df_to_json_valid_data():
@@ -105,6 +111,110 @@ def test_timeseries_group_df_to_json_valid_data():
         category_id="cat123",
     )
     assert result == expected_json
+
+
+def test_timeseries_group_patch_df_to_json():
+    assign_data = pd.DataFrame(
+        {
+            "office-id": ["CWMS", "MVP"],
+            "timeseries-id": [
+                "River.Stage.Inst.1Hour.0.Test",
+                "Lake.Stage.Inst.1Hour.0.Test",
+            ],
+            "alias-id": ["river-stage", None],
+            "ref-ts-id": [None, "Lake.Stage.Inst.1Hour.0.Reference"],
+            "attribute": [2, 0],
+        }
+    )
+    unassign_data = pd.DataFrame(
+        {
+            "office-id": ["CWMS"],
+            "timeseries-id": ["Old.Stage.Inst.1Hour.0.Test"],
+        }
+    )
+
+    result = timeseries_group.timeseries_group_patch_df_to_json(
+        group_id="group123",
+        group_office_id="CWMS",
+        category_office_id="CWMS",
+        category_id="category123",
+        assign_data=assign_data,
+        unassign_data=unassign_data,
+    )
+
+    assert result == {
+        "office-id": "CWMS",
+        "id": "group123",
+        "time-series-category": {"office-id": "CWMS", "id": "category123"},
+        "membership": {
+            "assign": [
+                {
+                    "office-id": "CWMS",
+                    "timeseries-id": "River.Stage.Inst.1Hour.0.Test",
+                    "attribute": 2,
+                    "alias-id": "river-stage",
+                },
+                {
+                    "office-id": "MVP",
+                    "timeseries-id": "Lake.Stage.Inst.1Hour.0.Test",
+                    "attribute": 0,
+                    "ref-ts-id": "Lake.Stage.Inst.1Hour.0.Reference",
+                },
+            ],
+            "unassign": [{"office-id": "CWMS", "name": "Old.Stage.Inst.1Hour.0.Test"}],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("assign_data", "unassign_data", "membership_key"),
+    [
+        (
+            pd.DataFrame({"office-id": ["CWMS"], "timeseries-id": ["Test"]}),
+            None,
+            "assign",
+        ),
+        (
+            None,
+            pd.DataFrame({"office-id": ["CWMS"], "timeseries-id": ["Test"]}),
+            "unassign",
+        ),
+    ],
+)
+def test_timeseries_group_patch_df_to_json_supports_either_dataframe(
+    assign_data, unassign_data, membership_key
+):
+    result = timeseries_group.timeseries_group_patch_df_to_json(
+        group_id="group123",
+        group_office_id="CWMS",
+        category_office_id="CWMS",
+        category_id="category123",
+        assign_data=assign_data,
+        unassign_data=unassign_data,
+    )
+
+    assert list(result["membership"]) == [membership_key]
+
+
+def test_timeseries_group_patch_df_to_json_requires_at_least_one_dataframe():
+    with pytest.raises(ValueError, match="Provide data"):
+        timeseries_group.timeseries_group_patch_df_to_json(
+            group_id="group123",
+            group_office_id="CWMS",
+            category_office_id="CWMS",
+            category_id="category123",
+        )
+
+
+def test_timeseries_group_patch_df_to_json_validates_required_columns():
+    with pytest.raises(TypeError, match="assign_data is missing required columns"):
+        timeseries_group.timeseries_group_patch_df_to_json(
+            group_id="group123",
+            group_office_id="CWMS",
+            category_office_id="CWMS",
+            category_id="category123",
+            assign_data=pd.DataFrame({"office-id": ["CWMS"]}),
+        )
 
 
 def test_timeseries_df_to_json():
@@ -453,18 +563,17 @@ def test_get_timeseries_group_default(requests_mock):
     group_office_id = "CWMS"
 
     requests_mock.get(
-        f"{_MOCK_ROOT}/timeseries/group/{group_id}?"
+        f"{_MOCK_ROOT}/v2/timeseries/group/{group_office_id}/{group_id}?"
         f"office={office_id}&"
         f"category-id={category_id}&"
-        f"category-office-id={category_office_id}&"
-        f"group-office-id={group_office_id}",
+        f"category-office-id={category_office_id}",
         json=_TS_GROUP,
     )
 
     """
     requests_mock.get(
         f"{_MOCK_ROOT}"
-        "/timeseries/group/USGS%20TS%20Data%20Acquisition?office=CWMS&"
+        "/v2/timeseries/group/CWMS/USGS%20TS%20Data%20Acquisition?office=CWMS&"
         "category-id=Data%20Acquisition",
         json=_TS_GROUP,
     )
@@ -490,6 +599,45 @@ def test_get_timeseries_group_default(requests_mock):
         "59905",
         0,
     ]
+    assert requests_mock.last_request.headers["Accept"] == "application/json"
+
+
+def test_timeseries_group_requests_use_v2(requests_mock):
+    group_id = "USGS TS Data Acquisition"
+    group_endpoint = re.compile(
+        rf"^{re.escape(_MOCK_ROOT)}/v2/timeseries/group/CWMS(?:/[^?]*)?(?:\?.*)?$"
+    )
+
+    requests_mock.get(group_endpoint, json=_TS_GROUP)
+    requests_mock.post(f"{_MOCK_ROOT}/v2/timeseries/group/CWMS", status_code=200)
+    requests_mock.patch(group_endpoint, status_code=200)
+    requests_mock.delete(group_endpoint, status_code=200)
+
+    timeseries_group.get_timeseries_group(
+        group_id=group_id, group_office_id="CWMS", office_id="CWMS"
+    )
+    timeseries_group.get_timeseries_groups(office_id="CWMS", group_office_id="CWMS")
+    timeseries_group.store_timeseries_groups(data=_TS_GROUP)
+    timeseries_group.update_timeseries_groups(
+        data=_TS_GROUP, group_id=group_id, office_id="CWMS"
+    )
+    timeseries_group.delete_timeseries_group(
+        group_id=group_id, category_id="Data Acquisition", office_id="CWMS"
+    )
+
+    assert requests_mock.call_count == 5
+    assert all(
+        f"{_MOCK_ROOT}/v2/timeseries/group/" in request.url
+        for request in requests_mock.request_history
+    )
+    assert all(
+        "version=2" not in request.headers.get("Accept", "")
+        and "version=2" not in request.headers.get("Content-Type", "")
+        for request in requests_mock.request_history
+    )
+    patch_data = json.loads(requests_mock.request_history[3].text)
+    assert patch_data["membership"]["assign"] == _TS_GROUP["assigned-time-series"]
+    assert "assigned-time-series" not in patch_data
 
 
 def test_get_multi_timeseries_default(requests_mock):

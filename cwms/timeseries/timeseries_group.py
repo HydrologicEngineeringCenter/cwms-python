@@ -27,7 +27,7 @@ def get_timeseries_group(
             office_id: string
                 The owning office of the timeseries assigned to the group whose data is to be included in the response.
             group_office_id: string
-                Specifies the owning office of the timeseries group.
+                Required. Specifies the owning office of the timeseries group.
             category_office_id: string
                 Specifies the owning office of the timeseries group category.
 
@@ -36,12 +36,14 @@ def get_timeseries_group(
             cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    endpoint = f"timeseries/group/{group_id}"
+    if not group_office_id:
+        raise ValueError("Retrieving a timeseries group requires its owning office")
+
+    endpoint = f"v2/timeseries/group/{group_office_id}/{group_id}"
     params = {
         "office": office_id,
         "category-id": category_id,
         "category-office-id": category_office_id,
-        "group-office-id": group_office_id,
     }
 
     response = api.get(endpoint=endpoint, params=params, api_version=1)
@@ -73,16 +75,18 @@ def get_timeseries_groups(
         category_office_id: string
             Specifies the owning office of the timeseries group category
         group_office_id: string
-            Specifies the owning office of the timeseries group
+            Required. Specifies the owning office of the timeseries group(s).
     Returns
     -------
         cwms data type.  data.json will return the JSON output and data.df will return a dataframe
     """
 
-    endpoint = "timeseries/group"
+    if not group_office_id:
+        raise ValueError("Retrieving timeseries groups requires their owning office")
+
+    endpoint = f"v2/timeseries/group/{group_office_id}"
     params = {
         "office": office_id,
-        "group-office-id": group_office_id,
         "include-assigned": include_assigned,
         "timeseries-category-like": timeseries_category_like,
         "timeseries-group-like": timeseries_group_like,
@@ -173,6 +177,74 @@ def timeseries_group_df_to_json(
     return json_dict
 
 
+def timeseries_group_patch_df_to_json(
+    group_id: str,
+    group_office_id: str,
+    category_office_id: str,
+    category_id: str,
+    assign_data: Optional[DataFrame] = None,
+    unassign_data: Optional[DataFrame] = None,
+) -> JSON:
+    """Convert assignment and unassignment dataframes to a v2 group patch.
+
+    Both dataframes require ``office-id`` and ``timeseries-id`` columns.
+    Assignment rows may also contain ``alias-id``, ``ref-ts-id``, and
+    ``attribute``. Unassignment rows use ``timeseries-id``, which is converted
+    to the v2 membership ``name`` field.
+    """
+    if assign_data is None and unassign_data is None:
+        raise ValueError("Provide data for timeseries to assign and/or unassign")
+
+    def validate_data(data: DataFrame, name: str) -> None:
+        if not isinstance(data, DataFrame):
+            raise TypeError(f"{name} must be a pandas DataFrame")
+        required_columns = ["office-id", "timeseries-id"]
+        missing_columns = [column for column in required_columns if column not in data]
+        if missing_columns:
+            raise TypeError(f"{name} is missing required columns: {missing_columns}")
+        if data[required_columns].isnull().any().any():
+            raise ValueError(
+                f"{name} contains null values in required columns: "
+                f"{required_columns}"
+            )
+
+    membership: dict[str, list[JSON]] = {}
+    if assign_data is not None:
+        validate_data(assign_data, "assign_data")
+        assignments = []
+        for row in assign_data.to_dict(orient="records"):
+            assigned: JSON = {
+                "office-id": row["office-id"],
+                "timeseries-id": row["timeseries-id"],
+                "attribute": row.get("attribute", 0),
+            }
+            if pd.isna(assigned["attribute"]):
+                assigned["attribute"] = 0
+            for column in ("alias-id", "ref-ts-id"):
+                value = row.get(column)
+                if value is not None and not pd.isna(value):
+                    assigned[column] = value
+            assignments.append(assigned)
+        membership["assign"] = assignments
+
+    if unassign_data is not None:
+        validate_data(unassign_data, "unassign_data")
+        membership["unassign"] = [
+            {"office-id": row["office-id"], "name": row["timeseries-id"]}
+            for row in unassign_data.to_dict(orient="records")
+        ]
+
+    return {
+        "office-id": group_office_id,
+        "id": group_id,
+        "time-series-category": {
+            "office-id": category_office_id,
+            "id": category_id,
+        },
+        "membership": membership,
+    }
+
+
 def store_timeseries_groups(
     data: JSON,
     fail_if_exists: Optional[bool] = True,
@@ -197,10 +269,10 @@ def store_timeseries_groups(
     None
     """
 
-    if data is None:
-        raise ValueError("Cannot store a standard text without timeseries group JSON")
+    if not isinstance(data, dict) or not data.get("office-id"):
+        raise ValueError("Cannot store a timeseries group without its owning office")
 
-    endpoint = "timeseries/group"
+    endpoint = f"v2/timeseries/group/{data['office-id']}"
     params = {"fail-if-exists": fail_if_exists, "ignore-nulls": ignore_nulls}
 
     return api.post(endpoint, data, params, api_version=1)
@@ -222,7 +294,8 @@ def update_timeseries_groups(
         office_id : str
             The ID of the office associated with the timeseries group.
         replace_assigned_ts : bool, optional
-            Specifies whether to unassign all existing timeseries before assigning new timeseries specified in the content body. Default is False.
+            Retained for compatibility. V2 only unassigns time series explicitly
+            listed in membership.unassign.
         data: JSON dictionary
             Timeseries data to be stored.
 
@@ -235,13 +308,27 @@ def update_timeseries_groups(
     if not office_id:
         raise ValueError("Cannot update a timeseries groups without an office id")
 
-    endpoint = f"timeseries/group/{group_id}"
+    endpoint = f"v2/timeseries/group/{office_id}/{group_id}"
     params = {
-        "replace-assigned-ts": replace_assigned_ts,
-        "office": office_id,
+        "ignore-nulls": True,
     }
 
-    api.patch(endpoint=endpoint, data=data, params=params, api_version=1)
+    patch_data = data.copy()
+    supplied_membership = patch_data.get("membership", {})
+    if not isinstance(supplied_membership, dict):
+        raise TypeError("membership must be a JSON object")
+    membership = supplied_membership.copy()
+    if "assigned-time-series" in patch_data:
+        if "assign" in membership:
+            raise ValueError(
+                "Provide either assigned-time-series or membership.assign, not both"
+            )
+        membership["assign"] = patch_data.pop("assigned-time-series")
+
+    if membership or "membership" in patch_data:
+        patch_data["membership"] = membership
+
+    api.patch(endpoint=endpoint, data=patch_data, params=params, api_version=1)
 
 
 def delete_timeseries_group(
@@ -268,9 +355,8 @@ def delete_timeseries_group(
             None
     """
 
-    endpoint = f"timeseries/group/{group_id}"
+    endpoint = f"v2/timeseries/group/{office_id}/{group_id}"
     params = {
-        "office": office_id,
         "category-id": category_id,
         "cascade-delete": cascade_delete,
     }
