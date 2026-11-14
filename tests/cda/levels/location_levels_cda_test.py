@@ -12,6 +12,7 @@ import pytest
 
 import cwms.levels.location_levels as location_levels
 import cwms.locations.physical_locations as locations
+from cwms.api import ApiError
 
 # Load test location level from tests/cda/resources/location_level.json
 LEVEL_RESOURCE_PATH = Path(__file__).parent.parent / "resources" / "location_level.json"
@@ -111,12 +112,19 @@ def test_delete_loc_level():
     data["level-date"] = temp_effective_date.isoformat()
     data["constant-value"] = 300
     location_levels.store_location_level(data)
+    created = location_levels.get_location_level(
+        level_id=TEST_LEVEL_ID,
+        office_id=TEST_OFFICE,
+        effective_date=temp_effective_date,
+        unit=TEST_UNIT,
+    )
+    assert pd.to_datetime(created.json["level-date"]) == temp_effective_date
     location_levels.delete_location_level(
         location_level_id=TEST_LEVEL_ID,
         office_id=TEST_OFFICE,
         effective_date=temp_effective_date,
     )
-    # Try to get it, should raise or return None/empty
+    # CDA may return the previous effective level after this dated level is deleted.
     try:
         level = location_levels.get_location_level(
             level_id=TEST_LEVEL_ID,
@@ -124,9 +132,10 @@ def test_delete_loc_level():
             effective_date=temp_effective_date,
             unit=TEST_UNIT,
         )
-        assert level.df.empty
-    except Exception:
-        pass
+    except ApiError as error:
+        assert error.response.status_code == 404
+    else:
+        assert pd.to_datetime(level.json["level-date"]) != temp_effective_date
 
 
 def test_get_loc_level_ts():
